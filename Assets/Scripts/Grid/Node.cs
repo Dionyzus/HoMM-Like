@@ -16,13 +16,15 @@ namespace HOMM_BM
 
         public List<Node> subNodes = new List<Node>();
 
+        public bool isWalkable = true;
+
         public bool IsWalkable()
         {
-            bool retVal = true;
+            bool retVal = isWalkable;
 
             for (int i = 0; i < subNodes.Count; i++)
             {
-                if (subNodes[i].IsWalkable() == false)
+                if (subNodes[i].isWalkable == false)
                 {
                     retVal = false;
                     continue;

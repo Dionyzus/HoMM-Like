@@ -6,8 +6,9 @@ namespace HOMM_BM
 {
     public class GridManager : MonoBehaviour
     {
+        public Vector3 readExtents = new Vector3(.5f, .5f, .5f);
         public float scaleY = 2;
-        public int[] scales = { 1, 2};
+        public int[] scales = { 1, 2 };
 
         Vector3Int[] gridSizes;
         List<Node[,,]> grids = new List<Node[,,]>();
@@ -15,6 +16,8 @@ namespace HOMM_BM
         GameObject[] gridParents;
 
         Vector3 minPosition;
+
+        GameObject collisionObject;
 
         public static GridManager instance;
 
@@ -26,12 +29,22 @@ namespace HOMM_BM
         {
             ReadLevel();
 
+            //collisionObject = new GameObject("Collision");
+            //collisionObject.AddComponent<BoxCollider>();
+
+            //Node middleNode = GetNode(gridSizes[0].x / 2, 0, gridSizes[0].z / 2, 0);
+            //collisionObject.transform.position = middleNode.worldPosition;
+
+            //Vector3 targetScale = Vector3.one * 1000;
+            //targetScale.y = 0.03f;
+
+            //collisionObject.transform.localScale = targetScale;
+
             GridUnit[] gridUnits = GameObject.FindObjectsOfType<GridUnit>();
             foreach (GridUnit unit in gridUnits)
             {
                 Node n = GetNode(unit.startPosition, unit.gridIndex);
                 unit.transform.position = n.worldPosition;
-                unit.currentNode = n;
                 Debug.Log("World position: " + n.worldPosition);
             }
         }
@@ -184,12 +197,35 @@ namespace HOMM_BM
 
             node.worldPosition = targetPosition;
 
+            Vector3 origin = node.worldPosition;
+            origin.y += scaleY / 2;
+
+            Debug.DrawRay(node.worldPosition, Vector3.down * scaleY, Color.red, 5);
+            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, .5f))
+            {
+                node.worldPosition = hit.point;
+            }
+
             if (gridIndex == 0)
             {
+                Collider[] colliders = Physics.OverlapBox(
+                node.worldPosition, readExtents, Quaternion.identity);
+
+                for (int i = 0; i < colliders.Length; i++)
+                {
+                    if (colliders[i].gameObject.layer != 9)
+                    {
+                        node.isWalkable = false;
+                    }
+                }
+
+                if (node.isWalkable == false)
+                    return;
+
                 GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 Destroy(go.GetComponent<Collider>());
 
-                go.transform.position = targetPosition;
+                go.transform.position = node.worldPosition;
                 go.transform.eulerAngles = new Vector3(90, 0, 0);
                 go.transform.parent = gridParents[gridIndex].transform;
                 go.transform.localScale = nodeScale;
@@ -200,6 +236,8 @@ namespace HOMM_BM
 
         public Node GetNode(Vector3 worldPosition, int gridIndex)
         {
+            worldPosition -= minPosition;
+
             Vector3Int position = new Vector3Int
             {
                 x = Mathf.RoundToInt(worldPosition.x / scales[gridIndex]),

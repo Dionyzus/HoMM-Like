@@ -31,6 +31,8 @@ namespace HOMM_BM
             origin.steps = 0;
             reachableNodes.Add(origin);
             openSet.Add(origin);
+            //int stepsAmount = 0;
+
             while (openSet.Count > 0)
             {
                 Node currentNode = openSet[0];
@@ -67,17 +69,29 @@ namespace HOMM_BM
 
             for (int x = -1; x <= 1; x++)
             {
-                for (int z = -1; z <= 1; z++)
+                int _x = currentNode.position.x + x;
+                int _z = currentNode.position.z;
+
+                Node neighbour = gridManager.GetNode(_x, currentNode.position.y, _z, gridIndex);
+
+                if (neighbour != null)
                 {
-                    int _x = currentNode.position.x + x;
-                    int _z = currentNode.position.z + z;
-
-                    Node neighbour = gridManager.GetNode(_x, currentNode.position.y, _z, gridIndex);
-
-                    if(neighbour != null)
-                    {
+                    if(neighbour.IsWalkable())
                         retVal.Add(neighbour);
-                    }
+                }
+            }
+
+            for (int z = -1; z <= 1; z++)
+            {
+                int _x = currentNode.position.x;
+                int _z = currentNode.position.z + z;
+
+                Node neighbour = gridManager.GetNode(_x, currentNode.position.y, _z, gridIndex);
+
+                if (neighbour != null)
+                {
+                    if(neighbour.IsWalkable())
+                        retVal.Add(neighbour);
                 }
             }
 
