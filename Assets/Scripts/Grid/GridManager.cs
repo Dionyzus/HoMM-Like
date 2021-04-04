@@ -7,14 +7,21 @@ namespace HOMM_BM
     public class GridManager : MonoBehaviour
     {
         public float scaleY = 2;
-        public float[] scales = { 1, 2};
+        public int[] scales = { 1, 2};
 
         Vector3Int[] gridSizes;
         List<Node[,,]> grids = new List<Node[,,]>();
 
-        Vector3 minPosition;
-        Transform gridParent;
+        GameObject[] gridParents;
 
+        Vector3 minPosition;
+
+        public static GridManager instance;
+
+        private void Awake()
+        {
+            instance = this;
+        }
         private void Start()
         {
             ReadLevel();
@@ -24,6 +31,8 @@ namespace HOMM_BM
             {
                 Node n = GetNode(unit.startPosition, unit.gridIndex);
                 unit.transform.position = n.worldPosition;
+                unit.currentNode = n;
+                Debug.Log("World position: " + n.worldPosition);
             }
         }
 
@@ -78,13 +87,13 @@ namespace HOMM_BM
             minPosition.y = minY;
             minPosition.z = minZ;
 
-            gridParent = new GameObject("Grid Parent").transform;
-            gridParent.position = minPosition;
-
+            gridParents = new GameObject[scales.Length];
             gridSizes = new Vector3Int[scales.Length];
 
             for (int i = 0; i < scales.Length; i++)
             {
+                gridParents[i] = new GameObject("Parent for index " + i);
+
                 gridSizes[i] = new Vector3Int
                 {
                     x = Mathf.FloorToInt((maxX - minX) / scales[i]),
@@ -92,11 +101,11 @@ namespace HOMM_BM
                     z = Mathf.FloorToInt((maxZ - minZ) / scales[i])
                 };
 
-                grids.Add(CreateGrid(gridSizes[i], scales[i]));
+                grids.Add(CreateGrid(gridSizes[i], scales[i], i));
             }
         }
 
-        Node[,,] CreateGrid(Vector3Int gridSize, float scaleXZ)
+        Node[,,] CreateGrid(Vector3Int gridSize, int scaleXZ, int gridIndex)
         {
             Node[,,] grid = new Node[gridSize.x + 1, gridSize.y + 1, gridSize.z + 1];
 
@@ -110,20 +119,25 @@ namespace HOMM_BM
                         n.position.x = x;
                         n.position.y = y;
                         n.position.z = z;
+                        n.gridIndex = gridIndex;
 
                         n.pivotPosition.x = x * scaleXZ;
                         n.pivotPosition.y = y * scaleY;
                         n.pivotPosition.z = z * scaleXZ;
                         n.pivotPosition += minPosition;
 
-                        float scaleDifference = scaleXZ / 2;
-                        n.worldPosition = n.pivotPosition;
-                        n.worldPosition.x += scaleDifference;
-                        n.worldPosition.z += scaleDifference;
-
                         grid[x, y, z] = n;
 
-                        CreateNode(n, scaleXZ);
+                        int targetGridIndex = gridIndex - 1;
+
+                        if (targetGridIndex >= 0)
+                        {
+                            FindSubNodes(n, scaleXZ, targetGridIndex);
+
+                            Debug.Log("Subnodes count: " + n.subNodes.Count);
+                        }
+
+                        CreateNode(n, scaleXZ, gridIndex);
                     }
                 }
             }
@@ -131,23 +145,60 @@ namespace HOMM_BM
             return grid;
         }
 
-        void CreateNode(Node node, float scaleXZ)
+        void FindSubNodes(Node node, int currentScale, int targetGridIndex)
         {
-            GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            Destroy(gameObject.GetComponent<Collider>());
+            int steps = currentScale - scales[0];
 
-            Vector3 targetPosition = node.pivotPosition;
-            gameObject.transform.localScale = (Vector3.one * 0.95f) * scaleXZ;
+            Vector3Int scaledPosition = node.position;
+            scaledPosition.x *= currentScale;
+            scaledPosition.z *= currentScale;
 
-            targetPosition.x += gameObject.transform.localScale.x / 2;
-            targetPosition.z += gameObject.transform.localScale.z / 2;
+            Debug.Log("Steps: " + steps);
 
-            gameObject.transform.position = targetPosition;
-            gameObject.transform.eulerAngles = new Vector3(90, 0, 0);
-            gameObject.transform.parent = gridParent;
+            for (int x = 0; x <= steps; x++)
+            {
+                for (int z = 0; z <= steps; z++)
+                {
+                    int _x = scaledPosition.x + x;
+                    int _z = scaledPosition.z + z;
+
+                    Node subNode = GetNode(_x, node.position.y, _z, targetGridIndex);
+                    if (subNode != null)
+                    {
+                        if (!node.subNodes.Contains(subNode))
+                        {
+                            node.subNodes.Add(subNode);
+                        }
+                    }
+                }
+            }
         }
 
-        Node GetNode(Vector3 worldPosition, int gridIndex)
+        void CreateNode(Node node, int scaleXZ, int gridIndex)
+        {
+            Vector3 targetPosition = node.pivotPosition;
+            Vector3 nodeScale = (Vector3.one * 0.95f) * scaleXZ;
+
+            targetPosition.x += nodeScale.x / 2;
+            targetPosition.z += nodeScale.z / 2;
+
+            node.worldPosition = targetPosition;
+
+            if (gridIndex == 0)
+            {
+                GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                Destroy(go.GetComponent<Collider>());
+
+                go.transform.position = targetPosition;
+                go.transform.eulerAngles = new Vector3(90, 0, 0);
+                go.transform.parent = gridParents[gridIndex].transform;
+                go.transform.localScale = nodeScale;
+
+                node.renderer = go.GetComponentInChildren<Renderer>();
+            }
+        }
+
+        public Node GetNode(Vector3 worldPosition, int gridIndex)
         {
             Vector3Int position = new Vector3Int
             {
@@ -159,19 +210,24 @@ namespace HOMM_BM
             return GetNode(position, gridIndex);
         }
 
-        Node GetNode(Vector3Int position, int gridIndex)
+        public Node GetNode(Vector3Int position, int gridIndex)
+        {
+            return GetNode(position.x, position.y, position.z, gridIndex);
+        }
+
+        public Node GetNode(int x, int y, int z, int gridIndex)
         {
             Vector3Int size = gridSizes[gridIndex];
 
-            if(position.x < 0 || position.y < 0 || position.z < 0
-                || position.x > size.x 
-                || position.y > size.y 
-                || position.z > size.z)
+            if (x < 0 || y < 0 || z < 0
+                || x > size.x
+                || y > size.y
+                || z > size.z)
             {
                 return null;
             }
 
-            return grids[gridIndex][position.x, position.y, position.z];
+            return grids[gridIndex][x, y, z];
         }
     }
 }

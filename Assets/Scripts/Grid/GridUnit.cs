@@ -8,5 +8,7 @@ namespace HOMM_BM
     {
         public int gridIndex = 0;
         public Vector3Int startPosition;
+        public Node currentNode;
+        public int stepsCount = 3;
     }
 }
