@@ -6,7 +6,13 @@ namespace HOMM_BM
 {
     public class GridManager : MonoBehaviour
     {
-        public Vector3 readExtents = new Vector3(.5f, .5f, .5f);
+        //Maybe change this to property
+        public Vector3 readExtents = new Vector3(.25f, .5f, .25f);
+        public Vector3 readOffset = new Vector3(0, .5f, 0);
+        //Can be property
+        public static List<Vector3> visualizeNodes = new List<Vector3>();
+        public bool visualizeCollisions = true;
+
         public float scaleY = 2;
         public int[] scales = { 1, 2 };
 
@@ -19,7 +25,10 @@ namespace HOMM_BM
 
         GameObject collisionObject;
 
+        //Maybe change this to property
         public static GridManager instance;
+
+        public static LayerMask ignoreForObstacles;
 
         private void Awake()
         {
@@ -27,6 +36,8 @@ namespace HOMM_BM
         }
         private void Start()
         {
+            ignoreForObstacles = ~(1 << 8);
+
             ReadLevel();
 
             //collisionObject = new GameObject("Collision");
@@ -39,6 +50,8 @@ namespace HOMM_BM
             //targetScale.y = 0.03f;
 
             //collisionObject.transform.localScale = targetScale;
+
+            Debug.Log("Grids: " + grids);
 
             GridUnit[] gridUnits = GameObject.FindObjectsOfType<GridUnit>();
             foreach (GridUnit unit in gridUnits)
@@ -114,48 +127,60 @@ namespace HOMM_BM
                     z = Mathf.FloorToInt((maxZ - minZ) / scales[i])
                 };
 
-                grids.Add(CreateGrid(gridSizes[i], scales[i], i));
+                grids.Add(CreateGrid(gridSizes[i]));
             }
         }
 
-        Node[,,] CreateGrid(Vector3Int gridSize, int scaleXZ, int gridIndex)
+        Node[,,] CreateGrid(Vector3Int gridSize)
         {
-            Node[,,] grid = new Node[gridSize.x + 1, gridSize.y + 1, gridSize.z + 1];
+            Debug.Log("Grid size: " + gridSize.y);
+            return new Node[gridSize.x + 1, gridSize.y + 1, gridSize.z + 1];
+        }
 
-            for (int x = 0; x < gridSize.x + 1; x++)
+        void CreateNodeOnGrid(Vector3Int position, int gridIndex)
+        {
+            int scaleXZ = scales[gridIndex];
+
+            Node n = new Node
             {
-                for (int z = 0; z < gridSize.z + 1; z++)
-                {
-                    for (int y = 0; y < gridSize.y + 1; y++)
-                    {
-                        Node n = new Node();
-                        n.position.x = x;
-                        n.position.y = y;
-                        n.position.z = z;
-                        n.gridIndex = gridIndex;
+                position = position,
+                gridIndex = gridIndex,
+                scaleXZ = scaleXZ
+            };
 
-                        n.pivotPosition.x = x * scaleXZ;
-                        n.pivotPosition.y = y * scaleY;
-                        n.pivotPosition.z = z * scaleXZ;
-                        n.pivotPosition += minPosition;
+            n.pivotPosition.x = n.position.x * scaleXZ;
+            n.pivotPosition.y = n.position.y * scaleY;
+            n.pivotPosition.z = n.position.z * scaleXZ;
+            n.pivotPosition += minPosition;
 
-                        grid[x, y, z] = n;
+            Vector3 nodeScale = (Vector3.one * 0.95f) * scaleXZ;
+            Vector3 targetPosition = n.pivotPosition;
 
-                        int targetGridIndex = gridIndex - 1;
+            targetPosition.x += nodeScale.x / 2;
+            targetPosition.z += nodeScale.z / 2;
 
-                        if (targetGridIndex >= 0)
-                        {
-                            FindSubNodes(n, scaleXZ, targetGridIndex);
+            n.worldPosition = targetPosition;
 
-                            Debug.Log("Subnodes count: " + n.subNodes.Count);
-                        }
+            grids[gridIndex][n.position.x, n.position.y, n.position.z] = n;
 
-                        CreateNode(n, scaleXZ, gridIndex);
-                    }
-                }
+            int targetGridIndex = gridIndex - 1;
+
+            if (targetGridIndex >= 0)
+            {
+                FindSubNodes(n, scaleXZ, targetGridIndex);
+
+                Debug.Log("Subnodes count: " + n.subNodes.Count);
+            }
+            else
+            {
+                n.UpdateWalkability();
+
             }
 
-            return grid;
+            if (n.IsWalkable())
+            {
+                CreateNodeReference(n, scaleXZ, gridIndex, nodeScale);
+            }
         }
 
         void FindSubNodes(Node node, int currentScale, int targetGridIndex)
@@ -187,40 +212,21 @@ namespace HOMM_BM
             }
         }
 
-        void CreateNode(Node node, int scaleXZ, int gridIndex)
+        void CreateNodeReference(Node node, int scaleXZ, int gridIndex, Vector3 nodeScale)
         {
-            Vector3 targetPosition = node.pivotPosition;
-            Vector3 nodeScale = (Vector3.one * 0.95f) * scaleXZ;
+            //Vector3 origin = node.worldPosition;
+            //origin.y += scaleY / 2;
 
-            targetPosition.x += nodeScale.x / 2;
-            targetPosition.z += nodeScale.z / 2;
-
-            node.worldPosition = targetPosition;
-
-            Vector3 origin = node.worldPosition;
-            origin.y += scaleY / 2;
-
-            Debug.DrawRay(node.worldPosition, Vector3.down * scaleY, Color.red, 5);
-            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, .5f))
-            {
-                node.worldPosition = hit.point;
-            }
+            //Debug.DrawRay(node.worldPosition, Vector3.down * scaleY, Color.red, 5);
+            //if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, .5f))
+            //{
+            //    node.worldPosition = hit.point;
+            //}
 
             if (gridIndex == 0)
             {
-                Collider[] colliders = Physics.OverlapBox(
-                node.worldPosition, readExtents, Quaternion.identity);
-
-                for (int i = 0; i < colliders.Length; i++)
-                {
-                    if (colliders[i].gameObject.layer != 9)
-                    {
-                        node.isWalkable = false;
-                    }
-                }
-
-                if (node.isWalkable == false)
-                    return;
+                //if (node.isWalkable == false)
+                //    return;
 
                 GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 Destroy(go.GetComponent<Collider>());
@@ -232,6 +238,29 @@ namespace HOMM_BM
 
                 node.renderer = go.GetComponentInChildren<Renderer>();
             }
+        }
+
+        public bool IsPositionInsideGrid(Vector3 worldPosition, int gridIndex) 
+        {
+            Vector3Int position = new Vector3Int();
+
+            worldPosition -= minPosition;
+
+            position.x = Mathf.RoundToInt(worldPosition.x / scales[gridIndex]);
+            position.y = Mathf.RoundToInt(worldPosition.y / scaleY);
+            position.z = Mathf.RoundToInt(worldPosition.z / scales[gridIndex]);
+
+            Vector3Int size = gridSizes[gridIndex];
+
+            if (position.x < 0 || position.y < 0 || position.z < 0
+                || position.x > size.x
+                || position.y > size.y
+                || position.z > size.z)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public Node GetNode(Vector3 worldPosition, int gridIndex)
@@ -265,7 +294,24 @@ namespace HOMM_BM
                 return null;
             }
 
+            if (grids[gridIndex][x, y, z] == null)
+            {
+                CreateNodeOnGrid(new Vector3Int(x, y, z), gridIndex);
+            }
+
             return grids[gridIndex][x, y, z];
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (visualizeCollisions)
+            {
+                Gizmos.color = Color.red;
+                for (int i = 0; i < visualizeNodes.Count; i++)
+                {
+                    Gizmos.DrawWireCube(visualizeNodes[i], readExtents);
+                }
+            }
         }
     }
 }

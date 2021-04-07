@@ -19,12 +19,36 @@ namespace HOMM_BM
         public LineRenderer pathLine;
         bool unitIsMoving;
 
+        bool waitForInteraction;
+
         public Material standardMaterial;
         public Material highlightedMaterial;
         public Material mouseOverMaterial;
 
         private void Update()
         {
+            if (targetUnit != null)
+            {
+                if (targetUnit.IsInteracting)
+                {
+                    if (waitForInteraction == false)
+                    {
+                        waitForInteraction = true;
+                    }
+
+                    return;
+                }
+                else
+                {
+                    if (waitForInteraction)
+                    {
+                        waitForInteraction = false;
+                        unitIsMoving = false;
+                        calculatePath = true;
+                    }
+                }
+            }
+
             if (unitIsMoving)
             {
                 if (targetUnit.MovingOnPath())
@@ -35,6 +59,17 @@ namespace HOMM_BM
             }
             else
             {
+                if (targetUnit != null)
+                {
+                    if (Input.GetKeyDown(KeyCode.Space))
+                    {
+                        targetUnit.PlayAttack();
+                        ClearHighlightedNodes();
+                        unitIsMoving = true;
+                        return;
+                    }
+                }
+
                 if (calculatePath)
                 {
                     CalculateWalkablePositions();
@@ -51,10 +86,7 @@ namespace HOMM_BM
                 return;
 
             FlowmapPathfinder flowmap = new FlowmapPathfinder(
-                    GridManager.instance,
-                    targetUnit.gridIndex,
-                    targetUnit.CurrentNode,
-                    targetUnit.stepsCount);
+                    GridManager.instance, targetUnit);
 
             reachableNodes = flowmap.CreateFlowmapForNode();
 
@@ -127,7 +159,7 @@ namespace HOMM_BM
                                     if (previousNode != currentNode)
                                     {
                                         HighlightNodes(currentNode);
-                                        GetPathFromMap(currentNode, targetUnit.CurrentNode, targetUnit.gridIndex);
+                                        GetPathFromMap(currentNode, targetUnit);
                                     }
                                 }
                             }
@@ -172,64 +204,68 @@ namespace HOMM_BM
             }
         }
 
-        void GetPathFromMap(Node currentNode, Node targetNode, int gridIndex)
+        void GetPathFromMap(Node origin, GridUnit gridUnit)
         {
             previousPath.Clear();
 
-            Node startNode = currentNode;
-            previousPath.Add(currentNode);
-            bool isPathValid = true;
+            List<Node> openSet = new List<Node>();
+            HashSet<Node> closedSet = new HashSet<Node>();
 
-            while (currentNode != targetNode)
+            openSet.Add(origin);
+            previousPath.Add(origin);
+
+            while (openSet.Count > 0)
             {
-                currentNode = GetNeighbour(currentNode, currentNode.steps, gridIndex);
+                Node currentNode = openSet[0];
+                int minSteps = currentNode.steps;
 
-                if (currentNode == null)
+                foreach (Node n in GetNeighbours(currentNode, gridUnit))
                 {
-                    isPathValid = false;
-                    break;
+                    if (!closedSet.Contains(n))
+                    {
+                        if (!openSet.Contains(n))
+                        {
+                            if (reachableNodes.Contains(n))
+                            {
+                                if (n.steps < minSteps)
+                                {
+                                    //minSteps = n.steps;
+                                    openSet.Add(n);
+                                    previousPath.Add(n);
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
-                previousPath.Add(currentNode);
-
-                if (startNode == currentNode)
-                {
-                    break;
-                }
+                openSet.Remove(currentNode);
+                closedSet.Add(currentNode);
             }
 
-            Debug.Log(previousPath.Count);
-            if (isPathValid)
-            {
-                LoadNodesToPath(previousPath);
-            }
-            else
-            {
-                ClearPathNodes();
-                previousPath.Clear();
-            }
+            LoadNodesToPath(previousPath);
         }
 
-        Node GetNeighbour(Node currentNode, int steps, int gridIndex)
+        List<Node> GetNeighbours(Node currentNode, GridUnit gridUnit)
         {
-            Node retVal = null;
-            int minSteps = steps;
+            List<Node> retVal = new List<Node>();
 
-            for (int x = -1; x <= 1; x++)
+            for (int y = -gridUnit.verticalStepsDown; y <= gridUnit.verticalStepsUp; y++)
             {
-                for (int z = -1; z <= 1; z++)
+                int _y = currentNode.position.y + y;
+
+                for (int x = -1; x <= 1; x++)
                 {
-                    int _x = currentNode.position.x + x;
-                    int _z = currentNode.position.z + z;
-
-                    Node node = GridManager.instance.GetNode(_x, currentNode.position.y, _z, gridIndex);
-
-                    if (node != null)
+                    for (int z = -1; z <= 1; z++)
                     {
-                        if (node.steps < minSteps)
+                        int _x = currentNode.position.x + x;
+                        int _z = currentNode.position.z + z;
+
+                        Node node = GridManager.instance.GetNode(_x, _y, _z, gridUnit.gridIndex);
+
+                        if (node != null)
                         {
-                            minSteps = node.steps;
-                            retVal = node;
+                            retVal.Add(node);
                         }
                     }
                 }

@@ -6,6 +6,9 @@ namespace HOMM_BM
 {
     public class GridUnit : MonoBehaviour, ISelectable
     {
+        Animator animator;
+        public AnimatorOverrideController overrideController;
+
         public int gridIndex = 0;
         public Vector3Int startPosition;
         public Node CurrentNode
@@ -16,6 +19,8 @@ namespace HOMM_BM
             }
         }
         public int stepsCount = 3;
+        public int verticalStepsUp = 1;
+        public int verticalStepsDown = 3;
 
         List<Node> currentPath = new List<Node>();
         float time;
@@ -23,15 +28,71 @@ namespace HOMM_BM
         bool isPathInitialized;
         float actualMovementSpeed;
 
+        bool isWalking;
+
+        bool isDirty;
+
         public float movementSpeed = 2f;
 
         Vector3 originPosition;
         Vector3 targetPosition;
+        
+        public bool IsInteracting
+        {
+            get
+            {
+                return animator.GetBool("isInteracting");
+            }
+        }
 
 
+        private void Awake()
+        {
+            gameObject.layer = 8;
+        }
+        private void Start()
+        {
+            animator = GetComponentInChildren<Animator>();
+
+            if (overrideController != null)
+                animator.runtimeAnimatorController = overrideController;
+
+            animator.applyRootMotion = false;
+        }
+        private void Update()
+        {
+            animator.applyRootMotion = IsInteracting;
+            animator.SetBool("isWalking", isWalking);
+
+            if (IsInteracting)
+            {
+                Vector3 deltaPosition = animator.deltaPosition;
+                transform.position += deltaPosition;
+
+                animator.transform.localPosition = Vector3.zero;
+
+                if (!isDirty)
+                {
+                    isDirty = true;
+                }
+            } else
+            {
+                if (isDirty)
+                {
+                    isDirty = false;
+
+                    transform.position = CurrentNode.worldPosition;
+                }
+            }
+        }
         public GridUnit GetGridUnit()
         {
             return this;
+        }
+
+        public void PlayAttack()
+        {
+            animator.Play("Jump Attack");
         }
 
         public bool MovingOnPath()
@@ -57,6 +118,7 @@ namespace HOMM_BM
                 transform.rotation = Quaternion.LookRotation(direction);
 
                 isPathInitialized = true;
+                isWalking = true;
             }
 
             time += Time.deltaTime * actualMovementSpeed;
@@ -70,6 +132,7 @@ namespace HOMM_BM
                 {
                     time = 1;
                     isFinished = true;
+                    isWalking = false;
                 }
             }
 

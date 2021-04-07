@@ -9,16 +9,21 @@ namespace HOMM_BM
         GridManager gridManager;
         int gridIndex;
         int stepsCount;
+        int verticalStepsUp;
+        int verticalStepsDown;
         Node origin;
+
 
         public delegate void OnCompleteCallback(List<Node> reachableNodes);
         OnCompleteCallback onCompleteCallback;
-        public FlowmapPathfinder(GridManager gridManager, int gridIndex, Node origin, int stepsCount, OnCompleteCallback onCompleteCallback = null)
+        public FlowmapPathfinder(GridManager gridManager, GridUnit gridUnit, OnCompleteCallback onCompleteCallback = null)
         {
             this.gridManager = gridManager;
-            this.gridIndex = gridIndex;
-            this.origin = origin;
-            this.stepsCount = stepsCount;
+            gridIndex = gridUnit.gridIndex;
+            origin = gridUnit.CurrentNode;
+            stepsCount = gridUnit.stepsCount;
+            verticalStepsUp = gridUnit.verticalStepsUp;
+            verticalStepsDown = gridUnit.verticalStepsDown;
             this.onCompleteCallback = onCompleteCallback;
         }
 
@@ -39,18 +44,21 @@ namespace HOMM_BM
                 int steps = currentNode.steps;
                 steps += 1;
 
-                foreach (Node n in GetNeighbours(currentNode))
+                if (steps < stepsCount)
                 {
-                    if (!closedSet.Contains(n))
+                    foreach (Node n in GetNeighbours(currentNode))
                     {
-                        if (!openSet.Contains(n))
+                        if (!closedSet.Contains(n))
                         {
-                            openSet.Add(n);
-                            n.steps = steps;
-
-                            if (n.steps <= stepsCount)
+                            if (!openSet.Contains(n))
                             {
-                                reachableNodes.Add(n);
+                                openSet.Add(n);
+                                n.steps = steps;
+
+                                if (n.steps <= stepsCount)
+                                {
+                                    reachableNodes.Add(n);
+                                }
                             }
                         }
                     }
@@ -67,31 +75,36 @@ namespace HOMM_BM
         {
             List<Node> retVal = new List<Node>();
 
-            for (int x = -1; x <= 1; x++)
+            for (int y = -verticalStepsDown; y <= verticalStepsUp; y++)
             {
-                int _x = currentNode.position.x + x;
-                int _z = currentNode.position.z;
+                int _y = currentNode.position.y + y;
 
-                Node neighbour = gridManager.GetNode(_x, currentNode.position.y, _z, gridIndex);
-
-                if (neighbour != null)
+                for (int x = -1; x <= 1; x++)
                 {
-                    if(neighbour.IsWalkable())
-                        retVal.Add(neighbour);
+                    int _x = currentNode.position.x + x;
+                    int _z = currentNode.position.z;
+
+                    Node neighbour = gridManager.GetNode(_x, _y, _z, gridIndex);
+
+                    if (neighbour != null)
+                    {
+                        if (neighbour.IsWalkable())
+                            retVal.Add(neighbour);
+                    }
                 }
-            }
 
-            for (int z = -1; z <= 1; z++)
-            {
-                int _x = currentNode.position.x;
-                int _z = currentNode.position.z + z;
-
-                Node neighbour = gridManager.GetNode(_x, currentNode.position.y, _z, gridIndex);
-
-                if (neighbour != null)
+                for (int z = -1; z <= 1; z++)
                 {
-                    if(neighbour.IsWalkable())
-                        retVal.Add(neighbour);
+                    int _x = currentNode.position.x;
+                    int _z = currentNode.position.z + z;
+
+                    Node neighbour = gridManager.GetNode(_x, _y, _z, gridIndex);
+
+                    if (neighbour != null)
+                    {
+                        if (neighbour.IsWalkable())
+                            retVal.Add(neighbour);
+                    }
                 }
             }
 
