@@ -9,6 +9,8 @@ namespace HOMM_BM
         //Maybe change this to property
         public Vector3 readExtents = new Vector3(.25f, .5f, .25f);
         public Vector3 readOffset = new Vector3(0, .5f, 0);
+        public float groundDistanceCheck = 1f;
+        public float groundDistanceOffset = .5f;
         //Can be property
         public static List<Vector3> visualizeNodes = new List<Vector3>();
         public bool visualizeCollisions = true;
@@ -40,23 +42,12 @@ namespace HOMM_BM
 
             ReadLevel();
 
-            //collisionObject = new GameObject("Collision");
-            //collisionObject.AddComponent<BoxCollider>();
-
-            //Node middleNode = GetNode(gridSizes[0].x / 2, 0, gridSizes[0].z / 2, 0);
-            //collisionObject.transform.position = middleNode.worldPosition;
-
-            //Vector3 targetScale = Vector3.one * 1000;
-            //targetScale.y = 0.03f;
-
-            //collisionObject.transform.localScale = targetScale;
-
             Debug.Log("Grids: " + grids);
 
-            GridUnit[] gridUnits = GameObject.FindObjectsOfType<GridUnit>();
+            GridUnit[] gridUnits = FindObjectsOfType<GridUnit>();
             foreach (GridUnit unit in gridUnits)
             {
-                Node n = GetNode(unit.startPosition, unit.gridIndex);
+                Node n = GetNode(unit.transform.position, unit.gridIndex);
                 unit.transform.position = n.worldPosition;
                 Debug.Log("World position: " + n.worldPosition);
             }
@@ -64,7 +55,7 @@ namespace HOMM_BM
 
         void ReadLevel()
         {
-            GridPosition[] gridPositions = GameObject.FindObjectsOfType<GridPosition>();
+            GridPosition[] gridPositions = FindObjectsOfType<GridPosition>();
 
             float minX = float.MaxValue;
             float maxX = float.MinValue;
@@ -179,7 +170,7 @@ namespace HOMM_BM
 
             if (n.IsWalkable())
             {
-                CreateNodeReference(n, scaleXZ, gridIndex, nodeScale);
+                CreateNodeReference(n, gridIndex, nodeScale);
             }
         }
 
@@ -212,26 +203,17 @@ namespace HOMM_BM
             }
         }
 
-        void CreateNodeReference(Node node, int scaleXZ, int gridIndex, Vector3 nodeScale)
+        void CreateNodeReference(Node node, int gridIndex, Vector3 nodeScale)
         {
-            //Vector3 origin = node.worldPosition;
-            //origin.y += scaleY / 2;
-
-            //Debug.DrawRay(node.worldPosition, Vector3.down * scaleY, Color.red, 5);
-            //if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, .5f))
-            //{
-            //    node.worldPosition = hit.point;
-            //}
-
             if (gridIndex == 0)
             {
-                //if (node.isWalkable == false)
-                //    return;
-
                 GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 Destroy(go.GetComponent<Collider>());
 
-                go.transform.position = node.worldPosition;
+                Vector3 targetPosition = node.worldPosition;
+                targetPosition.y += .01f;
+
+                go.transform.position = targetPosition;
                 go.transform.eulerAngles = new Vector3(90, 0, 0);
                 go.transform.parent = gridParents[gridIndex].transform;
                 go.transform.localScale = nodeScale;
@@ -240,7 +222,7 @@ namespace HOMM_BM
             }
         }
 
-        public bool IsPositionInsideGrid(Vector3 worldPosition, int gridIndex) 
+        public bool IsPositionInsideGrid(Vector3 worldPosition, int gridIndex)
         {
             Vector3Int position = new Vector3Int();
 
@@ -300,6 +282,24 @@ namespace HOMM_BM
             }
 
             return grids[gridIndex][x, y, z];
+        }
+
+        public void ClearNode(Node node)
+        {
+            //grids[node.gridIndex][node.position.x, node.position.y, node.position.z] = null;
+
+            if (node.renderer != null)
+            {
+                Destroy(node.renderer.gameObject);
+            }
+        }
+
+        public void ClearGrids()
+        {
+            for (int i = 0; i < grids.Count; i++)
+            {
+                grids[i] = CreateGrid(gridSizes[i]);
+            }
         }
 
         private void OnDrawGizmos()

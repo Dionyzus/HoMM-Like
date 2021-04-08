@@ -36,7 +36,6 @@ namespace HOMM_BM
             origin.steps = 0;
             reachableNodes.Add(origin);
             openSet.Add(origin);
-            //int stepsAmount = 0;
 
             while (openSet.Count > 0)
             {

@@ -9,8 +9,9 @@ namespace HOMM_BM
         Animator animator;
         public AnimatorOverrideController overrideController;
 
+        Collider unitCollider;
+
         public int gridIndex = 0;
-        public Vector3Int startPosition;
         public Node CurrentNode
         {
             get
@@ -32,11 +33,14 @@ namespace HOMM_BM
 
         bool isDirty;
 
+        public bool killUnitDebug;
+        public GameObject onDeathEnable;
+
         public float movementSpeed = 2f;
 
         Vector3 originPosition;
         Vector3 targetPosition;
-        
+
         public bool IsInteracting
         {
             get
@@ -58,9 +62,18 @@ namespace HOMM_BM
                 animator.runtimeAnimatorController = overrideController;
 
             animator.applyRootMotion = false;
+            unitCollider = GetComponentInChildren<Collider>();
         }
         private void Update()
         {
+            if (killUnitDebug)
+            {
+                enabled = false;
+                KillUnit();
+                killUnitDebug = false;
+                return;
+            }
+
             animator.applyRootMotion = IsInteracting;
             animator.SetBool("isWalking", isWalking);
 
@@ -75,7 +88,8 @@ namespace HOMM_BM
                 {
                     isDirty = true;
                 }
-            } else
+            }
+            else
             {
                 if (isDirty)
                 {
@@ -111,7 +125,7 @@ namespace HOMM_BM
                 Vector3 direction = targetPosition - originPosition;
                 direction.y = 0;
 
-                if(direction == Vector3.zero)
+                if (direction == Vector3.zero)
                 {
                     direction = transform.forward;
                 }
@@ -149,6 +163,29 @@ namespace HOMM_BM
 
             path.Reverse();
             currentPath = path;
+        }
+
+        public void KillUnit()
+        {
+            animator.applyRootMotion = true;
+            animator.Play("Death");
+            animator.SetBool("isInteracting", true);
+            unitCollider.enabled = false;
+
+            Collider[] colliders = GetComponentsInChildren<Collider>();
+            foreach (Collider c in colliders)
+            {
+                c.gameObject.layer = 9;
+            }
+
+            animator.transform.parent = null;
+
+            if (onDeathEnable != null)
+            {
+                onDeathEnable.SetActive(true);
+            }
+
+            GameManager.instance.UnitDeath(this);
         }
     }
 }

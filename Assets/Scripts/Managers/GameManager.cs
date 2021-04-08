@@ -14,6 +14,9 @@ namespace HOMM_BM
 
         List<Node> previousPath = new List<Node>();
 
+        GameObject movePath;
+        GridUnit storeUnit;
+
         Node previousNode;
 
         public LineRenderer pathLine;
@@ -25,8 +28,25 @@ namespace HOMM_BM
         public Material highlightedMaterial;
         public Material mouseOverMaterial;
 
+        public static GameManager instance;
+
+        private void Awake()
+        {
+            instance = this;
+        }
+
         private void Update()
         {
+            if(storeUnit != null)
+            {
+                if (storeUnit.IsInteracting)
+                {
+                    return;
+                } else
+                {
+                    storeUnit = null;
+                }
+            }
             if (targetUnit != null)
             {
                 if (targetUnit.IsInteracting)
@@ -70,14 +90,38 @@ namespace HOMM_BM
                     }
                 }
 
-                if (calculatePath)
-                {
-                    CalculateWalkablePositions();
-                    calculatePath = false;
-                }
-
                 HandleMouse();
             }
+
+            if (calculatePath)
+            {
+                CalculateWalkablePositions();
+                calculatePath = false;
+            }
+        }
+
+        void ClearReachableNodes()
+        {
+            foreach (Node n in reachableNodes)
+            {
+                foreach (Node sn in n.subNodes)
+                {
+                    GridManager.instance.ClearNode(sn);
+                }
+
+                GridManager.instance.ClearNode(n);
+            }
+
+            foreach (Node n in highlightedNodes)
+            {
+                if (n.renderer != null)
+                {
+                    Destroy(n.renderer.gameObject);
+                }
+            }
+            highlightedNodes.Clear();
+
+            GridManager.instance.ClearGrids();
         }
 
         void CalculateWalkablePositions()
@@ -88,16 +132,9 @@ namespace HOMM_BM
             FlowmapPathfinder flowmap = new FlowmapPathfinder(
                     GridManager.instance, targetUnit);
 
-            reachableNodes = flowmap.CreateFlowmapForNode();
+            ClearReachableNodes();
 
-            foreach (Node n in highlightedNodes)
-            {
-                if (n.renderer != null)
-                {
-                    n.renderer.material = standardMaterial;
-                }
-            }
-            highlightedNodes.Clear();
+            reachableNodes = flowmap.CreateFlowmapForNode();
 
             foreach (Node n in reachableNodes)
             {
@@ -176,7 +213,9 @@ namespace HOMM_BM
                 foreach (Node n in previousNode.subNodes)
                 {
                     if (n.renderer != null)
+                    {
                         n.renderer.material = highlightedMaterial;
+                    }
                 }
 
                 if (previousNode.renderer != null)
@@ -213,6 +252,11 @@ namespace HOMM_BM
 
             openSet.Add(origin);
             previousPath.Add(origin);
+
+            if (movePath == null)
+            {
+                movePath = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            }
 
             while (openSet.Count > 0)
             {
@@ -274,11 +318,6 @@ namespace HOMM_BM
             return retVal;
         }
 
-        void ClearPathNodes()
-        {
-            pathLine.positionCount = 0;
-        }
-
         void LoadNodesToPath(List<Node> nodes)
         {
             pathLine.positionCount = nodes.Count;
@@ -287,6 +326,17 @@ namespace HOMM_BM
             {
                 pathLine.SetPosition(i, nodes[i].worldPosition + Vector3.up * 0.3f);
             }
+        }
+
+        public void UnitDeath(GridUnit gridUnit)
+        {
+            if (targetUnit == gridUnit)
+            {
+                targetUnit = null;
+            }
+
+            storeUnit = gridUnit;
+            calculatePath = true;
         }
     }
 }

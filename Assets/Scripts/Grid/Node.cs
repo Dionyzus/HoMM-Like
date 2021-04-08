@@ -25,16 +25,25 @@ namespace HOMM_BM
 
             if (gridIndex != 0)
             {
-                for (int i = 0; i < subNodes.Count; i++)
+                if (subNodes.Count == scaleXZ * 2)
                 {
-                    subNodes[i].UpdateWalkability();
+                    retVal = true;
 
-                    if (subNodes[i].isWalkable == false)
+                    for (int i = 0; i < subNodes.Count; i++)
                     {
-                        retVal = false;
-                        continue;
+                        subNodes[i].UpdateWalkability();
+
+                        if (subNodes[i].isWalkable == false)
+                        {
+                            retVal = false;
+                            break;
+                        }
                     }
                 }
+            }
+            else
+            {
+                UpdateWalkability();
             }
 
             return retVal;
@@ -62,11 +71,13 @@ namespace HOMM_BM
         public void UpdateWalkability()
         {
             Vector3 origin = worldPosition;
-            origin.y += scaleXZ / 2;
+            origin.y += GridManager.instance.groundDistanceOffset;
 
-            Debug.DrawRay(worldPosition, Vector3.down * scaleXZ, Color.red, 5);
+            float distance = GridManager.instance.groundDistanceCheck;
 
-            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, scaleXZ))
+            Debug.DrawRay(worldPosition, Vector3.down * distance, Color.red, 5);
+
+            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, distance, GridManager.ignoreForObstacles))
             {
                 if (hit.transform.gameObject.layer == 9)
                 {
