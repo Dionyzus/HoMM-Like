@@ -20,6 +20,9 @@ namespace HOMM_BM
 
         public static LayerMask ignoreForObstacles;
 
+        public bool visualizeCollisions = true;
+        public static List<Vector3> visualizeNodes = new List<Vector3>();
+
         public static GridManager instance;
         private void Awake()
         {
@@ -98,11 +101,11 @@ namespace HOMM_BM
                     y = Mathf.FloorToInt((maxY - minY) / scaleY),
                     z = Mathf.FloorToInt((maxZ - minZ) / scales[i])
                 };
-                grids.Add(CreateGrid(gridSizes[i], scales[i], i));
+                grids.Add(CreateGrid(gridSizes[i]));
             }
         }
 
-        Node[,,] CreateGrid(Vector3Int gridSize, int scaleXZ, int gridIndex)
+        Node[,,] CreateGrid(Vector3Int gridSize)
         {
             Node[,,] grid = new Node[gridSize.x + 1, gridSize.y + 1, gridSize.z + 1];
 
@@ -152,9 +155,6 @@ namespace HOMM_BM
         {
             if (scaleIndex == 0)
             {
-                //if (node.isWalkable == false)
-                //    return;
-
                 GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 Destroy(go.GetComponent<Collider>());
                 Vector3 targetPosition = node.worldPosition;
@@ -257,20 +257,18 @@ namespace HOMM_BM
         {
             for (int i = 0; i < grids.Count; i++)
             {
-                grids[i] = CreateGrid(gridSizes[i], scales[i], i);
+                grids[i] = CreateGrid(gridSizes[i]);
             }
         }
 
-        public bool visualizeCollision = true;
-        public static List<Vector3> visualizedNodes = new List<Vector3>();
         private void OnDrawGizmos()
         {
-            if (visualizeCollision)
+            if (visualizeCollisions)
             {
                 Gizmos.color = Color.red;
-                for (int i = 0; i < visualizedNodes.Count; i++)
+                for (int i = 0; i < visualizeNodes.Count; i++)
                 {
-                    Gizmos.DrawWireCube(visualizedNodes[i], readExtents);
+                    Gizmos.DrawWireCube(visualizeNodes[i], readExtents);
                 }
             }
         }

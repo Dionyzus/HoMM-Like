@@ -13,7 +13,7 @@ namespace HOMM_BM
                 return GridManager.instance.GetNode(transform.position, gridIndex);
             }
         }
-        public int steps = 3;
+        public int stepsCount = 3;
         public int verticalStepsUp = 1;
         public int verticalStepsDown = 3;
 

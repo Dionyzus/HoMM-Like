@@ -7,7 +7,7 @@ namespace HOMM_BM
         GridManager gridManager;
         int gridIndex;
         int stepsCount;
-        Node originNode;
+        Node origin;
 
         public delegate void OnCompleteCallback(List<Node> reachableNodes);
         OnCompleteCallback onCompleteCallback;
@@ -18,9 +18,9 @@ namespace HOMM_BM
         {
             this.gridManager = gridManager;
             gridIndex = gridUnit.gridIndex;
-            stepsCount = gridUnit.steps;
+            stepsCount = gridUnit.stepsCount;
             this.onCompleteCallback = onCompleteCallback;
-            originNode = gridUnit.CurrentNode;
+            origin = gridUnit.CurrentNode;
             verticalStepsUp = gridUnit.verticalStepsUp;
             verticalStepsDown = gridUnit.verticalStepsDown;
         }
@@ -30,9 +30,9 @@ namespace HOMM_BM
             List<Node> openSet = new List<Node>();
             HashSet<Node> closedSet = new HashSet<Node>();
 
-            originNode.steps = 0;
-            reachableNodes.Add(originNode);
-            openSet.Add(originNode);
+            origin.steps = 0;
+            reachableNodes.Add(origin);
+            openSet.Add(origin);
             while (openSet.Count > 0)
             {
                 Node currentNode = openSet[0];

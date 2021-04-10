@@ -78,7 +78,7 @@ namespace HOMM_BM
             //Debug.DrawLine(origin, origin + GridManager.instance.readExtents / 2, Color.blue, 20);
             //Debug.DrawLine(origin, origin - GridManager.instance.readExtents / 2, Color.yellow, 20);
 
-            GridManager.visualizedNodes.Add(origin);
+            GridManager.visualizeNodes.Add(origin);
 
             for (int i = 0; i < colliders.Length; i++)
             {
