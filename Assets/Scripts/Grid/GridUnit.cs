@@ -1,16 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace HOMM_BM
 {
     public class GridUnit : MonoBehaviour, ISelectable
     {
-        Animator animator;
-        public AnimatorOverrideController overrideController;
-
-        Collider unitCollider;
-
         public int gridIndex = 0;
         public Node CurrentNode
         {
@@ -19,7 +13,7 @@ namespace HOMM_BM
                 return GridManager.instance.GetNode(transform.position, gridIndex);
             }
         }
-        public int stepsCount = 3;
+        public int steps = 3;
         public int verticalStepsUp = 1;
         public int verticalStepsDown = 3;
 
@@ -27,20 +21,22 @@ namespace HOMM_BM
         float time;
         int index;
         bool isPathInitialized;
+        Vector3 originPosition;
+        Vector3 targetPosition;
+        public GridAction currentGridAction;
+
+        public float movementSpeed = 2;
         float actualMovementSpeed;
 
         bool isWalking;
-
         bool isDirty;
 
-        public bool killUnitDebug;
         public GameObject onDeathEnable;
 
-        public float movementSpeed = 2f;
+        bool moveIsBasedOnAnimation;
+        float animationLength;
 
-        Vector3 originPosition;
-        Vector3 targetPosition;
-
+        public bool isUnitDeadDebug;
         public bool IsInteracting
         {
             get
@@ -49,28 +45,30 @@ namespace HOMM_BM
             }
         }
 
+        Animator animator;
+        public AnimatorOverrideController overrideController;
+        Collider unitCollider;
 
-        private void Awake()
+        void Awake()
         {
             gameObject.layer = 8;
         }
-        private void Start()
+        void Start()
         {
             animator = GetComponentInChildren<Animator>();
-
             if (overrideController != null)
                 animator.runtimeAnimatorController = overrideController;
 
             animator.applyRootMotion = false;
             unitCollider = GetComponentInChildren<Collider>();
         }
-        private void Update()
+        void Update()
         {
-            if (killUnitDebug)
+            if (isUnitDeadDebug)
             {
                 enabled = false;
                 KillUnit();
-                killUnitDebug = false;
+                isUnitDeadDebug = false;
                 return;
             }
 
@@ -83,18 +81,14 @@ namespace HOMM_BM
                 transform.position += deltaPosition;
 
                 animator.transform.localPosition = Vector3.zero;
-
                 if (!isDirty)
-                {
                     isDirty = true;
-                }
             }
             else
             {
                 if (isDirty)
                 {
                     isDirty = false;
-
                     transform.position = CurrentNode.worldPosition;
                 }
             }
@@ -103,12 +97,11 @@ namespace HOMM_BM
         {
             return this;
         }
-
-        public void PlayAttack()
+        public void PlayAnimation(string animation)
         {
-            animator.Play("Jump Attack");
+            animator.applyRootMotion = true;
+            animator.Play(animation);
         }
-
         public bool MovingOnPath()
         {
             bool isFinished = false;
@@ -122,9 +115,13 @@ namespace HOMM_BM
                 float distance = Vector3.Distance(originPosition, targetPosition);
                 actualMovementSpeed = movementSpeed / distance;
 
+                if (moveIsBasedOnAnimation)
+                {
+                    actualMovementSpeed = (distance / animationLength) / distance; //0-1
+                }
+
                 Vector3 direction = targetPosition - originPosition;
                 direction.y = 0;
-
                 if (direction == Vector3.zero)
                 {
                     direction = transform.forward;
@@ -135,18 +132,36 @@ namespace HOMM_BM
                 isWalking = true;
             }
 
-            time += Time.deltaTime * actualMovementSpeed;
+            if (!moveIsBasedOnAnimation)
+            {
+                time += Time.deltaTime * actualMovementSpeed;
+            }
+            else
+            {
+                if (animator.GetBool("isMoving"))
+                {
+                    time += Time.deltaTime * actualMovementSpeed;
+                }
+                else
+                {
+                    if (time > 0)
+                    {
+                        time = 1;
+                    }
+                }
+            }
 
             if (time > 1)
             {
                 isPathInitialized = false;
 
-                index += 1;
+                index++;
                 if (index > currentPath.Count - 1)
                 {
                     time = 1;
                     isFinished = true;
                     isWalking = false;
+                    moveIsBasedOnAnimation = false;
                 }
             }
 
@@ -155,20 +170,30 @@ namespace HOMM_BM
             return isFinished;
         }
 
-        public void LoadPathAndStartMoving(List<Node> path)
+        public void LoadPathAndStartMoving(List<Node> path, bool reverse = true)
         {
+            moveIsBasedOnAnimation = false;
             isPathInitialized = false;
             index = 0;
             time = 0;
 
-            path.Reverse();
+            if (reverse)
+                path.Reverse();
             currentPath = path;
         }
-
+        public void LoadGridActionToMove(List<Node> path, AnimationClip animationClip)
+        {
+            isPathInitialized = false;
+            index = 0;
+            time = 0;
+            moveIsBasedOnAnimation = true;
+            animationLength = animationClip.length;
+            currentPath = path;
+        }
         public void KillUnit()
         {
             animator.applyRootMotion = true;
-            animator.Play("Death");
+            animator.Play("Dying");
             animator.SetBool("isInteracting", true);
             unitCollider.enabled = false;
 
@@ -177,14 +202,12 @@ namespace HOMM_BM
             {
                 c.gameObject.layer = 9;
             }
-
             animator.transform.parent = null;
 
             if (onDeathEnable != null)
             {
                 onDeathEnable.SetActive(true);
             }
-
             GameManager.instance.UnitDeath(this);
         }
     }

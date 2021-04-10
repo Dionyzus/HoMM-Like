@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace HOMM_BM
@@ -8,66 +7,59 @@ namespace HOMM_BM
     {
         public GridUnit targetUnit;
         public bool calculatePath;
-
         List<Node> highlightedNodes = new List<Node>();
-        List<Node> reachableNodes = new List<Node>();
-
-        List<Node> previousPath = new List<Node>();
-
-        GameObject movePath;
-        GridUnit storeUnit;
-
-        Node previousNode;
-
-        public LineRenderer pathLine;
-        bool unitIsMoving;
-
-        bool waitForInteraction;
+        [HideInInspector]
+        public List<Node> reachableNodes = new List<Node>();
 
         public Material standardMaterial;
         public Material highlightedMaterial;
         public Material mouseOverMaterial;
 
-        public static GameManager instance;
+        [HideInInspector]
+        public Node previousNode;
 
+        public LineRenderer pathLine;
+        [HideInInspector]
+        public bool unitIsMoving;
+        bool waitForInteraction;
+
+        GridUnit storeUnit;
+        MouseLogic currentMouseLogic;
+        public MouseLogic selectMove;
+        public MouseLogic targetNodeAction;
+
+        public static GameManager instance;
         private void Awake()
         {
             instance = this;
         }
-
         private void Update()
         {
-            if(storeUnit != null)
+            if (storeUnit != null)
             {
                 if (storeUnit.IsInteracting)
-                {
                     return;
-                } else
-                {
-                    storeUnit = null;
-                }
+                storeUnit = null;
             }
-            if (targetUnit != null)
-            {
-                if (targetUnit.IsInteracting)
-                {
-                    if (waitForInteraction == false)
-                    {
-                        waitForInteraction = true;
-                    }
 
-                    return;
-                }
-                else
-                {
-                    if (waitForInteraction)
-                    {
-                        waitForInteraction = false;
-                        unitIsMoving = false;
-                        calculatePath = true;
-                    }
-                }
-            }
+            //if (targetUnit != null)
+            //{
+            //    if (targetUnit.isInteracting)
+            //    {
+            //        if (waitForInteraction == false)
+            //            waitForInteraction = true;
+            //        return;
+            //    }
+            //    else
+            //    {
+            //        if (waitForInteraction)
+            //        {
+            //            waitForInteraction = false;
+            //            characterIsMoving = false;
+            //            calculatePath = true;
+            //        }
+            //    }
+            //}
 
             if (unitIsMoving)
             {
@@ -83,7 +75,7 @@ namespace HOMM_BM
                 {
                     if (Input.GetKeyDown(KeyCode.Space))
                     {
-                        targetUnit.PlayAttack();
+                        targetUnit.PlayAnimation("Jump Attack");
                         ClearHighlightedNodes();
                         unitIsMoving = true;
                         return;
@@ -92,130 +84,92 @@ namespace HOMM_BM
 
                 HandleMouse();
             }
-
             if (calculatePath)
             {
                 CalculateWalkablePositions();
                 calculatePath = false;
             }
         }
-
         void ClearReachableNodes()
         {
-            foreach (Node n in reachableNodes)
+            foreach (Node node in reachableNodes)
             {
-                foreach (Node sn in n.subNodes)
+                foreach (Node subNode in node.subNodes)
                 {
-                    GridManager.instance.ClearNode(sn);
+                    GridManager.instance.ClearNode(subNode);
                 }
-
-                GridManager.instance.ClearNode(n);
+                GridManager.instance.ClearNode(node);
             }
 
-            foreach (Node n in highlightedNodes)
+            foreach (Node node in highlightedNodes)
             {
-                if (n.renderer != null)
-                {
-                    Destroy(n.renderer.gameObject);
-                }
+                GridManager.instance.ClearNode(node);
             }
+
             highlightedNodes.Clear();
 
             GridManager.instance.ClearGrids();
         }
-
         void CalculateWalkablePositions()
         {
             if (targetUnit == null)
                 return;
 
-            FlowmapPathfinder flowmap = new FlowmapPathfinder(
-                    GridManager.instance, targetUnit);
+            FlowmapPathfinder flowmapPathfinder =
+                new FlowmapPathfinder(GridManager.instance, targetUnit);
 
             ClearReachableNodes();
 
-            reachableNodes = flowmap.CreateFlowmapForNode();
+            reachableNodes = flowmapPathfinder.CreateFlowmapForNode();
 
-            foreach (Node n in reachableNodes)
+            foreach (Node node in reachableNodes)
             {
-                for (int i = 0; i < n.subNodes.Count; i++)
+                for (int i = 0; i < node.subNodes.Count; i++)
                 {
-                    if (n.subNodes[i].renderer != null)
+                    if (node.subNodes[i].renderer != null)
                     {
-                        highlightedNodes.Add(n.subNodes[i]);
-                        n.subNodes[i].renderer.material = highlightedMaterial;
+                        highlightedNodes.Add(node.subNodes[i]);
+                        node.subNodes[i].renderer.material = highlightedMaterial;
                     }
                 }
 
-                if (n.renderer != null)
+                if (node.renderer != null)
                 {
-                    highlightedNodes.Add(n);
-                    n.renderer.material = highlightedMaterial;
+                    highlightedNodes.Add(node);
+                    node.renderer.material = highlightedMaterial;
                 }
             }
         }
 
         void HandleMouse()
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                currentMouseLogic = selectMove;
+                Debug.Log("Select and move");
+            }
 
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                currentMouseLogic = targetNodeAction;
+                Debug.Log("targe node");
+            }
+
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit, 100))
             {
-                ISelectable selectable = hit.transform.GetComponentInParent<ISelectable>();
-                if (selectable != null)
-                {
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        if (selectable.GetGridUnit() != targetUnit)
-                        {
-                            targetUnit = selectable.GetGridUnit();
-                            calculatePath = true;
-                        }
-                    }
-                }
-                else
-                {
-                    if (targetUnit != null)
-                    {
-                        if (Input.GetMouseButtonDown(0))
-                        {
-                            if (previousPath.Count > 0)
-                            {
-                                ClearHighlightedNodes();
-                                targetUnit.LoadPathAndStartMoving(previousPath);
-                                unitIsMoving = true;
-                            }
-                        }
-                        Node currentNode = GridManager.instance.GetNode(hit.point, targetUnit.gridIndex);
-                        if (currentNode != null)
-                        {
-                            if (reachableNodes.Contains(currentNode))
-                            {
-                                if (currentNode.IsWalkable())
-                                {
-                                    if (previousNode != currentNode)
-                                    {
-                                        HighlightNodes(currentNode);
-                                        GetPathFromMap(currentNode, targetUnit);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                if (currentMouseLogic != null)
+                    currentMouseLogic.InteractTick(this, hit);
             }
         }
-
-        void ClearHighlightedNodes()
+        public void ClearHighlightedNodes()
         {
             if (previousNode != null)
             {
-                foreach (Node n in previousNode.subNodes)
+                foreach (Node node in previousNode.subNodes)
                 {
-                    if (n.renderer != null)
-                    {
-                        n.renderer.material = highlightedMaterial;
-                    }
+                    if (node.renderer != null)
+                        node.renderer.material = highlightedMaterial;
                 }
 
                 if (previousNode.renderer != null)
@@ -223,18 +177,19 @@ namespace HOMM_BM
                     previousNode.renderer.material = highlightedMaterial;
                 }
             }
+
+            highlightedNodes.Clear();
         }
 
-        void HighlightNodes(Node currentNode)
+        public void HighlightNodes(Node currentNode)
         {
             ClearHighlightedNodes();
-
             previousNode = currentNode;
 
-            foreach (Node n in currentNode.subNodes)
+            foreach (Node node in currentNode.subNodes)
             {
-                if (n.renderer != null)
-                    n.renderer.material = mouseOverMaterial;
+                if (node.renderer != null)
+                    node.renderer.material = mouseOverMaterial;
             }
 
             if (currentNode.renderer != null)
@@ -242,52 +197,76 @@ namespace HOMM_BM
                 currentNode.renderer.material = mouseOverMaterial;
             }
         }
-
-        void GetPathFromMap(Node origin, GridUnit gridUnit)
+        [HideInInspector]
+        public List<Node> previousPath = new List<Node>();
+        public void GetPathFromMap(Node origin, GridUnit gridUnit)
         {
             previousPath.Clear();
 
             List<Node> openSet = new List<Node>();
             HashSet<Node> closedSet = new HashSet<Node>();
-
             openSet.Add(origin);
             previousPath.Add(origin);
 
-            if (movePath == null)
-            {
-                movePath = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            }
-
             while (openSet.Count > 0)
             {
-                Node currentNode = openSet[0];
-                int minSteps = currentNode.steps;
+                Node cn = openSet[0];
+                int minStep = cn.steps;
 
-                foreach (Node n in GetNeighbours(currentNode, gridUnit))
+                foreach (Node node in GetNeighbours(cn, gridUnit))
                 {
-                    if (!closedSet.Contains(n))
+                    if (!closedSet.Contains(node))
                     {
-                        if (!openSet.Contains(n))
+                        if (!openSet.Contains(node))
                         {
-                            if (reachableNodes.Contains(n))
+                            if (reachableNodes.Contains(node))
                             {
-                                if (n.steps < minSteps)
+                                if (node.steps < minStep)
                                 {
-                                    //minSteps = n.steps;
-                                    openSet.Add(n);
-                                    previousPath.Add(n);
+                                    openSet.Add(node);
+                                    previousPath.Add(node);
                                     break;
                                 }
                             }
                         }
                     }
                 }
-
-                openSet.Remove(currentNode);
-                closedSet.Add(currentNode);
+                openSet.Remove(cn);
+                closedSet.Add(cn);
             }
 
             LoadNodesToPath(previousPath);
+            //Node startNode = cn;
+            //previousPath.Add(cn);
+
+            //bool isValidPath = true;
+
+            //while (cn != targetNode)
+            //{
+            //    cn = GetNeighbour(cn, cn.step, gridIndex);
+
+            //    if (cn == null)
+            //    {
+            //        isValidPath = false;
+            //        break;
+            //    }
+
+            //    previousPath.Add(cn);
+            //    if (startNode == cn)
+            //    {
+            //        Debug.LogWarning("Infinite while loop!");
+            //        break;
+            //    }
+            //}
+            //if (isValidPath)
+            //{
+            //    LoadNodesToPath(previousPath);
+            //}
+            //else
+            //{
+            //    ClearNodesPath();
+            //    previousPath.Clear();
+            //}
         }
 
         List<Node> GetNeighbours(Node currentNode, GridUnit gridUnit)
@@ -306,7 +285,6 @@ namespace HOMM_BM
                         int _z = currentNode.position.z + z;
 
                         Node node = GridManager.instance.GetNode(_x, _y, _z, gridUnit.gridIndex);
-
                         if (node != null)
                         {
                             retVal.Add(node);
@@ -314,26 +292,22 @@ namespace HOMM_BM
                     }
                 }
             }
-
             return retVal;
         }
 
-        void LoadNodesToPath(List<Node> nodes)
+        public void LoadNodesToPath(List<Node> nodes)
         {
             pathLine.positionCount = nodes.Count;
-
             for (int i = 0; i < nodes.Count; i++)
             {
-                pathLine.SetPosition(i, nodes[i].worldPosition + Vector3.up * 0.3f);
+                pathLine.SetPosition(i, nodes[i].worldPosition + Vector3.up * .3f);
             }
         }
 
         public void UnitDeath(GridUnit gridUnit)
         {
             if (targetUnit == gridUnit)
-            {
                 targetUnit = null;
-            }
 
             storeUnit = gridUnit;
             calculatePath = true;
