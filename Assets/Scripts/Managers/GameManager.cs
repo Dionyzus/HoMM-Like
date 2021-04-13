@@ -89,6 +89,34 @@ namespace HOMM_BM
                 CalculateWalkablePositions();
                 calculatePath = false;
             }
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                if (Physics.Raycast(ray, out RaycastHit hit, 100))
+                {
+                    if (currentMouseLogic == null)
+                    {
+                        currentMouseLogic = selectMove;
+                        currentMouseLogic.InteractTick(this, hit);
+                    }
+
+                    InteractionHook hook = hit.transform.GetComponentInChildren<InteractionHook>();
+                    if (targetUnit != null)
+                    {
+                        targetUnit.currentInteractionHook = hook;
+
+                        if (hook != null)
+                        {
+                            if (hook.interactionStacks != null)
+                            {
+                                targetUnit.AddOnInteractionStack(hook.interactionStacks[0]);
+                            }
+                        }
+                    }
+                }
+            }
         }
         void ClearReachableNodes()
         {
@@ -199,6 +227,7 @@ namespace HOMM_BM
         }
         [HideInInspector]
         public List<Node> previousPath = new List<Node>();
+
         public void GetPathFromMap(Node origin, GridUnit gridUnit)
         {
             previousPath.Clear();
@@ -301,6 +330,20 @@ namespace HOMM_BM
             for (int i = 0; i < nodes.Count; i++)
             {
                 pathLine.SetPosition(i, nodes[i].worldPosition + Vector3.up * .3f);
+            }
+        }
+
+        public void OnSelectCurrentUnit(GridUnit gridUnit)
+        {
+            if (targetUnit == gridUnit)
+                return;
+
+            if (gridUnit != null)
+            {
+                targetUnit = gridUnit;
+                currentMouseLogic = selectMove;
+                if (currentMouseLogic != null)
+                    currentMouseLogic.InteractTick(this, gridUnit);
             }
         }
 

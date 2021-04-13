@@ -12,7 +12,23 @@ namespace HOMM_BM
                 Node currentNode = GridManager.instance.GetNode(hit.point, gameManager.targetUnit.gridIndex);
                 if (currentNode != null)
                 {
-                    gameManager.targetUnit.currentGridAction.Tick(currentNode, gameManager.targetUnit);
+                    gameManager.targetUnit.currentGridAction.Tick(currentNode);
+
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        gameManager.targetUnit.currentGridAction.OnDoAction(gameManager.targetUnit);
+                    }
+                }
+            }
+        }
+        public override void InteractTick(GameManager gameManager, GridUnit gridUnit)
+        {
+            if (gameManager.targetUnit != null)
+            {
+                Node currentNode = GridManager.instance.GetNode(gridUnit.CurrentNode.worldPosition, gameManager.targetUnit.gridIndex);
+                if (currentNode != null)
+                {
+                    gameManager.targetUnit.currentGridAction.Tick(currentNode);
 
                     if (Input.GetMouseButtonDown(0))
                     {

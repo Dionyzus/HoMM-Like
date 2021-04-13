@@ -7,6 +7,10 @@ namespace HOMM_BM
     {
         public override void InteractTick(GameManager gameManager, RaycastHit hit)
         {
+            if (hit.transform.GetComponentInParent<InteractionHook>() != null)
+            {
+                return;
+            }
             ISelectable selectable = hit.transform.GetComponentInParent<ISelectable>();
             if (selectable != null)
             {
@@ -48,6 +52,25 @@ namespace HOMM_BM
                         }
                     }
                 }
+            }
+        }
+
+        public override void InteractTick(GameManager gameManager, GridUnit gridUnit)
+        {
+            ISelectable selectable = gridUnit.GetComponentInParent<ISelectable>();
+            if (selectable != null)
+            {
+                if (selectable.GetGridUnit() != gameManager.targetUnit)
+                {
+                    gameManager.targetUnit = selectable.GetGridUnit();
+                    gameManager.targetUnit.LoadPathAndStartMoving(gameManager.previousPath);
+                    gameManager.calculatePath = true;
+                }
+                else
+                {
+                    gameManager.calculatePath = true;
+                }
+
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HOMM_BM
 {
@@ -49,10 +50,23 @@ namespace HOMM_BM
         public AnimatorOverrideController overrideController;
         Collider unitCollider;
 
+        public int stackIndex;
+        public InteractionInstance currentInteractionInstance;
+        public List<InteractionInstance> interactionInstances = new List<InteractionInstance>();
+
+        [HideInInspector]
+        public InteractionHook currentInteractionHook;
+
+        Interaction currentInteraction;
+
+        public Transform sliderTransform;
+        Slider interactionSlider;
+
         void Awake()
         {
             gameObject.layer = 8;
         }
+
         void Start()
         {
             animator = GetComponentInChildren<Animator>();
@@ -61,9 +75,18 @@ namespace HOMM_BM
 
             animator.applyRootMotion = false;
             unitCollider = GetComponentInChildren<Collider>();
+
+            sliderTransform = UiManager.instance.GetDebugSlider().transform;
+            interactionSlider = sliderTransform.GetComponentInChildren<Slider>();
+            SetInteractionSliderStatus(false, 0);
         }
         void Update()
         {
+            if (sliderTransform != null)
+            {
+                sliderTransform.position = transform.position;
+            }
+
             if (isUnitDeadDebug)
             {
                 enabled = false;
@@ -92,7 +115,33 @@ namespace HOMM_BM
                     transform.position = CurrentNode.worldPosition;
                 }
             }
+
+
+            float deltaTime = Time.deltaTime;
+
+            if (currentInteraction != null)
+            {
+                HandleInteraction(currentInteraction, deltaTime);
+            }
+            if (currentInteraction == null)
+            {
+                if (interactionInstances.Count > 0)
+                {
+                    LoadInteractionStack(interactionInstances[0]);
+                    interactionInstances.RemoveAt(0);
+                }
+            }
         }
+        public void SetInteractionSliderStatus(bool status, float value)
+        {
+            sliderTransform.gameObject.SetActive(status);
+            interactionSlider.value = value;
+        }
+        public void SetInteractionSliderMaxValue(float value)
+        {
+            interactionSlider.maxValue = value;
+        }
+
         public GridUnit GetGridUnit()
         {
             return this;
@@ -209,6 +258,100 @@ namespace HOMM_BM
                 onDeathEnable.SetActive(true);
             }
             GameManager.instance.UnitDeath(this);
+        }
+
+        public void ActionIsDone()
+        {
+            currentInteractionInstance.interactionStack.actions[stackIndex].ActionDone(this);
+        }
+        void PathfindToInteractionHook()
+        {
+            if (GameManager.instance.targetUnit != null)
+            {
+                if (GameManager.instance.previousPath.Count > 0)
+                {
+                    GameManager.instance.ClearHighlightedNodes();
+                    GameManager.instance.targetUnit.LoadPathAndStartMoving(GameManager.instance.previousPath);
+                    GameManager.instance.unitIsMoving = true;
+                }
+                Node currentNode = GridManager.instance.GetNode(CurrentNode.worldPosition, gridIndex);
+                if (currentNode != null)
+                {
+                    if (GameManager.instance.reachableNodes.Contains(currentNode))
+                    {
+                        if (currentNode.IsWalkable())
+                        {
+                            if (GameManager.instance.previousNode != currentNode)
+                            {
+                                GameManager.instance.HighlightNodes(currentNode);
+                                GameManager.instance.GetPathFromMap(currentNode, GameManager.instance.targetUnit);
+                            }
+                        }
+                    }
+                }
+            }
+            LoadInteractionFromStoredInteractionHook();
+        }
+        public void LoadInteractionFromHookAndStore(InteractionHook interactionHook)
+        {
+            currentInteractionHook = interactionHook;
+            PathfindToInteractionHook();
+        }
+        void LoadInteractionFromStoredInteractionHook()
+        {
+            currentInteractionHook.LoadInteraction(this);
+        }
+        void HandleInteraction(Interaction interaction, float deltaTime)
+        {
+            interaction.StartMethod(this);
+            if (interaction.TickIsFinished(this, deltaTime))
+            {
+                interaction.OnEnd(this);
+                currentInteraction = null;
+            }
+
+        }
+        public void AddOnInteractionStack(InteractionStack stack)
+        {
+            InteractionInstance ii = new InteractionInstance
+            {
+                interactionStack = stack,
+                gridUnit = this
+            };
+
+            interactionInstances.Add(ii);
+
+            UiManager.instance.CreateUiObjectForInteraction(ii);
+        }
+        public void RemoveInteraction(InteractionInstance instance)
+        {
+            if (interactionInstances.Contains(instance))
+            {
+                interactionInstances.Remove(instance);
+            }
+        }
+        public void LoadInteraction(Interaction targetInteraction)
+        {
+            currentInteraction = targetInteraction;
+        }
+        public void LoadInteractionStack(InteractionInstance instance)
+        {
+            stackIndex = 0;
+            currentInteractionInstance = instance;
+            currentInteractionInstance.interactionStack.LoadAction(this, stackIndex);
+        }
+        public void StackIsComplete()
+        {
+            currentInteraction = null;
+
+            if (currentInteractionInstance.uiObject != null)
+            {
+                currentInteractionInstance.uiObject.SetToDestroy();
+                if (InteractionButton.instance != null)
+                {
+                    InteractionButton.instance.OnClick();
+                }
+            }
         }
     }
 }

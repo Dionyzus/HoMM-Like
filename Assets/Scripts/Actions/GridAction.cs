@@ -10,7 +10,7 @@ namespace HOMM_BM
         public AnimationClip animationClip;
         List<Node> path = new List<Node>();
 
-        public void Tick(Node currentNode, GridUnit unit)
+        public void Tick(Node currentNode)
         {
             path.Clear();
 
@@ -21,7 +21,7 @@ namespace HOMM_BM
         public void OnDoAction(GridUnit unit)
         {
             unit.LoadGridActionToMove(path, animationClip);
-            unit.PlayAnimation("Jump Attack");
+            unit.PlayAnimation(playAnimation);
             GameManager.instance.unitIsMoving = true;
         }
     }

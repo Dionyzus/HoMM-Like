@@ -1,5 +1,4 @@
-﻿
-namespace HOMM_BM
+﻿namespace HOMM_BM
 {
     public interface ISelectable
     {

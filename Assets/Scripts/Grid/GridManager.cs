@@ -40,6 +40,13 @@ namespace HOMM_BM
                 Node node = GetNode(unit.transform.position, unit.gridIndex);
                 unit.transform.position = node.worldPosition;
             }
+
+            GridObject[] gridObjects = FindObjectsOfType<GridObject>();
+            foreach (GridObject go in gridObjects)
+            {
+                Node node = GetNode(go.transform.position, go.gridIndex);
+                go.transform.position = node.worldPosition;
+            }
         }
 
         void ReadLevel()
@@ -136,8 +143,8 @@ namespace HOMM_BM
             node.worldPosition = targetPosition;
 
             grids[gridIndex][node.position.x, node.position.y, node.position.z] = node;
-
             int targetGridIndex = gridIndex - 1;
+
             if (targetGridIndex >= 0)
             {
                 FindSubNodes(node, scaleXZ, 0);
