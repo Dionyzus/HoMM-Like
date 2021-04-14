@@ -6,17 +6,15 @@ namespace HOMM_BM
 {
     public class WaitForTimerToFinish : Interaction
     {
-        float timer = 3;
+        float timer = 0.5f;
         public override void OnEnd(GridUnit gridUnit)
         {
             gridUnit.ActionIsDone();
-            gridUnit.SetInteractionSliderStatus(false, 0);
         }
 
         public override bool TickIsFinished(GridUnit gridUnit, float deltaTime)
         {
             timer -= deltaTime;
-            gridUnit.SetInteractionSliderStatus(true, timer);
 
             Vector3 direction = (gridUnit.currentInteractionHook.transform.position - gridUnit.transform.position).normalized;
             direction.y = 0;
@@ -32,7 +30,7 @@ namespace HOMM_BM
 
         protected override void OnStart(GridUnit gridUnit)
         {
-            gridUnit.SetInteractionSliderMaxValue(timer);
+            Debug.Log("Interaction started");
         }
     }
 }

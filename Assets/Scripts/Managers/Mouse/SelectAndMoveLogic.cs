@@ -7,70 +7,42 @@ namespace HOMM_BM
     {
         public override void InteractTick(GameManager gameManager, RaycastHit hit)
         {
-            if (hit.transform.GetComponentInParent<InteractionHook>() != null)
-            {
+            InteractionHook ih = hit.transform.GetComponentInParent<InteractionHook>();
+            if (ih)
                 return;
-            }
+
             ISelectable selectable = hit.transform.GetComponentInParent<ISelectable>();
-            if (selectable != null)
+
+            if (selectable != null && selectable.GetGridUnit().gameObject.layer != GridManager.enemyUnitsLayer)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
                     if (selectable.GetGridUnit() != gameManager.targetUnit)
                     {
                         gameManager.targetUnit = selectable.GetGridUnit();
+                        UiManager.instance.OnCharacterSelected(gameManager.targetUnit);
                         gameManager.calculatePath = true;
                     }
                 }
             }
             else
             {
-                if (gameManager.targetUnit != null)
-                {
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        if (gameManager.previousPath.Count > 0)
-                        {
-                            gameManager.ClearHighlightedNodes();
-                            gameManager.targetUnit.LoadPathAndStartMoving(gameManager.previousPath);
-                            gameManager.unitIsMoving = true;
-                        }
-                    }
-                    Node currentNode = GridManager.instance.GetNode(hit.point, gameManager.targetUnit.gridIndex);
-                    if (currentNode != null)
-                    {
-                        if (gameManager.reachableNodes.Contains(currentNode))
-                        {
-                            if (currentNode.IsWalkable())
-                            {
-                                if (gameManager.previousNode != currentNode)
-                                {
-                                    gameManager.HighlightNodes(currentNode);
-                                    gameManager.GetPathFromMap(currentNode, gameManager.targetUnit);
-                                }
-                            }
-                        }
-                    }
-                }
+                GameManager.instance.HandleMovingOnPath(hit.point);
             }
         }
 
         public override void InteractTick(GameManager gameManager, GridUnit gridUnit)
         {
             ISelectable selectable = gridUnit.GetComponentInParent<ISelectable>();
+
             if (selectable != null)
             {
                 if (selectable.GetGridUnit() != gameManager.targetUnit)
                 {
                     gameManager.targetUnit = selectable.GetGridUnit();
                     gameManager.targetUnit.LoadPathAndStartMoving(gameManager.previousPath);
-                    gameManager.calculatePath = true;
                 }
-                else
-                {
-                    gameManager.calculatePath = true;
-                }
-
+                gameManager.calculatePath = true;
             }
         }
     }

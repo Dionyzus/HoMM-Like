@@ -26,6 +26,8 @@ namespace HOMM_BM
         Vector3 targetPosition;
         public GridAction currentGridAction;
 
+        public RenderTexture unitImage;
+
         public float movementSpeed = 2;
         float actualMovementSpeed;
 
@@ -47,6 +49,17 @@ namespace HOMM_BM
         }
 
         Animator animator;
+        public Animator Animator
+        {
+            get
+            {
+                return animator;
+            }
+        }
+
+        private Slider interactionSlider;
+        public Slider InteractionSlider { get => interactionSlider; set => interactionSlider = value; }
+
         public AnimatorOverrideController overrideController;
         Collider unitCollider;
 
@@ -59,12 +72,12 @@ namespace HOMM_BM
 
         Interaction currentInteraction;
 
-        public Transform sliderTransform;
-        Slider interactionSlider;
+        public int stepsCountSlider;
 
         void Awake()
         {
-            gameObject.layer = 8;
+            //Maybe seperate enemy and friendly units
+            //gameObject.layer = 8;
         }
 
         void Start()
@@ -75,18 +88,9 @@ namespace HOMM_BM
 
             animator.applyRootMotion = false;
             unitCollider = GetComponentInChildren<Collider>();
-
-            sliderTransform = UiManager.instance.GetDebugSlider().transform;
-            interactionSlider = sliderTransform.GetComponentInChildren<Slider>();
-            SetInteractionSliderStatus(false, 0);
         }
         void Update()
         {
-            if (sliderTransform != null)
-            {
-                sliderTransform.position = transform.position;
-            }
-
             if (isUnitDeadDebug)
             {
                 enabled = false;
@@ -131,15 +135,6 @@ namespace HOMM_BM
                     interactionInstances.RemoveAt(0);
                 }
             }
-        }
-        public void SetInteractionSliderStatus(bool status, float value)
-        {
-            sliderTransform.gameObject.SetActive(status);
-            interactionSlider.value = value;
-        }
-        public void SetInteractionSliderMaxValue(float value)
-        {
-            interactionSlider.maxValue = value;
         }
 
         public GridUnit GetGridUnit()
@@ -205,6 +200,7 @@ namespace HOMM_BM
                 isPathInitialized = false;
 
                 index++;
+                SetInteractionSliderStatus();
                 if (index > currentPath.Count - 1)
                 {
                     time = 1;
@@ -217,6 +213,15 @@ namespace HOMM_BM
             transform.position = Vector3.Lerp(originPosition, targetPosition, time);
 
             return isFinished;
+        }
+
+        public void SetInteractionSliderStatus()
+        {
+            InteractionSlider.value -= 1;
+            if (InteractionSlider.value == 0)
+            {
+                UiManager.instance.ResetInteractionSlider(this);
+            }
         }
 
         public void LoadPathAndStartMoving(List<Node> path, bool reverse = true)
@@ -266,30 +271,7 @@ namespace HOMM_BM
         }
         void PathfindToInteractionHook()
         {
-            if (GameManager.instance.targetUnit != null)
-            {
-                if (GameManager.instance.previousPath.Count > 0)
-                {
-                    GameManager.instance.ClearHighlightedNodes();
-                    GameManager.instance.targetUnit.LoadPathAndStartMoving(GameManager.instance.previousPath);
-                    GameManager.instance.unitIsMoving = true;
-                }
-                Node currentNode = GridManager.instance.GetNode(CurrentNode.worldPosition, gridIndex);
-                if (currentNode != null)
-                {
-                    if (GameManager.instance.reachableNodes.Contains(currentNode))
-                    {
-                        if (currentNode.IsWalkable())
-                        {
-                            if (GameManager.instance.previousNode != currentNode)
-                            {
-                                GameManager.instance.HighlightNodes(currentNode);
-                                GameManager.instance.GetPathFromMap(currentNode, GameManager.instance.targetUnit);
-                            }
-                        }
-                    }
-                }
-            }
+            GameManager.instance.HandleMovingOnPath(CurrentNode.worldPosition);
             LoadInteractionFromStoredInteractionHook();
         }
         public void LoadInteractionFromHookAndStore(InteractionHook interactionHook)
@@ -342,6 +324,7 @@ namespace HOMM_BM
         }
         public void StackIsComplete()
         {
+            Debug.Log("Stack is complete!");
             currentInteraction = null;
 
             if (currentInteractionInstance.uiObject != null)

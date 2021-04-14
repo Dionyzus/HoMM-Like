@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace HOMM_BM
 {
@@ -42,25 +43,6 @@ namespace HOMM_BM
                 storeUnit = null;
             }
 
-            //if (targetUnit != null)
-            //{
-            //    if (targetUnit.isInteracting)
-            //    {
-            //        if (waitForInteraction == false)
-            //            waitForInteraction = true;
-            //        return;
-            //    }
-            //    else
-            //    {
-            //        if (waitForInteraction)
-            //        {
-            //            waitForInteraction = false;
-            //            characterIsMoving = false;
-            //            calculatePath = true;
-            //        }
-            //    }
-            //}
-
             if (unitIsMoving)
             {
                 if (targetUnit.MovingOnPath())
@@ -73,12 +55,46 @@ namespace HOMM_BM
             {
                 if (targetUnit != null)
                 {
-                    if (Input.GetKeyDown(KeyCode.Space))
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                    if (Physics.Raycast(ray, out RaycastHit hit, 100))
                     {
-                        targetUnit.PlayAnimation("Jump Attack");
-                        ClearHighlightedNodes();
-                        unitIsMoving = true;
-                        return;
+                        if (EventSystem.current.IsPointerOverGameObject())
+                        {
+                            Node currentNode = GridManager.instance.GetNode(hit.point, targetUnit.gridIndex);
+                            if (!reachableNodes.Contains(currentNode))
+                            {
+                                previousPath.Clear();
+                            }
+                        }
+                    }
+                }
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                    if (Physics.Raycast(ray, out RaycastHit hit, 100))
+                    {
+                        if (currentMouseLogic == null)
+                        {
+                            currentMouseLogic = selectMove;
+                            currentMouseLogic.InteractTick(this, hit);
+                        }
+
+                        InteractionHook hook = hit.transform.GetComponentInChildren<InteractionHook>();
+                        if (targetUnit != null)
+                        {
+                            targetUnit.currentInteractionHook = hook;
+
+                            if (hook != null)
+                            {
+                                if (hook.interactionStacks != null)
+                                {
+                                    targetUnit.AddOnInteractionStack(hook.interactionStacks[0]);
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -88,34 +104,6 @@ namespace HOMM_BM
             {
                 CalculateWalkablePositions();
                 calculatePath = false;
-            }
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-                if (Physics.Raycast(ray, out RaycastHit hit, 100))
-                {
-                    if (currentMouseLogic == null)
-                    {
-                        currentMouseLogic = selectMove;
-                        currentMouseLogic.InteractTick(this, hit);
-                    }
-
-                    InteractionHook hook = hit.transform.GetComponentInChildren<InteractionHook>();
-                    if (targetUnit != null)
-                    {
-                        targetUnit.currentInteractionHook = hook;
-
-                        if (hook != null)
-                        {
-                            if (hook.interactionStacks != null)
-                            {
-                                targetUnit.AddOnInteractionStack(hook.interactionStacks[0]);
-                            }
-                        }
-                    }
-                }
             }
         }
         void ClearReachableNodes()
@@ -265,37 +253,6 @@ namespace HOMM_BM
             }
 
             LoadNodesToPath(previousPath);
-            //Node startNode = cn;
-            //previousPath.Add(cn);
-
-            //bool isValidPath = true;
-
-            //while (cn != targetNode)
-            //{
-            //    cn = GetNeighbour(cn, cn.step, gridIndex);
-
-            //    if (cn == null)
-            //    {
-            //        isValidPath = false;
-            //        break;
-            //    }
-
-            //    previousPath.Add(cn);
-            //    if (startNode == cn)
-            //    {
-            //        Debug.LogWarning("Infinite while loop!");
-            //        break;
-            //    }
-            //}
-            //if (isValidPath)
-            //{
-            //    LoadNodesToPath(previousPath);
-            //}
-            //else
-            //{
-            //    ClearNodesPath();
-            //    previousPath.Clear();
-            //}
         }
 
         List<Node> GetNeighbours(Node currentNode, GridUnit gridUnit)
@@ -335,6 +292,9 @@ namespace HOMM_BM
 
         public void OnSelectCurrentUnit(GridUnit gridUnit)
         {
+            if (unitIsMoving)
+                return;
+
             if (targetUnit == gridUnit)
                 return;
 
@@ -342,8 +302,11 @@ namespace HOMM_BM
             {
                 targetUnit = gridUnit;
                 currentMouseLogic = selectMove;
+
+                UiManager.instance.OnCharacterSelected(targetUnit);
+
                 if (currentMouseLogic != null)
-                    currentMouseLogic.InteractTick(this, gridUnit);
+                    currentMouseLogic.InteractTick(this, targetUnit);
             }
         }
 
@@ -354,6 +317,36 @@ namespace HOMM_BM
 
             storeUnit = gridUnit;
             calculatePath = true;
+        }
+        public void HandleMovingOnPath(Vector3 origin)
+        {
+            if (targetUnit != null)
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (previousPath.Count > 0)
+                    {
+                        ClearHighlightedNodes();
+                        targetUnit.LoadPathAndStartMoving(previousPath);
+                        unitIsMoving = true;
+                    }
+                }
+                Node currentNode = GridManager.instance.GetNode(origin, targetUnit.gridIndex);
+                if (currentNode != null)
+                {
+                    if (reachableNodes.Contains(currentNode))
+                    {
+                        if (currentNode.IsWalkable())
+                        {
+                            if (previousNode != currentNode)
+                            {
+                                HighlightNodes(currentNode);
+                                GetPathFromMap(currentNode, targetUnit);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

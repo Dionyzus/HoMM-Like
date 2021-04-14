@@ -19,6 +19,8 @@ namespace HOMM_BM
         Vector3 minPosition;
 
         public static LayerMask ignoreForObstacles;
+        public static int enemyUnitsLayer = 10;
+        public static int friendlyUnitsLayer = 8;
 
         public bool visualizeCollisions = true;
         public static List<Vector3> visualizeNodes = new List<Vector3>();

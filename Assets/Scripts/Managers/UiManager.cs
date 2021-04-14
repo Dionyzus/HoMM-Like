@@ -1,13 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HOMM_BM
 {
     public class UiManager : MonoBehaviour
     {
         public GameObject sliderPrefab;
-        public Transform worldCanvasTransform;
+        Slider stepsSlider;
         public static UiManager instance;
         private void Awake()
         {
@@ -16,25 +17,37 @@ namespace HOMM_BM
             GridUnit[] gridUnits = FindObjectsOfType<GridUnit>();
             foreach (GridUnit unit in gridUnits)
             {
-                AddCharacterButton(unit);
+                if (unit.gameObject.layer == GridManager.friendlyUnitsLayer)
+                {
+                    GameObject sliderParent = AddCharacterButton(unit);
+                    AddStepsSlider(unit, sliderParent);
+                }
+
             }
         }
-        public GameObject GetDebugSlider()
+        public void AddStepsSlider(GridUnit unit, GameObject sliderParent)
         {
             GameObject go = Instantiate(sliderPrefab);
-            go.transform.SetParent(worldCanvasTransform);
-            return go;
+            go.transform.SetParent(sliderParent.transform);
+            go.transform.localScale = Vector3.one;
+
+            stepsSlider = go.GetComponentInChildren<Slider>();
+            stepsSlider.maxValue = unit.stepsCountSlider;
+            stepsSlider.minValue = 0;
+            stepsSlider.value = stepsSlider.maxValue;
+
+            unit.InteractionSlider = stepsSlider;
+
+            go.SetActive(true);
         }
+        public void ResetInteractionSlider(GridUnit unit)
+        {
+            unit.InteractionSlider.value = unit.InteractionSlider.maxValue;
+        }
+
         public GameObject interactionPrefab;
         public Transform interactionsParent;
 
-        public void SelectUnit(GridUnit gridUnit)
-        {
-            foreach (InteractionInstance instance in gridUnit.interactionInstances)
-            {
-                CreateUiObjectForInteraction(instance);
-            }
-        }
         public void CreateUiObjectForInteraction(InteractionInstance instance)
         {
             GameObject go = Instantiate(interactionPrefab);
@@ -48,7 +61,7 @@ namespace HOMM_BM
         }
 
         public GameObject charSelectPrefab;
-        public void AddCharacterButton(GridUnit gridUnit)
+        public GameObject AddCharacterButton(GridUnit gridUnit)
         {
             GameObject go = Instantiate(charSelectPrefab);
             go.transform.SetParent(charSelectPrefab.transform.parent);
@@ -56,6 +69,29 @@ namespace HOMM_BM
             UnitSelectButton button = go.GetComponentInChildren<UnitSelectButton>();
             button.gridUnit = gridUnit;
             go.SetActive(true);
+
+            return go;
+        }
+
+        public void OnCharacterSelected(GridUnit targetUnit)
+        {
+            UnitSelectButton[] characterDisplays = FindObjectsOfType<UnitSelectButton>();
+
+            //Better way to do this?
+            foreach (UnitSelectButton displays in characterDisplays)
+            {
+                Outline outline = displays.GetComponentInChildren<Outline>();
+
+                if (outline.enabled == true)
+                {
+                    outline.enabled = false;
+                }
+
+                if (displays.gridUnit == targetUnit)
+                {
+                    outline.enabled = true;
+                }
+            }
         }
     }
 }

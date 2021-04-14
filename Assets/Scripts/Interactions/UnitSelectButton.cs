@@ -14,6 +14,7 @@ namespace HOMM_BM
         {
             button = GetComponent<Button>();
             button.onClick.AddListener(OnClick);
+            button.GetComponentInChildren<RawImage>().texture = gridUnit.unitImage;
         }
 
         public void OnClick()
