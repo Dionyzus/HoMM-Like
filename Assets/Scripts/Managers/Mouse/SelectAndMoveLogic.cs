@@ -19,6 +19,7 @@ namespace HOMM_BM
                 {
                     if (selectable.GetGridUnit() != gameManager.targetUnit)
                     {
+                        gameManager.pathLine.positionCount = 0;
                         gameManager.targetUnit = selectable.GetGridUnit();
                         UiManager.instance.OnCharacterSelected(gameManager.targetUnit);
                         gameManager.calculatePath = true;
@@ -27,7 +28,7 @@ namespace HOMM_BM
             }
             else
             {
-                GameManager.instance.HandleMovingOnPath(hit.point);
+                GameManager.instance.HandleMovingAction(hit.point);
             }
         }
 
@@ -39,6 +40,7 @@ namespace HOMM_BM
             {
                 if (selectable.GetGridUnit() != gameManager.targetUnit)
                 {
+                    gameManager.pathLine.positionCount = 0;
                     gameManager.targetUnit = selectable.GetGridUnit();
                     gameManager.targetUnit.LoadPathAndStartMoving(gameManager.previousPath);
                 }

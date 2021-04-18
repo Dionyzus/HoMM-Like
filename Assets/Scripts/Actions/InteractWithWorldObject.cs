@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
-    [CreateAssetMenu]
+    [CreateAssetMenu(menuName = "Action Logic/Interaction with World Object")]
     public class InteractWithWorldObject : ActionLogic
     {
         public override void LoadAction(GridUnit gridUnit)

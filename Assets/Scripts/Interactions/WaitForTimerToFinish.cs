@@ -6,17 +6,16 @@ namespace HOMM_BM
 {
     public class WaitForTimerToFinish : Interaction
     {
-        float timer = 0.5f;
+        float timer;
         public override void OnEnd(GridUnit gridUnit)
         {
-            gridUnit.ActionIsDone();
+            gridUnit.StackIsComplete();
         }
 
         public override bool TickIsFinished(GridUnit gridUnit, float deltaTime)
         {
             timer -= deltaTime;
-
-            Vector3 direction = (gridUnit.currentInteractionHook.transform.position - gridUnit.transform.position).normalized;
+            Vector3 direction = (gridUnit.CurrentEnemyTarget.transform.position - gridUnit.transform.position).normalized;
             direction.y = 0;
             Quaternion rotation = Quaternion.LookRotation(direction);
             gridUnit.transform.rotation = Quaternion.Slerp(gridUnit.transform.rotation, rotation, deltaTime / .3f);
@@ -28,9 +27,11 @@ namespace HOMM_BM
             return false;
         }
 
-        protected override void OnStart(GridUnit gridUnit)
+        protected override void OnStart(GridUnit gridUnit, AnimationClip animationClip, string animation)
         {
-            Debug.Log("Interaction started");
+            timer = animationClip.length;
+            gridUnit.PlayAnimation(animation);
+            gridUnit.Animator.SetBool("isInteracting", true);
         }
     }
 }

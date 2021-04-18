@@ -18,6 +18,9 @@ namespace HOMM_BM
         public int verticalStepsUp = 1;
         public int verticalStepsDown = 3;
 
+        public string actionAnimation;
+        public AnimationClip animationClip;
+
         List<Node> currentPath = new List<Node>();
         float time;
         int index;
@@ -35,6 +38,12 @@ namespace HOMM_BM
         bool isDirty;
 
         public GameObject onDeathEnable;
+
+        private bool isHittingEnemy;
+        public bool IsHittingEnemy { get => isHittingEnemy; set => isHittingEnemy = value; }
+
+        private GridUnit currentEnemyTarget;
+        public GridUnit CurrentEnemyTarget { get => currentEnemyTarget; set => currentEnemyTarget = value; }
 
         bool moveIsBasedOnAnimation;
         float animationLength;
@@ -74,6 +83,8 @@ namespace HOMM_BM
 
         public int stepsCountSlider;
 
+        float deltaTime;
+
         void Awake()
         {
             //Maybe seperate enemy and friendly units
@@ -87,6 +98,8 @@ namespace HOMM_BM
                 animator.runtimeAnimatorController = overrideController;
 
             animator.applyRootMotion = false;
+            isHittingEnemy = false;
+
             unitCollider = GetComponentInChildren<Collider>();
         }
         void Update()
@@ -99,7 +112,8 @@ namespace HOMM_BM
                 return;
             }
 
-            animator.applyRootMotion = IsInteracting;
+            //Check this out...
+            //animator.applyRootMotion = IsInteracting;
             animator.SetBool("isWalking", isWalking);
 
             if (IsInteracting)
@@ -121,11 +135,12 @@ namespace HOMM_BM
             }
 
 
-            float deltaTime = Time.deltaTime;
+            deltaTime = Time.deltaTime;
 
             if (currentInteraction != null)
             {
-                HandleInteraction(currentInteraction, deltaTime);
+                //HandleInteraction(currentInteraction, deltaTime);
+                HandleUnitAttack(currentInteraction, deltaTime);
             }
             if (currentInteraction == null)
             {
@@ -141,12 +156,12 @@ namespace HOMM_BM
         {
             return this;
         }
-        public void PlayAnimation(string animation)
+        public void PlayAnimation(string animation, bool applyRootMotion = false)
         {
-            animator.applyRootMotion = true;
+            animator.applyRootMotion = applyRootMotion;
             animator.Play(animation);
         }
-        public bool MovingOnPath()
+        public bool MovingOnPathFinished()
         {
             bool isFinished = false;
 
@@ -200,13 +215,19 @@ namespace HOMM_BM
                 isPathInitialized = false;
 
                 index++;
+                GameManager.instance.pathLine.positionCount -= 1;
                 SetInteractionSliderStatus();
+
                 if (index > currentPath.Count - 1)
                 {
+                    if (isHittingEnemy)
+                    {
+                        currentInteraction = new WaitForTimerToFinish();
+                    }
                     time = 1;
-                    isFinished = true;
                     isWalking = false;
                     moveIsBasedOnAnimation = false;
+                    isFinished = true;
                 }
             }
 
@@ -271,8 +292,8 @@ namespace HOMM_BM
         }
         void PathfindToInteractionHook()
         {
-            GameManager.instance.HandleMovingOnPath(CurrentNode.worldPosition);
-            LoadInteractionFromStoredInteractionHook();
+            GameManager.instance.HandleMovingAction(CurrentNode.worldPosition);
+            //LoadInteractionFromStoredInteractionHook();
         }
         public void LoadInteractionFromHookAndStore(InteractionHook interactionHook)
         {
@@ -283,14 +304,26 @@ namespace HOMM_BM
         {
             currentInteractionHook.LoadInteraction(this);
         }
-        void HandleInteraction(Interaction interaction, float deltaTime)
+
+        public void HandleUnitAttack(Interaction interaction, float deltaTime)
         {
-            interaction.StartMethod(this);
+            interaction.StartMethod(this, animationClip, actionAnimation);
+
             if (interaction.TickIsFinished(this, deltaTime))
             {
                 interaction.OnEnd(this);
                 currentInteraction = null;
             }
+            
+        }
+        void HandleInteraction(Interaction interaction, float deltaTime)
+        {
+            //interaction.StartMethod(this);
+            //if (interaction.TickIsFinished(this, deltaTime))
+            //{
+            //    interaction.OnEnd(this);
+            //    currentInteraction = null;
+            //}
 
         }
         public void AddOnInteractionStack(InteractionStack stack)
@@ -325,16 +358,20 @@ namespace HOMM_BM
         public void StackIsComplete()
         {
             Debug.Log("Stack is complete!");
+            currentEnemyTarget = null;
             currentInteraction = null;
 
-            if (currentInteractionInstance.uiObject != null)
-            {
-                currentInteractionInstance.uiObject.SetToDestroy();
-                if (InteractionButton.instance != null)
-                {
-                    InteractionButton.instance.OnClick();
-                }
-            }
+            isHittingEnemy = false;
+
+            //Ui presentation of action
+            //if (currentInteractionInstance.uiObject != null)
+            //{
+            //    currentInteractionInstance.uiObject.SetToDestroy();
+            //    if (InteractionButton.instance != null)
+            //    {
+            //        InteractionButton.instance.OnClick();
+            //    }
+            //}
         }
     }
 }

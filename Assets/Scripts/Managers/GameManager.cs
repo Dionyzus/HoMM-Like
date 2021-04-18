@@ -7,6 +7,7 @@ namespace HOMM_BM
     public class GameManager : MonoBehaviour
     {
         public GridUnit targetUnit;
+
         public bool calculatePath;
         List<Node> highlightedNodes = new List<Node>();
         [HideInInspector]
@@ -28,6 +29,7 @@ namespace HOMM_BM
         MouseLogic currentMouseLogic;
         public MouseLogic selectMove;
         public MouseLogic targetNodeAction;
+        public MouseLogic performAttack;
 
         public static GameManager instance;
         private void Awake()
@@ -45,61 +47,82 @@ namespace HOMM_BM
 
             if (unitIsMoving)
             {
-                if (targetUnit.MovingOnPath())
+                ClearReachableNodes();
+                if (targetUnit.MovingOnPathFinished())
                 {
+                    pathLine.positionCount = 0;
+                    previousPath.Clear();
                     unitIsMoving = false;
-                    calculatePath = true;
+
+                    if(!targetUnit.IsHittingEnemy)
+                        calculatePath = true;
                 }
             }
+
             else
             {
                 if (targetUnit != null)
                 {
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-                    if (Physics.Raycast(ray, out RaycastHit hit, 100))
+                    if (Input.GetMouseButtonDown(0))
                     {
-                        if (EventSystem.current.IsPointerOverGameObject())
+                        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                        if (Physics.Raycast(ray, out RaycastHit hit, 100))
                         {
-                            Node currentNode = GridManager.instance.GetNode(hit.point, targetUnit.gridIndex);
-                            if (!reachableNodes.Contains(currentNode))
+                            if (EventSystem.current.IsPointerOverGameObject())
                             {
-                                previousPath.Clear();
+                                if (hit.transform.GetComponentInChildren<InteractionTrigger>())
+                                {
+                                    InteractionHook hook = hit.transform.GetComponentInParent<InteractionHook>();
+
+                                    if (targetUnit != null)
+                                    {
+                                        if (hook != null)
+                                        {
+                                            targetUnit.currentInteractionHook = hook;
+                                        }
+                                        else
+                                        {
+                                            targetUnit.currentInteractionHook = null;
+                                        }
+                                    }
+                                }
+                                else if (hit.transform.gameObject.layer == GridManager.enemyUnitsLayer)
+                                {
+                                    targetUnit.IsHittingEnemy = true;
+                                    targetUnit.CurrentEnemyTarget = hit.transform.GetComponentInChildren<GridUnit>();
+                                    HandleMovingAction(targetUnit.CurrentNode.worldPosition);
+                                    return;
+                                }
+                                else
+                                {
+                                    Node currentNode = GridManager.instance.GetNode(hit.point, targetUnit.gridIndex);
+                                    if (!reachableNodes.Contains(currentNode))
+                                    {
+                                        //Should actually add check for distance between actual target and available steps
+                                        //Add path to stored path, and calculate path from that node
+                                        previousPath.Clear();
+                                        calculatePath = true;
+                                    }
+                                }
                             }
                         }
+                    }
+                    if (targetUnit.currentInteractionHook != null && Input.GetKeyDown(KeyCode.Space))
+                    {
+                        InitiateMovingOnPath();
                     }
                 }
 
                 if (Input.GetMouseButtonDown(0))
                 {
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-                    if (Physics.Raycast(ray, out RaycastHit hit, 100))
-                    {
-                        if (currentMouseLogic == null)
-                        {
-                            currentMouseLogic = selectMove;
-                            currentMouseLogic.InteractTick(this, hit);
-                        }
-
-                        InteractionHook hook = hit.transform.GetComponentInChildren<InteractionHook>();
-                        if (targetUnit != null)
-                        {
-                            targetUnit.currentInteractionHook = hook;
-
-                            if (hook != null)
-                            {
-                                if (hook.interactionStacks != null)
-                                {
-                                    targetUnit.AddOnInteractionStack(hook.interactionStacks[0]);
-                                }
-                            }
-                        }
-                    }
+                    if (currentMouseLogic == null)
+                        currentMouseLogic = selectMove;
                 }
 
                 HandleMouse();
             }
+
             if (calculatePath)
             {
                 CalculateWalkablePositions();
@@ -159,17 +182,8 @@ namespace HOMM_BM
 
         void HandleMouse()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1))
-            {
-                currentMouseLogic = selectMove;
-                Debug.Log("Select and move");
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha2))
-            {
-                currentMouseLogic = targetNodeAction;
-                Debug.Log("targe node");
-            }
+            if (targetUnit != null && targetUnit.IsInteracting)
+                return;
 
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit, 100))
@@ -300,6 +314,7 @@ namespace HOMM_BM
 
             if (gridUnit != null)
             {
+                pathLine.positionCount = 0;
                 targetUnit = gridUnit;
                 currentMouseLogic = selectMove;
 
@@ -318,18 +333,13 @@ namespace HOMM_BM
             storeUnit = gridUnit;
             calculatePath = true;
         }
-        public void HandleMovingOnPath(Vector3 origin)
+        public void HandleMovingAction(Vector3 origin)
         {
             if (targetUnit != null)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
-                    if (previousPath.Count > 0)
-                    {
-                        ClearHighlightedNodes();
-                        targetUnit.LoadPathAndStartMoving(previousPath);
-                        unitIsMoving = true;
-                    }
+                    InitiateMovingOnPath();
                 }
                 Node currentNode = GridManager.instance.GetNode(origin, targetUnit.gridIndex);
                 if (currentNode != null)
@@ -346,6 +356,15 @@ namespace HOMM_BM
                         }
                     }
                 }
+            }
+        }
+        public void InitiateMovingOnPath()
+        {
+            if (previousPath.Count > 0)
+            {
+                ClearHighlightedNodes();
+                targetUnit.LoadPathAndStartMoving(previousPath);
+                unitIsMoving = true;
             }
         }
     }
