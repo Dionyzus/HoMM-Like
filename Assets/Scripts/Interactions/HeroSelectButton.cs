@@ -5,21 +5,21 @@ using UnityEngine.UI;
 
 namespace HOMM_BM
 {
-    public class UnitSelectButton : MonoBehaviour
+    public class HeroSelectButton : MonoBehaviour
     {
         Button button;
-        public GridUnit gridUnit;
+        public HeroController heroController;
 
         private void Start()
         {
             button = GetComponent<Button>();
             button.onClick.AddListener(OnClick);
-            button.GetComponentInChildren<RawImage>().texture = gridUnit.unitImage;
+            button.GetComponentInChildren<RawImage>().texture = heroController.unitImage;
         }
 
         public void OnClick()
         {
-            GameManager.instance.OnSelectCurrentUnit(gridUnit);
+            GameManager.WorldManager.OnSelectCurrentHero(heroController);
         }
     }
 }

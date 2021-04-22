@@ -17,7 +17,6 @@ namespace HOMM_BM
         }
         public void OnClick()
         {
-            interactionInstance.gridUnit.RemoveInteraction(interactionInstance);
             SetToDestroy();
         }
         public void SetToDestroy()

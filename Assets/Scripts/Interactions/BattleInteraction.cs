@@ -4,18 +4,18 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
-    public class WaitForTimerToFinish : Interaction
+    public class BattleInteraction : Interaction
     {
         float timer;
         public override void OnEnd(GridUnit gridUnit)
         {
-            gridUnit.StackIsComplete();
+            gridUnit.ActionIsDone();
         }
 
         public override bool TickIsFinished(GridUnit gridUnit, float deltaTime)
         {
             timer -= deltaTime;
-            Vector3 direction = (gridUnit.CurrentEnemyTarget.transform.position - gridUnit.transform.position).normalized;
+            Vector3 direction = (gridUnit.currentInteractionHook.transform.position - gridUnit.transform.position).normalized;
             direction.y = 0;
             Quaternion rotation = Quaternion.LookRotation(direction);
             gridUnit.transform.rotation = Quaternion.Slerp(gridUnit.transform.rotation, rotation, deltaTime / .3f);
@@ -27,10 +27,10 @@ namespace HOMM_BM
             return false;
         }
 
-        protected override void OnStart(GridUnit gridUnit, AnimationClip animationClip, string animation)
+        protected override void OnStart(GridUnit gridUnit)
         {
-            timer = animationClip.length;
-            gridUnit.PlayAnimation(animation);
+            timer = gridUnit.animationClip.length;
+            gridUnit.PlayAnimation(gridUnit.actionAnimation);
             gridUnit.Animator.SetBool("isInteracting", true);
         }
     }

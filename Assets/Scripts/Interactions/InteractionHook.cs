@@ -4,12 +4,14 @@ namespace HOMM_BM
 {
     public class InteractionHook : GridObject
     {
+        public InteractionContainer interactionContainer;
+        public Interaction interaction;
         public Transform interactionPoint;
-        public InteractionStack[] interactionStacks;
 
         public void LoadInteraction(GridUnit gridUnit)
         {
-            gridUnit.LoadInteraction(new WaitForTimerToFinish());
+            if (interaction != null)
+                gridUnit.LoadInteraction(interaction);
         }
     }
 }

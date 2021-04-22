@@ -3,36 +3,36 @@
 namespace HOMM_BM
 {
     [CreateAssetMenu(menuName = "Mouse Logic/Target Node for Action")]
-    public class TargetNodeForAction : MouseLogic
+    public class TargetNodeForAction : MouseLogicBattle
     {
-        public override void InteractTick(GameManager gameManager, RaycastHit hit)
+        public override void InteractTick(BattleManager battleManager, RaycastHit hit)
         {
-            if (gameManager.targetUnit != null)
+            if (battleManager.currentUnit != null)
             {
-                Node currentNode = GridManager.instance.GetNode(hit.point, gameManager.targetUnit.gridIndex);
+                Node currentNode = GridManager.instance.GetNode(hit.point, battleManager.currentUnit.gridIndex);
                 if (currentNode != null)
                 {
-                    gameManager.targetUnit.currentGridAction.Tick(currentNode);
+                    battleManager.currentUnit.currentGridAction.Tick(currentNode);
 
                     if (Input.GetMouseButtonDown(0))
                     {
-                        gameManager.targetUnit.currentGridAction.OnDoAction(gameManager.targetUnit);
+                        battleManager.currentUnit.currentGridAction.OnDoAction(battleManager.currentUnit);
                     }
                 }
             }
         }
-        public override void InteractTick(GameManager gameManager, GridUnit gridUnit)
+        public override void InteractTick(BattleManager battleManager, UnitController unitController)
         {
-            if (gameManager.targetUnit != null)
+            if (battleManager.currentUnit != null)
             {
-                Node currentNode = GridManager.instance.GetNode(gridUnit.CurrentNode.worldPosition, gameManager.targetUnit.gridIndex);
+                Node currentNode = GridManager.instance.GetNode(unitController.CurrentNode.worldPosition, battleManager.currentUnit.gridIndex);
                 if (currentNode != null)
                 {
-                    gameManager.targetUnit.currentGridAction.Tick(currentNode);
+                    battleManager.currentUnit.currentGridAction.Tick(currentNode);
 
                     if (Input.GetMouseButtonDown(0))
                     {
-                        gameManager.targetUnit.currentGridAction.OnDoAction(gameManager.targetUnit);
+                        battleManager.currentUnit.currentGridAction.OnDoAction(battleManager.currentUnit);
                     }
                 }
             }

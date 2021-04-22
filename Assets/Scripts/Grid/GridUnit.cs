@@ -6,7 +6,24 @@ namespace HOMM_BM
 {
     public class GridUnit : MonoBehaviour, ISelectable
     {
+        public delegate void OnPathReachCallback();
+        protected OnPathReachCallback onPathReachCallback;
+
+        public GameObject onDeathEnable;
+
+        public GridAction currentGridAction;
+        public RenderTexture unitImage;
+
+        protected Quaternion targetRotation;
+        protected float moveTime;
+        protected float rotationTime;
+
+        public float movementSpeed = 2;
+        public float rotationSpeed = .2f;
         public int gridIndex = 0;
+        public int stepsCount = 3;
+        public int verticalStepsUp = 1;
+        public int verticalStepsDown = 3;
         public Node CurrentNode
         {
             get
@@ -14,41 +31,28 @@ namespace HOMM_BM
                 return GridManager.instance.GetNode(transform.position, gridIndex);
             }
         }
-        public int stepsCount = 3;
-        public int verticalStepsUp = 1;
-        public int verticalStepsDown = 3;
 
         public string actionAnimation;
         public AnimationClip animationClip;
 
-        List<Node> currentPath = new List<Node>();
-        float time;
-        int index;
-        bool isPathInitialized;
-        Vector3 originPosition;
-        Vector3 targetPosition;
-        public GridAction currentGridAction;
+        protected float time;
+        protected int index;
+        protected List<Node> currentPath = new List<Node>();
 
-        public RenderTexture unitImage;
+        protected bool isPathInitialized;
 
-        public float movementSpeed = 2;
-        float actualMovementSpeed;
+        protected Vector3 originPosition;
+        protected Vector3 targetPosition;
 
-        bool isWalking;
-        bool isDirty;
+        protected float actualMovementSpeed;
+        protected bool isWalking;
+        protected bool isDirty;
 
-        public GameObject onDeathEnable;
+        protected bool isInteractionInitialized;
+        public bool IsInteractionInitialized { get => isInteractionInitialized; set => isInteractionInitialized = value; }
 
-        private bool isHittingEnemy;
-        public bool IsHittingEnemy { get => isHittingEnemy; set => isHittingEnemy = value; }
-
-        private GridUnit currentEnemyTarget;
-        public GridUnit CurrentEnemyTarget { get => currentEnemyTarget; set => currentEnemyTarget = value; }
-
-        bool moveIsBasedOnAnimation;
-        float animationLength;
-
-        public bool isUnitDeadDebug;
+        protected bool moveIsBasedOnAnimation;
+        protected float animationLength;
         public bool IsInteracting
         {
             get
@@ -57,7 +61,7 @@ namespace HOMM_BM
             }
         }
 
-        Animator animator;
+        protected Animator animator;
         public Animator Animator
         {
             get
@@ -66,24 +70,19 @@ namespace HOMM_BM
             }
         }
 
-        private Slider interactionSlider;
-        public Slider InteractionSlider { get => interactionSlider; set => interactionSlider = value; }
+        public bool IsWalking { get => isWalking; set => isWalking = value; }
 
         public AnimatorOverrideController overrideController;
-        Collider unitCollider;
-
-        public int stackIndex;
-        public InteractionInstance currentInteractionInstance;
-        public List<InteractionInstance> interactionInstances = new List<InteractionInstance>();
+        protected Collider unitCollider;
 
         [HideInInspector]
         public InteractionHook currentInteractionHook;
 
-        Interaction currentInteraction;
+        public InteractionInstance currentInteractionInstance;
+        public InteractionInstance interactionInstance;
 
-        public int stepsCountSlider;
+        public Interaction currentInteraction;
 
-        float deltaTime;
 
         void Awake()
         {
@@ -98,23 +97,15 @@ namespace HOMM_BM
                 animator.runtimeAnimatorController = overrideController;
 
             animator.applyRootMotion = false;
-            isHittingEnemy = false;
+            isInteractionInitialized = false;
 
             unitCollider = GetComponentInChildren<Collider>();
         }
         void Update()
         {
-            if (isUnitDeadDebug)
-            {
-                enabled = false;
-                KillUnit();
-                isUnitDeadDebug = false;
-                return;
-            }
-
             //Check this out...
             //animator.applyRootMotion = IsInteracting;
-            animator.SetBool("isWalking", isWalking);
+            animator.SetBool("isWalking", IsWalking);
 
             if (IsInteracting)
             {
@@ -133,245 +124,44 @@ namespace HOMM_BM
                     transform.position = CurrentNode.worldPosition;
                 }
             }
-
-
-            deltaTime = Time.deltaTime;
-
-            if (currentInteraction != null)
-            {
-                //HandleInteraction(currentInteraction, deltaTime);
-                HandleUnitAttack(currentInteraction, deltaTime);
-            }
-            if (currentInteraction == null)
-            {
-                if (interactionInstances.Count > 0)
-                {
-                    LoadInteractionStack(interactionInstances[0]);
-                    interactionInstances.RemoveAt(0);
-                }
-            }
-        }
-
-        public GridUnit GetGridUnit()
-        {
-            return this;
         }
         public void PlayAnimation(string animation, bool applyRootMotion = false)
         {
             animator.applyRootMotion = applyRootMotion;
             animator.Play(animation);
         }
-        public bool MovingOnPathFinished()
+        public virtual void CreateInteractionContainer(InteractionContainer container)
         {
-            bool isFinished = false;
-
-            if (!isPathInitialized)
-            {
-                originPosition = CurrentNode.worldPosition;
-                targetPosition = currentPath[index].worldPosition;
-                time = 0;
-
-                float distance = Vector3.Distance(originPosition, targetPosition);
-                actualMovementSpeed = movementSpeed / distance;
-
-                if (moveIsBasedOnAnimation)
-                {
-                    actualMovementSpeed = (distance / animationLength) / distance; //0-1
-                }
-
-                Vector3 direction = targetPosition - originPosition;
-                direction.y = 0;
-                if (direction == Vector3.zero)
-                {
-                    direction = transform.forward;
-                }
-                transform.rotation = Quaternion.LookRotation(direction);
-
-                isPathInitialized = true;
-                isWalking = true;
-            }
-
-            if (!moveIsBasedOnAnimation)
-            {
-                time += Time.deltaTime * actualMovementSpeed;
-            }
-            else
-            {
-                if (animator.GetBool("isMoving"))
-                {
-                    time += Time.deltaTime * actualMovementSpeed;
-                }
-                else
-                {
-                    if (time > 0)
-                    {
-                        time = 1;
-                    }
-                }
-            }
-
-            if (time > 1)
-            {
-                isPathInitialized = false;
-
-                index++;
-                GameManager.instance.pathLine.positionCount -= 1;
-                SetInteractionSliderStatus();
-
-                if (index > currentPath.Count - 1)
-                {
-                    if (isHittingEnemy)
-                    {
-                        currentInteraction = new WaitForTimerToFinish();
-                    }
-                    time = 1;
-                    isWalking = false;
-                    moveIsBasedOnAnimation = false;
-                    isFinished = true;
-                }
-            }
-
-            transform.position = Vector3.Lerp(originPosition, targetPosition, time);
-
-            return isFinished;
+            Debug.Log("Default create interaction container");
+        }
+        public virtual void StoreInteractionHook(InteractionHook interactionHook)
+        {
+            Debug.Log("Default load interaction from hook and store");
+        }
+        public virtual void LoadInteraction(Interaction targetInteraction)
+        {
+            Debug.Log("Default load interaction");
+        }
+        protected virtual void HandleInteraction(Interaction interaction, float deltaTime)
+        {
+            Debug.Log("Default handle interaction");
+        }
+        public virtual void ActionIsDone()
+        {
+            Debug.Log("Default action is done");
+        }
+        public virtual void LoadIntoInteractionContainer(InteractionInstance instance)
+        {
+            Debug.Log("Default load into interaction container");
+        }
+        public virtual void InteractionCompleted()
+        {
+            Debug.Log("Default interaction completed");
         }
 
-        public void SetInteractionSliderStatus()
+        public GridUnit GetGridUnit()
         {
-            InteractionSlider.value -= 1;
-            if (InteractionSlider.value == 0)
-            {
-                UiManager.instance.ResetInteractionSlider(this);
-            }
-        }
-
-        public void LoadPathAndStartMoving(List<Node> path, bool reverse = true)
-        {
-            moveIsBasedOnAnimation = false;
-            isPathInitialized = false;
-            index = 0;
-            time = 0;
-
-            if (reverse)
-                path.Reverse();
-            currentPath = path;
-        }
-        public void LoadGridActionToMove(List<Node> path, AnimationClip animationClip)
-        {
-            isPathInitialized = false;
-            index = 0;
-            time = 0;
-            moveIsBasedOnAnimation = true;
-            animationLength = animationClip.length;
-            currentPath = path;
-        }
-        public void KillUnit()
-        {
-            animator.applyRootMotion = true;
-            animator.Play("Dying");
-            animator.SetBool("isInteracting", true);
-            unitCollider.enabled = false;
-
-            Collider[] colliders = GetComponentsInChildren<Collider>();
-            foreach (Collider c in colliders)
-            {
-                c.gameObject.layer = 9;
-            }
-            animator.transform.parent = null;
-
-            if (onDeathEnable != null)
-            {
-                onDeathEnable.SetActive(true);
-            }
-            GameManager.instance.UnitDeath(this);
-        }
-
-        public void ActionIsDone()
-        {
-            currentInteractionInstance.interactionStack.actions[stackIndex].ActionDone(this);
-        }
-        void PathfindToInteractionHook()
-        {
-            GameManager.instance.HandleMovingAction(CurrentNode.worldPosition);
-            //LoadInteractionFromStoredInteractionHook();
-        }
-        public void LoadInteractionFromHookAndStore(InteractionHook interactionHook)
-        {
-            currentInteractionHook = interactionHook;
-            PathfindToInteractionHook();
-        }
-        void LoadInteractionFromStoredInteractionHook()
-        {
-            currentInteractionHook.LoadInteraction(this);
-        }
-
-        public void HandleUnitAttack(Interaction interaction, float deltaTime)
-        {
-            interaction.StartMethod(this, animationClip, actionAnimation);
-
-            if (interaction.TickIsFinished(this, deltaTime))
-            {
-                interaction.OnEnd(this);
-                currentInteraction = null;
-            }
-            
-        }
-        void HandleInteraction(Interaction interaction, float deltaTime)
-        {
-            //interaction.StartMethod(this);
-            //if (interaction.TickIsFinished(this, deltaTime))
-            //{
-            //    interaction.OnEnd(this);
-            //    currentInteraction = null;
-            //}
-
-        }
-        public void AddOnInteractionStack(InteractionStack stack)
-        {
-            InteractionInstance ii = new InteractionInstance
-            {
-                interactionStack = stack,
-                gridUnit = this
-            };
-
-            interactionInstances.Add(ii);
-
-            UiManager.instance.CreateUiObjectForInteraction(ii);
-        }
-        public void RemoveInteraction(InteractionInstance instance)
-        {
-            if (interactionInstances.Contains(instance))
-            {
-                interactionInstances.Remove(instance);
-            }
-        }
-        public void LoadInteraction(Interaction targetInteraction)
-        {
-            currentInteraction = targetInteraction;
-        }
-        public void LoadInteractionStack(InteractionInstance instance)
-        {
-            stackIndex = 0;
-            currentInteractionInstance = instance;
-            currentInteractionInstance.interactionStack.LoadAction(this, stackIndex);
-        }
-        public void StackIsComplete()
-        {
-            Debug.Log("Stack is complete!");
-            currentEnemyTarget = null;
-            currentInteraction = null;
-
-            isHittingEnemy = false;
-
-            //Ui presentation of action
-            //if (currentInteractionInstance.uiObject != null)
-            //{
-            //    currentInteractionInstance.uiObject.SetToDestroy();
-            //    if (InteractionButton.instance != null)
-            //    {
-            //        InteractionButton.instance.OnClick();
-            //    }
-            //}
+            return this;
         }
     }
 }

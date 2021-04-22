@@ -15,17 +15,14 @@ namespace HOMM_BM
             path.Clear();
 
             path.Add(currentNode);
-            GameManager.instance.LoadNodesToPath(path);
+            FlowmapPathfinderMaster.instance.LoadNodesToPath(path);
         }
 
-        public void OnDoAction(GridUnit unit)
+        public void OnDoAction(UnitController unit)
         {
-            //unit.LoadGridActionToMove(path, animationClip);
-            //unit.PlayAnimation(actionAnimation);
-            //GameManager.instance.unitIsMoving = true;
-
+            unit.LoadGridActionToMove(path, animationClip);
             unit.PlayAnimation(actionAnimation);
-            unit.Animator.SetBool("isInteracting", true);
+            GameManager.BattleManager.unitIsMoving = true;
         }
     }
 }

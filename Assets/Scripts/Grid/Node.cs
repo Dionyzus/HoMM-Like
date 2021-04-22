@@ -82,8 +82,25 @@ namespace HOMM_BM
 
             for (int i = 0; i < colliders.Length; i++)
             {
-                if(!colliders[i].isTrigger)
-                    isWalkable = false;
+                //if(!colliders[i].isTrigger)
+                //    isWalkable = false;
+                isWalkable = false;
+            }
+        }
+
+        //A* pathfinding
+        public int x;
+        public int y;
+        public int z;
+
+        public Node parentNode;
+        public float hCost;
+        public float gCost;
+        public float fCost
+        {
+            get
+            {
+                return gCost + hCost;
             }
         }
     }

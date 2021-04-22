@@ -1,28 +1,22 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace HOMM_BM
 {
     public class FlowmapPathfinder
     {
         GridManager gridManager;
-        int gridIndex;
-        int stepsCount;
-        Node origin;
+        GridUnit gridUnit;
 
         public delegate void OnCompleteCallback(List<Node> reachableNodes);
         OnCompleteCallback onCompleteCallback;
-        int verticalStepsUp;
-        int verticalStepsDown;
 
         public FlowmapPathfinder(GridManager gridManager, GridUnit gridUnit, OnCompleteCallback onCompleteCallback = null)
         {
             this.gridManager = gridManager;
-            gridIndex = gridUnit.gridIndex;
-            stepsCount = gridUnit.stepsCount;
+            this.gridUnit = gridUnit;
             this.onCompleteCallback = onCompleteCallback;
-            origin = gridUnit.CurrentNode;
-            verticalStepsUp = gridUnit.verticalStepsUp;
-            verticalStepsDown = gridUnit.verticalStepsDown;
         }
         public List<Node> CreateFlowmapForNode()
         {
@@ -30,16 +24,16 @@ namespace HOMM_BM
             List<Node> openSet = new List<Node>();
             HashSet<Node> closedSet = new HashSet<Node>();
 
-            origin.steps = 0;
-            reachableNodes.Add(origin);
-            openSet.Add(origin);
+            gridUnit.CurrentNode.steps = 0;
+            reachableNodes.Add(gridUnit.CurrentNode);
+            openSet.Add(gridUnit.CurrentNode);
             while (openSet.Count > 0)
             {
                 Node currentNode = openSet[0];
                 int steps = currentNode.steps;
                 steps++;
 
-                if (steps < stepsCount)
+                if (steps < gridUnit.stepsCount)
                 {
                     foreach (Node node in GetNeighbours(currentNode))
                     {
@@ -50,7 +44,7 @@ namespace HOMM_BM
                                 openSet.Add(node);
                                 node.steps = steps;
 
-                                if (node.steps <= stepsCount)
+                                if (node.steps <= gridUnit.stepsCount)
                                     reachableNodes.Add(node);
                             }
                         }
@@ -66,7 +60,7 @@ namespace HOMM_BM
         {
             List<Node> retVal = new List<Node>();
 
-            for (int y = -verticalStepsDown; y <= verticalStepsUp; y++)
+            for (int y = -gridUnit.verticalStepsDown; y <= gridUnit.verticalStepsUp; y++)
             {
                 int _y = currentNode.position.y + y;
 
@@ -75,7 +69,7 @@ namespace HOMM_BM
                     int _x = currentNode.position.x + x;
                     int _z = currentNode.position.z;
 
-                    Node neighbour = gridManager.GetNode(_x, _y, _z, gridIndex);
+                    Node neighbour = gridManager.GetNode(_x, _y, _z, gridUnit.gridIndex);
                     if (neighbour != null)
                     {
                         if (neighbour.IsWalkable())
@@ -88,7 +82,7 @@ namespace HOMM_BM
                     int _x = currentNode.position.x;
                     int _z = currentNode.position.z + z;
 
-                    Node neighbour = gridManager.GetNode(_x, _y, _z, gridIndex);
+                    Node neighbour = gridManager.GetNode(_x, _y, _z, gridUnit.gridIndex);
                     if (neighbour != null)
                     {
                         if (neighbour.IsWalkable())
