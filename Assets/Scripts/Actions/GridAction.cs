@@ -22,7 +22,7 @@ namespace HOMM_BM
         {
             unit.LoadGridActionToMove(path, animationClip);
             unit.PlayAnimation(actionAnimation);
-            GameManager.BattleManager.unitIsMoving = true;
+            BattleManager.instance.unitIsMoving = true;
         }
     }
 }

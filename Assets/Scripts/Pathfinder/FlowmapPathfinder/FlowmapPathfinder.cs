@@ -25,8 +25,10 @@ namespace HOMM_BM
             HashSet<Node> closedSet = new HashSet<Node>();
 
             gridUnit.CurrentNode.steps = 0;
+
             reachableNodes.Add(gridUnit.CurrentNode);
             openSet.Add(gridUnit.CurrentNode);
+
             while (openSet.Count > 0)
             {
                 Node currentNode = openSet[0];
@@ -56,6 +58,7 @@ namespace HOMM_BM
             return reachableNodes;
         }
 
+        //Don't touch this one
         List<Node> GetNeighbours(Node currentNode)
         {
             List<Node> retVal = new List<Node>();

@@ -15,7 +15,7 @@ namespace HOMM_BM
                 if (ih != null)
                 {
                     //Basically always the same, since we just want to store interactionHook
-                    ih.interaction = new BattleInteraction();
+                    ih.interaction = new InitiateAttack();
                     gridUnit.StoreInteractionHook(ih);
                     return;
                 }

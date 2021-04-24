@@ -14,12 +14,12 @@ namespace HOMM_BM
         {
             button = GetComponent<Button>();
             button.onClick.AddListener(OnClick);
-            button.GetComponentInChildren<RawImage>().texture = heroController.unitImage;
+            button.GetComponentInChildren<RawImage>().texture = heroController.heroImage;
         }
 
         public void OnClick()
         {
-            GameManager.WorldManager.OnSelectCurrentHero(heroController);
+            WorldManager.instance.OnSelectCurrentHero(heroController);
         }
     }
 }

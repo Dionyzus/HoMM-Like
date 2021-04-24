@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
-    public class BattleInteraction : Interaction
+    public class InitiateAttack : Interaction
     {
         float timer;
         public override void OnEnd(GridUnit gridUnit)

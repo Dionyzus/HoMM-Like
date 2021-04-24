@@ -27,7 +27,7 @@ namespace HOMM_BM
 
             //Debug.DrawRay(origin, Vector3.down * distance, Color.red, 5);
 
-            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, distance, GridManager.ignoreForObstacles))
+            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, distance, GridManager.IGNORE_FOR_OBSTACLES))
             {
                 if (hit.transform.gameObject.layer == 9)
                 {
@@ -73,7 +73,7 @@ namespace HOMM_BM
             Vector3 origin = worldPosition + GridManager.instance.readOffset;
 
             Collider[] colliders = Physics.OverlapBox(origin,
-                GridManager.instance.readExtents / 2, Quaternion.identity, GridManager.ignoreForObstacles);
+                GridManager.instance.readExtents / 2, Quaternion.identity, GridManager.IGNORE_FOR_OBSTACLES);
 
             //Debug.DrawLine(origin, origin + GridManager.instance.readExtents / 2, Color.blue, 20);
             //Debug.DrawLine(origin, origin - GridManager.instance.readExtents / 2, Color.yellow, 20);
@@ -89,10 +89,6 @@ namespace HOMM_BM
         }
 
         //A* pathfinding
-        public int x;
-        public int y;
-        public int z;
-
         public Node parentNode;
         public float hCost;
         public float gCost;

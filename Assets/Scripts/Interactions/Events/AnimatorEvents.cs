@@ -9,9 +9,17 @@ namespace HOMM_BM
     {
         public UnityEvent onFinish;
 
+        public UnityEvent onAnimationHit;
+
         public void OnFinish()
         {
             onFinish.Invoke();
+        }
+
+        public void OnAnimationHit()
+        {
+            //onAnimationHit.Invoke();
+            BattleManager.instance.CurrentCombatEvent.OnDamageReceived();
         }
     }
 }

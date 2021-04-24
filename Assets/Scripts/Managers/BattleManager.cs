@@ -1,40 +1,63 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System;
+using System.Collections;
 
 namespace HOMM_BM
 {
-    public class BattleManager : GameManager
+    public class BattleManager : MonoBehaviour
     {
+        public static BattleManager instance;
+
+        //Used since not all animations have hit event
+        public bool unitReceivedHitDebug;
+
         public UnitController currentUnit;
-        UnitController storedUnit;
+
+        //Until some AI logic is added.
+        float debugTime;
+
+        Queue<UnitController> unitsQueue;
+        UnitController[] battleUnits;
 
         bool isTargetPointBlank;
-
         public bool calculatePath;
 
         [HideInInspector]
         public bool unitIsMoving;
 
+        private CombatEvent currentCombatEvent;
+        public CombatEvent CurrentCombatEvent { get => currentCombatEvent; set => currentCombatEvent = value; }
+
         MouseLogicBattle currentMouseLogic;
         public MouseLogicBattle selectMove;
         public MouseLogicBattle targetNodeAction;
 
+        UnitController previousUnit;
+        public UnitController PreviousUnit { get => previousUnit; set => previousUnit = value; }
+
         private void Awake()
         {
-            BattleManager = this;
+            instance = this;
         }
+        public void Initialize()
+        {
+            battleUnits = FindObjectsOfType<UnitController>();
+            Array.Sort(battleUnits,
+                    delegate (UnitController unitA, UnitController unitB) { return unitB.Initiative.CompareTo(unitA.Initiative); });
+
+            unitsQueue = new Queue<UnitController>(battleUnits);
+            currentUnit = unitsQueue.Peek();
+
+            //True as in initializing
+            OnCurrentUnitTurn(true);
+        }
+
         private void Update()
         {
-            if (!instance.CurrentGameState.Equals(GameState.BATTLE))
+            if (!GameManager.instance.CurrentGameState.Equals(GameManager.GameState.BATTLE))
                 return;
-
-            if (storedUnit != null)
-            {
-                if (storedUnit.IsInteracting)
-                    return;
-                storedUnit = null;
-            }
 
             if (unitIsMoving)
             {
@@ -45,18 +68,32 @@ namespace HOMM_BM
                     unitIsMoving = false;
 
                     if (!currentUnit.IsInteractionInitialized)
-                        calculatePath = true;
+                        OnMoveFinished();
                 }
             }
 
             else
             {
+                //Atm just for debuging purposes
+                if (currentUnit.gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
+                {
+                    if (debugTime >= 2)
+                    {
+                        OnMoveFinished();
+                        debugTime = 0;
+                        return;
+                    }
+                    debugTime += Time.deltaTime;
+                    return;
+                }
+
                 if (currentUnit != null)
                 {
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
                     if (Physics.Raycast(ray, out RaycastHit hit, 100))
                     {
+                        //Need to add check for range
                         if (EventSystem.current.IsPointerOverGameObject())
                         {
                             InteractionHook hook = hit.transform.GetComponentInParent<InteractionHook>();
@@ -69,7 +106,7 @@ namespace HOMM_BM
                                 if (!unitIsMoving)
                                 {
                                     Node targetNode = GridManager.instance.GetNode(hit.point, currentUnit.gridIndex);
-                                    if (FlowmapPathfinderMaster.instance.IsCurrentNodeNeighbour(currentUnit.CurrentNode, targetNode))
+                                    if (FlowmapPathfinderMaster.instance.IsTargetNodeNeighbour(currentUnit.CurrentNode, targetNode))
                                     {
                                         FlowmapPathfinderMaster.instance.pathLine.positionCount = 0;
                                         FlowmapPathfinderMaster.instance.previousPath.Clear();
@@ -86,6 +123,13 @@ namespace HOMM_BM
                                         currentUnit.IsInteractionInitialized = true;
                                         currentUnit.CreateInteractionContainer(hook.interactionContainer);
 
+                                        UnitController targetUnit = hook.GetComponentInParent<UnitController>();
+
+                                        if (targetUnit != null)
+                                        {
+                                            currentCombatEvent = new CombatEvent(currentUnit, targetUnit);
+                                        }
+
                                         if (FlowmapPathfinderMaster.instance.previousPath.Count > 0)
                                         {
                                             HandleMovingAction(currentUnit.CurrentNode.worldPosition);
@@ -93,8 +137,9 @@ namespace HOMM_BM
 
                                         if (isTargetPointBlank)
                                         {
-                                            currentUnit.isTargetPointBlank = true;
+                                            currentUnit.IsTargetPointBlank = true;
                                             isTargetPointBlank = false;
+                                            FlowmapPathfinderMaster.instance.ClearFlowmapData();
                                         }
 
                                         return;
@@ -103,12 +148,6 @@ namespace HOMM_BM
                             }
                         }
                     }
-                }
-
-                if (Input.GetMouseButtonDown(0))
-                {
-                    if (currentMouseLogic == null)
-                        currentMouseLogic = selectMove;
                 }
 
                 HandleMouse();
@@ -123,7 +162,7 @@ namespace HOMM_BM
 
         void HandleMouse()
         {
-            if (currentUnit != null && (currentUnit.IsInteracting || currentUnit.currentInteractionHook != null))
+            if (currentUnit.IsInteractionInitialized || currentUnit.IsInteracting || currentUnit.currentInteractionHook != null)
                 return;
 
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -134,33 +173,19 @@ namespace HOMM_BM
             }
         }
 
-        public void OnCurrentUnitTurn(UnitController gridUnit)
+        public void OnCurrentUnitTurn(bool isInitialize = false)
         {
-            if (unitIsMoving)
-                return;
-
-            if (currentUnit == gridUnit)
-                return;
-
-            if (gridUnit != null)
+            if (currentUnit != null)
             {
-                currentUnit = gridUnit;
+                UiManager.instance.OnUnitTurn(unitsQueue, currentUnit, isInitialize);
                 currentMouseLogic = selectMove;
-
-                UiManager.instance.OnUnitTurn(currentUnit);
-
-                if (currentMouseLogic != null)
-                    currentMouseLogic.InteractTick(this, currentUnit);
+            }
+            else
+            {
+                Debug.Log("Something went wrong, current unit is null!");
             }
         }
-        public void UnitDeath(UnitController gridUnit)
-        {
-            if (currentUnit == gridUnit)
-                currentUnit = null;
 
-            storedUnit = gridUnit;
-            calculatePath = true;
-        }
         public void HandleMovingAction(Vector3 origin)
         {
             if (currentUnit != null)
@@ -172,6 +197,24 @@ namespace HOMM_BM
 
                 FlowmapPathfinderMaster.instance.CalculateNewPath(origin, currentUnit);
             }
+        }
+        public void OnMoveFinished()
+        {
+            unitReceivedHitDebug = false;
+
+            unitsQueue.Dequeue();
+            unitsQueue.Enqueue(currentUnit);
+
+            previousUnit = currentUnit;
+
+            currentUnit = unitsQueue.Peek();
+
+            OnCurrentUnitTurn();
+        }
+
+        public void UnitDeathCallback(UnitController unitController)
+        {
+            //Remove from existing queue etc. etc.
         }
     }
 }

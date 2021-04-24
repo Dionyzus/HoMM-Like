@@ -21,21 +21,5 @@ namespace HOMM_BM
                 }
             }
         }
-        public override void InteractTick(BattleManager battleManager, UnitController unitController)
-        {
-            if (battleManager.currentUnit != null)
-            {
-                Node currentNode = GridManager.instance.GetNode(unitController.CurrentNode.worldPosition, battleManager.currentUnit.gridIndex);
-                if (currentNode != null)
-                {
-                    battleManager.currentUnit.currentGridAction.Tick(currentNode);
-
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        battleManager.currentUnit.currentGridAction.OnDoAction(battleManager.currentUnit);
-                    }
-                }
-            }
-        }
     }
 }

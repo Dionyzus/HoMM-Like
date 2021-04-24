@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace HOMM_BM
 {
-    public class CurrentUnitIcon : MonoBehaviour
+    public class UnitButton : MonoBehaviour
     {
         Button button;
         public UnitController unitController;
@@ -14,12 +14,14 @@ namespace HOMM_BM
         {
             button = GetComponent<Button>();
             button.onClick.AddListener(OnClick);
-            button.GetComponentInChildren<RawImage>().texture = unitController.unitImage;
+            button.GetComponentInChildren<Image>().sprite = unitController.UnitImage.sprite;
         }
 
         public void OnClick()
         {
-            GameManager.BattleManager.OnCurrentUnitTurn(unitController);
+            //Show unit stats, but probably should check how right click can be used
+
+            //BattleManager.instance.OnCurrentUnitTurn(unitController);
         }
     }
 }

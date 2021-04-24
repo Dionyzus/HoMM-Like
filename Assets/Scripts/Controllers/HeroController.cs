@@ -7,13 +7,15 @@ namespace HOMM_BM
 {
     public class HeroController : GridUnit
     {
+        bool failedToLoadPath = false;
+
+        public RenderTexture heroImage;
+
         private Slider interactionSlider;
         public Slider InteractionSlider { get => interactionSlider; set => interactionSlider = value; }
 
-        //private void Start()
-        //{
-        //    stepsCountSlider = stepsCount;
-        //}
+        private bool isInteractionPointBlank;
+        public bool IsInteractionPointBlank { get => isInteractionPointBlank; set => isInteractionPointBlank = value; }
 
         private void Update()
         {
@@ -36,7 +38,7 @@ namespace HOMM_BM
             {
                 if (interactionInstance != null)
                 {
-                    LoadIntoInteractionContainer(interactionInstance);
+                    LoadActionFromInteractionContainer(interactionInstance);
                     interactionInstance = null;
                 }
             }
@@ -141,7 +143,7 @@ namespace HOMM_BM
             RequestPathfindToNode(GridManager.instance.GetNode(currentInteractionHook.interactionPoint.position, gridIndex),
                     LoadInteractionFromInteractionHook);
         }
-        void RequestPathfindToNode(Node target, OnPathReachCallback callback)
+        public void RequestPathfindToNode(Node target, OnPathReachCallback callback)
         {
             //This could be problem..
             if (!target.isWalkable)
@@ -149,13 +151,33 @@ namespace HOMM_BM
                 callback?.Invoke();
             }
 
+            if (isInteractionPointBlank)
+            {
+                LoadInteractionFromInteractionHook();
+                isInteractionPointBlank = false;
+                return;
+            }
+
             PathfinderMaster.instance.RequestPathfinder(CurrentNode, target, LoadPath, callback, this);
+        }
+        public void PreviewPathToNode(Node target)
+        {
+            if (!target.isWalkable)
+            {
+                Debug.Log("Target node is not walkable");
+            }
+
+            PathfinderMaster.instance.RequestPathPreview(CurrentNode, target, this);
         }
         public void LoadPath(List<Node> path, OnPathReachCallback callback)
         {
             if (path == null || path.Count == 0)
             {
                 Debug.Log("Failed to load path, path is null.");
+
+                failedToLoadPath = true;
+                MovingToLocationCompleted();
+
                 return;
             }
             else
@@ -188,7 +210,7 @@ namespace HOMM_BM
         {
             currentInteractionInstance.interactionContainer.action.ActionDone(this);
         }
-        public override void LoadIntoInteractionContainer(InteractionInstance instance)
+        public override void LoadActionFromInteractionContainer(InteractionInstance instance)
         {
             currentInteractionInstance = instance;
             currentInteractionInstance.interactionContainer.LoadAction(this);
@@ -199,6 +221,45 @@ namespace HOMM_BM
 
             Destroy(currentInteractionHook.gameObject);
             currentInteractionHook = null;
+
+            if (currentInteractionInstance.uiObject != null)
+            {
+                currentInteractionInstance.uiObject.SetToDestroy();
+                if (InteractionButton.instance != null)
+                {
+                    InteractionButton.instance.OnClick();
+                }
+            }
+        }
+
+        public override void InitializeMoveToInteractionContainer(Node targetNode)
+        {
+            InteractionInstance ii = new InteractionInstance
+            {
+                interactionContainer = moveToLocationContainer,
+                gridUnit = this
+            };
+
+            interactionInstance = ii;
+            targetLocationNode = targetNode;
+
+            UiManager.instance.CreateUiObjectForInteraction(ii);
+        }
+        public override void MoveToLocation()
+        {
+            RequestPathfindToNode(targetLocationNode,
+                    MovingToLocationCompleted);
+        }
+        public override void MovingToLocationCompleted()
+        {
+            if (isInteractionInitialized)
+                isInteractionInitialized = false;
+
+            if (failedToLoadPath)
+            {
+                Debug.Log("Do some animation, maybe interaction button a bit diff");
+                failedToLoadPath = false;
+            }
 
             if (currentInteractionInstance.uiObject != null)
             {

@@ -18,10 +18,10 @@ namespace HOMM_BM
 
         Vector3 minPosition;
 
-        public static LayerMask ignoreForObstacles;
+        public static LayerMask IGNORE_FOR_OBSTACLES;
 
-        public static int enemyUnitsLayer = 10;
-        public static int friendlyUnitsLayer = 8;
+        public static int ENEMY_UNITS_LAYER = 10;
+        public static int FRIENDLY_UNITS_LAYER = 8;
 
         public bool visualizeCollisions = true;
         public static List<Vector3> visualizeNodes = new List<Vector3>();
@@ -34,7 +34,7 @@ namespace HOMM_BM
 
         private void Start()
         {
-            ignoreForObstacles = ~(1 << 8);
+            IGNORE_FOR_OBSTACLES = ~(1 << 8);
             ReadLevel();
 
             GridUnit[] gridUnits = FindObjectsOfType<GridUnit>();

@@ -1,25 +1,50 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HOMM_BM
 {
     public class UnitController : GridUnit
     {
-        public bool isUnitDeadDebug;
-        public bool isTargetPointBlank;
+        public GridAction currentGridAction;
+        public GameObject onDeathEnableCollider;
+
+        Image unitImage;
+        public Image UnitImage { get => unitImage; set => unitImage = value; }
+
+        public UnitStats unitStats;
+
+        //Unit controller specific data
+        float initiative;
+        public float Initiative { get => initiative; set => initiative = value; }
+
+        int hitPoints;
+        int hitDamage;
+
+        private bool isTargetPointBlank;
+        public bool IsTargetPointBlank { get => isTargetPointBlank; set => isTargetPointBlank = value; }
+        public int HitPoints { get => hitPoints; set => hitPoints = value; }
+        public int HitDamage { get => hitDamage; set => hitDamage = value; }
+
+        private void Awake()
+        {
+            unitImage = GetComponentInChildren<Image>();
+
+            gridIndex = unitStats.gridIndex;
+            stepsCount = unitStats.stepsCount;
+
+            movementSpeed = unitStats.movementSpeed;
+            rotationSpeed = unitStats.rotationSpeed;
+
+            initiative = unitStats.initiative;
+            hitPoints = unitStats.hitPoints;
+            hitDamage = unitStats.hitDamage;
+        }
 
         private void Update()
         {
             float deltaTime = Time.deltaTime;
-
-            if (isUnitDeadDebug)
-            {
-                enabled = false;
-                KillUnit();
-                isUnitDeadDebug = false;
-                return;
-            }
 
             //Check this out...
             //animator.applyRootMotion = IsInteracting;
@@ -29,7 +54,7 @@ namespace HOMM_BM
             {
                 if (interactionInstance != null)
                 {
-                    LoadIntoInteractionContainer(interactionInstance);
+                    LoadActionFromInteractionContainer(interactionInstance);
                     interactionInstance = null;
                 }
                 currentInteractionHook.LoadInteraction(this);
@@ -40,7 +65,7 @@ namespace HOMM_BM
             {
                 if (interactionInstance != null)
                 {
-                    LoadIntoInteractionContainer(interactionInstance);
+                    LoadActionFromInteractionContainer(interactionInstance);
                     interactionInstance = null;
                 }
                 TryLoadingInteractionFromHook();
@@ -50,27 +75,6 @@ namespace HOMM_BM
             {
                 HandleInteraction(currentInteraction, deltaTime);
             }
-        }
-
-        public void KillUnit()
-        {
-            animator.applyRootMotion = true;
-            animator.Play("Dying");
-            animator.SetBool("isInteracting", true);
-            unitCollider.enabled = false;
-
-            Collider[] colliders = GetComponentsInChildren<Collider>();
-            foreach (Collider c in colliders)
-            {
-                c.gameObject.layer = 9;
-            }
-            animator.transform.parent = null;
-
-            if (onDeathEnable != null)
-            {
-                onDeathEnable.SetActive(true);
-            }
-            GameManager.BattleManager.UnitDeath(this);
         }
 
         public bool MovingOnPathFinished()
@@ -179,7 +183,7 @@ namespace HOMM_BM
         }
         void TryLoadingInteractionFromHook()
         {
-            if (!GameManager.BattleManager.unitIsMoving)
+            if (!BattleManager.instance.unitIsMoving)
             {
                 currentInteractionHook.LoadInteraction(this);
                 isInteractionInitialized = false;
@@ -198,25 +202,55 @@ namespace HOMM_BM
                 currentInteraction = null;
             }
         }
+
         public override void ActionIsDone()
         {
             currentInteractionInstance.interactionContainer.action.ActionDone(this);
         }
-        public override void LoadIntoInteractionContainer(InteractionInstance instance)
+        public override void LoadActionFromInteractionContainer(InteractionInstance instance)
         {
             currentInteractionInstance = instance;
             currentInteractionInstance.interactionContainer.LoadAction(this);
+        }
+
+        //We shall see what to do with this, it messes things up now should probably be retaliation
+        //Atm used for debug purposes cause not all animations have hit events
+        public void HitReceivedCompleted()
+        {
+            currentInteraction = null;
+
+            if (isTargetPointBlank)
+                isTargetPointBlank = false;
         }
         public override void InteractionCompleted()
         {
             currentInteraction = null;
             currentInteractionHook = null;
 
+            if(isTargetPointBlank)
+                isTargetPointBlank = false;
+
             //If unit losses all hp, kill unit, leave dead body and now it is walkable
-            //Keep "interaction", since we wanna keep track of all the moves
+            //UnitDeadDebug stuff
+
+            //Maaybe keep interaction UI this for some cool inteeractions tracking
+            if (currentInteractionInstance.uiObject != null)
+            {
+                currentInteractionInstance.uiObject.SetToDestroy();
+                if (InteractionButton.instance != null)
+                {
+                    InteractionButton.instance.OnClick();
+                }
+            }
 
             //Keep this until adding select next unit
-            GameManager.BattleManager.calculatePath = true;
+            //BattleManager.instance.calculatePath = true;
+
+            //If animation doesn't have hit event set
+            if (!BattleManager.instance.unitReceivedHitDebug)
+                BattleManager.instance.CurrentCombatEvent.OnDamageReceived();
+
+            BattleManager.instance.OnMoveFinished();
         }
     }
 }

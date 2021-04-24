@@ -9,42 +9,29 @@ namespace HOMM_BM
     public class UiManager : MonoBehaviour
     {
         public GameObject sliderPrefab;
-        public GameObject charSelectPrefab;
+        public GameObject heroSelectPrefab;
 
         public GameObject interactionPrefab;
         public Transform interactionsParent;
+
+        public GameObject currentUnitPrefab;
+        public GameObject unitPrefab;
+
+        GameObject currentUnitUi;
+
+        Queue<GameObject> unitsUiQueue = new Queue<GameObject>();
 
         Slider stepsSlider;
         public static UiManager instance;
         private void Awake()
         {
             instance = this;
-
-            HeroController[] heroes = FindObjectsOfType<HeroController>();
-            foreach (HeroController hero in heroes)
-            {
-                if (hero.gameObject.layer == GridManager.friendlyUnitsLayer)
-                {
-                    GameObject sliderParent = AddHeroButton(hero);
-                    AddStepsSlider(hero, sliderParent);
-                }
-
-            }
-
-            UnitController[] units = FindObjectsOfType<UnitController>();
-            foreach (UnitController unit in units)
-            {
-                if (unit.gameObject.layer == GridManager.friendlyUnitsLayer)
-                {
-                    AddUnitIcon(unit);
-                }
-            }
         }
 
-        public void AddStepsSlider(HeroController hero, GameObject sliderParent)
+        public void AddStepsSlider(HeroController hero)
         {
             GameObject go = Instantiate(sliderPrefab);
-            go.transform.SetParent(sliderParent.transform);
+            go.transform.SetParent(sliderPrefab.transform.parent);
             go.transform.localScale = Vector3.one;
 
             stepsSlider = go.GetComponentInChildren<Slider>();
@@ -56,9 +43,9 @@ namespace HOMM_BM
 
             go.SetActive(true);
         }
-        public void ResetInteractionSlider(HeroController unit)
+        public void ResetInteractionSlider(HeroController hero)
         {
-            unit.InteractionSlider.value = unit.InteractionSlider.maxValue;
+            hero.InteractionSlider.value = hero.InteractionSlider.maxValue;
         }
 
         public void CreateUiObjectForInteraction(InteractionInstance instance)
@@ -72,21 +59,63 @@ namespace HOMM_BM
             interactionButton.interactionInstance = instance;
             instance.uiObject = interactionButton;
         }
-        public GameObject AddHeroButton(HeroController gridUnit)
+        public void AddHeroButton(HeroController heroController)
         {
-            GameObject go = Instantiate(charSelectPrefab);
-            go.transform.SetParent(charSelectPrefab.transform.parent);
+            GameObject go = Instantiate(heroSelectPrefab);
+            go.transform.SetParent(heroSelectPrefab.transform.parent);
             go.transform.localScale = Vector3.one;
             HeroSelectButton button = go.GetComponentInChildren<HeroSelectButton>();
-            button.heroController = gridUnit;
+            button.heroController = heroController;
             go.SetActive(true);
-
-            return go;
         }
 
-        private void AddUnitIcon(UnitController unit)
+        void AddCurrentUnitIcon(UnitController unitController)
         {
-            Debug.Log("Unit icon: " + unit.gameObject.transform);
+            GameObject go = Instantiate(currentUnitPrefab);
+            go.transform.SetParent(currentUnitPrefab.transform.parent);
+            go.transform.localScale = Vector3.one;
+            UnitButton button = go.GetComponentInChildren<UnitButton>();
+            button.unitController = unitController;
+            go.SetActive(true);
+
+            currentUnitUi = go;
+        }
+        void ClearCurrentUnitUi()
+        {
+            Destroy(currentUnitUi);
+        }
+
+        public void AddUnitIcons(Queue<UnitController> unitsQueue)
+        {
+            //Add something to differe enemy with friendly units
+            foreach (UnitController unit in unitsQueue)
+            {
+                GameObject go = Instantiate(unitPrefab);
+                go.transform.SetParent(unitPrefab.transform.parent);
+                go.transform.localScale = Vector3.one;
+                UnitButton button = go.GetComponentInChildren<UnitButton>();
+                button.unitController = unit;
+                go.SetActive(true);
+
+                unitsUiQueue.Enqueue(go);
+            }
+        }
+
+        public void UpdateUnitIcons()
+        {
+            ClearCurrentUnitUi();
+
+            GameObject newGo = Instantiate(unitPrefab);
+            newGo.transform.SetParent(unitPrefab.transform.parent);
+            newGo.transform.localScale = Vector3.one;
+            UnitButton button = newGo.GetComponentInChildren<UnitButton>();
+            button.unitController = BattleManager.instance.PreviousUnit;
+            newGo.SetActive(true);
+
+            GameObject go = unitsUiQueue.Dequeue();
+            Destroy(go);
+
+            unitsUiQueue.Enqueue(newGo);
         }
 
         public void OnHeroSelected(HeroController targetHero)
@@ -110,26 +139,20 @@ namespace HOMM_BM
             }
         }
 
-        public void OnUnitTurn(UnitController targetUnit)
+        public void OnUnitTurn(Queue<UnitController> unitsQueue, UnitController currentUnit, bool isInitialize)
         {
-            Debug.Log("Current unit turn: " + targetUnit.transform);
-            //CurrentUnitIcon[] characterDisplays = FindObjectsOfType<CurrentUnitIcon>();
+            if (isInitialize)
+            {
+                AddUnitIcons(unitsQueue);
+            }
+            else
+            {
+                UpdateUnitIcons();
+            }
 
-            ////Better way to do this ?
-            //foreach (CurrentUnitIcon displays in characterDisplays)
-            //{
-            //    Outline outline = displays.GetComponentInChildren<Outline>();
+            AddCurrentUnitIcon(currentUnit);
 
-            //    if (outline.enabled == true)
-            //    {
-            //        outline.enabled = false;
-            //    }
-
-            //    if (displays.unitController == targetUnit)
-            //    {
-            //        outline.enabled = true;
-            //    }
-            //}
+            BattleManager.instance.calculatePath = true;
         }
     }
 }

@@ -5,6 +5,5 @@ namespace HOMM_BM
     public abstract class MouseLogicBattle : ScriptableObject
     {
         public abstract void InteractTick(BattleManager battleManager, RaycastHit hit);
-        public abstract void InteractTick(BattleManager battleManager, UnitController unitController);
     }
 }

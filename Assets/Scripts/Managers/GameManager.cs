@@ -4,14 +4,18 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
+    [DisallowMultipleComponent]
     public class GameManager : MonoBehaviour
     {
         public static GameManager instance;
 
         GameState currentGameState;
         public GameState CurrentGameState { get => currentGameState; set => currentGameState = value; }
-        public static BattleManager BattleManager;
-        public static WorldManager WorldManager;
+
+        private void Awake()
+        {
+            instance = this;
+        }
 
         //Maybe this will need to be an update method
         private void Start()
@@ -20,13 +24,14 @@ namespace HOMM_BM
 
             if (LevelManager.instance.gameState.Equals(GameState.WORLD))
             {
-                instance = WorldManager;
+                WorldManager.instance.Initialize();
             }
             if (LevelManager.instance.gameState.Equals(GameState.BATTLE))
             {
-                instance = BattleManager;
+                BattleManager.instance.Initialize();
             }
         }
+
         public enum GameState
         {
             BATTLE,

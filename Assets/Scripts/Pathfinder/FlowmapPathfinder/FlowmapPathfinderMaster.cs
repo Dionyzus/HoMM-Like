@@ -28,7 +28,7 @@ namespace HOMM_BM
             instance = this;
         }
         //Should check this out a little bit more
-        public bool IsCurrentNodeNeighbour(Node currentNode, Node targetNode)
+        public bool IsTargetNodeNeighbour(Node currentNode, Node targetNode)
         {
             bool retVal = false;
 
@@ -61,13 +61,18 @@ namespace HOMM_BM
                 }
             }
         }
+        public void ClearFlowmapData()
+        {
+            ClearHighlightedNodes();
+            ClearReachableNodes();
+        }
         public void InitiateMovingOnPath(UnitController unitController)
         {
             if (previousPath.Count > 0)
             {
                 ClearHighlightedNodes();
                 unitController.LoadPathAndStartMoving(previousPath);
-                GameManager.BattleManager.unitIsMoving = true;
+                BattleManager.instance.unitIsMoving = true;
                 ClearReachableNodes();
             }
         }
@@ -109,6 +114,8 @@ namespace HOMM_BM
 
             LoadNodesToPath(previousPath);
         }
+
+        //Seperated for loops to eliminate diagonals
         List<Node> GetNeighbours(Node currentNode, UnitController unitController)
         {
             List<Node> retVal = new List<Node>();
@@ -119,16 +126,25 @@ namespace HOMM_BM
 
                 for (int x = -1; x <= 1; x++)
                 {
-                    for (int z = -1; z <= 1; z++)
-                    {
-                        int _x = currentNode.position.x + x;
-                        int _z = currentNode.position.z + z;
+                    int _x = currentNode.position.x + x;
+                    int _z = currentNode.position.z;
 
-                        Node node = GridManager.instance.GetNode(_x, _y, _z, unitController.gridIndex);
-                        if (node != null)
-                        {
-                            retVal.Add(node);
-                        }
+                    Node node = GridManager.instance.GetNode(_x, _y, _z, unitController.gridIndex);
+                    if (node != null)
+                    {
+                        retVal.Add(node);
+                    }
+                }
+
+                for (int z = -1; z <= 1; z++)
+                {
+                    int _x = currentNode.position.x;
+                    int _z = currentNode.position.z + z;
+
+                    Node node = GridManager.instance.GetNode(_x, _y, _z, unitController.gridIndex);
+                    if (node != null)
+                    {
+                        retVal.Add(node);
                     }
                 }
             }
@@ -136,11 +152,11 @@ namespace HOMM_BM
         }
         public void CalculateWalkablePositions()
         {
-            if (GameManager.BattleManager.currentUnit == null)
+            if (BattleManager.instance.currentUnit == null)
                 return;
 
             FlowmapPathfinder flowmapPathfinder =
-                new FlowmapPathfinder(GridManager.instance, GameManager.BattleManager.currentUnit);
+                new FlowmapPathfinder(GridManager.instance, BattleManager.instance.currentUnit);
 
             ClearReachableNodes();
 

@@ -5,8 +5,10 @@ using UnityEngine.EventSystems;
 
 namespace HOMM_BM
 {
-    public class WorldManager : GameManager
+    public class WorldManager : MonoBehaviour
     {
+        public static WorldManager instance;
+
         public HeroController currentHero;
         [HideInInspector]
         public bool heroIsMoving;
@@ -16,11 +18,24 @@ namespace HOMM_BM
 
         private void Awake()
         {
-            WorldManager = this;
+            instance = this;
         }
+        public void Initialize()
+        {
+            HeroController[] heroes = FindObjectsOfType<HeroController>();
+            foreach (HeroController hero in heroes)
+            {
+                if (hero.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                {
+                    UiManager.instance.AddHeroButton(hero);
+                    UiManager.instance.AddStepsSlider(hero);
+                }
+            }
+        }
+
         private void Update()
         {
-            if (!instance.CurrentGameState.Equals(GameState.WORLD))
+            if (!GameManager.instance.CurrentGameState.Equals(GameManager.GameState.WORLD))
                 return;
 
             if (currentHero != null)
@@ -41,11 +56,18 @@ namespace HOMM_BM
                             if (hook != null)
                             {
                                 currentHero.currentInteractionHook = hook;
+                                Node targetNode = GridManager.instance.GetNode(hit.point, currentHero.gridIndex);
+
+                                if (PathfinderMaster.instance.IsTargetNodeNeighbour(currentHero.CurrentNode, targetNode))
+                                {
+                                    currentHero.IsInteractionPointBlank = true;
+                                }
                             }
 
                             if (currentHero.currentInteractionHook != null && hook == null)
                             {
                                 currentHero.currentInteractionHook = null;
+                                currentHero.IsInteractionPointBlank = false;
                             }
                         }
                     }

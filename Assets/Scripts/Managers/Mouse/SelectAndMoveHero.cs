@@ -14,7 +14,7 @@ namespace HOMM_BM
                 return;
 
             ISelectable selectable = hit.transform.GetComponentInParent<ISelectable>();
-            if (selectable != null && selectable.GetGridUnit().gameObject.layer != GridManager.enemyUnitsLayer)
+            if (selectable != null && selectable.GetGridUnit().gameObject.layer != GridManager.ENEMY_UNITS_LAYER)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -27,7 +27,17 @@ namespace HOMM_BM
             }
             else
             {
-                Debug.Log("In else of interact tick, this should be to actual move on path");
+                if (worldManager.currentHero != null)
+                {
+                    Node targetNode = GridManager.instance.GetNode(hit.point, worldManager.currentHero.gridIndex);
+
+                    //Add something to show where player is clicking, or use path preview
+                    if (targetNode != null && Input.GetKeyDown(KeyCode.Space))
+                    {
+                        worldManager.currentHero.IsInteractionInitialized = true;
+                        worldManager.currentHero.InitializeMoveToInteractionContainer(targetNode);
+                    }
+                }
             }
         }
 

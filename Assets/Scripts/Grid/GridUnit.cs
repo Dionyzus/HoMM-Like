@@ -9,19 +9,16 @@ namespace HOMM_BM
         public delegate void OnPathReachCallback();
         protected OnPathReachCallback onPathReachCallback;
 
-        public GameObject onDeathEnable;
-
-        public GridAction currentGridAction;
-        public RenderTexture unitImage;
-
         protected Quaternion targetRotation;
         protected float moveTime;
         protected float rotationTime;
 
+        //Make this protected after adding hero stats
         public float movementSpeed = 2;
         public float rotationSpeed = .2f;
         public int gridIndex = 0;
         public int stepsCount = 3;
+
         public int verticalStepsUp = 1;
         public int verticalStepsDown = 3;
         public Node CurrentNode
@@ -35,6 +32,10 @@ namespace HOMM_BM
         public string actionAnimation;
         public AnimationClip animationClip;
 
+        public AnimationClip takingHitAnimationClip;
+
+        public InteractionContainer moveToLocationContainer;
+
         protected float time;
         protected int index;
         protected List<Node> currentPath = new List<Node>();
@@ -47,6 +48,8 @@ namespace HOMM_BM
         protected float actualMovementSpeed;
         protected bool isWalking;
         protected bool isDirty;
+
+        protected Node targetLocationNode;
 
         protected bool isInteractionInitialized;
         public bool IsInteractionInitialized { get => isInteractionInitialized; set => isInteractionInitialized = value; }
@@ -73,7 +76,8 @@ namespace HOMM_BM
         public bool IsWalking { get => isWalking; set => isWalking = value; }
 
         public AnimatorOverrideController overrideController;
-        protected Collider unitCollider;
+        private Collider unitCollider;
+        public Collider UnitCollider { get => unitCollider; set => unitCollider = value; }
 
         [HideInInspector]
         public InteractionHook currentInteractionHook;
@@ -150,18 +154,30 @@ namespace HOMM_BM
         {
             Debug.Log("Default action is done");
         }
-        public virtual void LoadIntoInteractionContainer(InteractionInstance instance)
+        public virtual void LoadActionFromInteractionContainer(InteractionInstance instance)
         {
-            Debug.Log("Default load into interaction container");
+            Debug.Log("Default load action from interaction container");
         }
         public virtual void InteractionCompleted()
         {
             Debug.Log("Default interaction completed");
         }
-
         public GridUnit GetGridUnit()
         {
             return this;
+        }
+
+        public virtual void InitializeMoveToInteractionContainer(Node targetNode)
+        {
+            Debug.Log("Default load to interaction container");
+        }
+        public virtual void MoveToLocation()
+        {
+            Debug.Log("Default move to location");
+        }
+        public virtual void MovingToLocationCompleted()
+        {
+            Debug.Log("Default moving to location completed");
         }
     }
 }
