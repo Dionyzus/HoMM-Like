@@ -30,17 +30,14 @@ namespace HOMM_BM
         //Should check this out a little bit more
         public bool IsTargetNodeNeighbour(Node currentNode, Node targetNode)
         {
-            bool retVal = false;
+            float xDistance = Mathf.Abs(currentNode.worldPosition.x - targetNode.worldPosition.x);
+            float zDistance = Mathf.Abs(currentNode.worldPosition.z - targetNode.worldPosition.z);
 
-            float xDistance = currentNode.worldPosition.x - targetNode.worldPosition.x;
-            float zDistance = currentNode.worldPosition.z - targetNode.worldPosition.z;
-
-            if (xDistance >= -1 && xDistance <= 1 && zDistance >= -1 && zDistance <= 1)
+            if (xDistance <= 1 && zDistance <= 1)
             {
-                retVal = true;
+                return true;
             }
-
-            return retVal;
+            return false;
         }
         public void CalculateNewPath(Vector3 origin, UnitController unitController)
         {
@@ -71,10 +68,38 @@ namespace HOMM_BM
             if (previousPath.Count > 0)
             {
                 ClearHighlightedNodes();
+
                 unitController.LoadPathAndStartMoving(previousPath);
                 BattleManager.instance.unitIsMoving = true;
+
                 ClearReachableNodes();
             }
+        }
+        int GetDistance(Node positionA, Node positionB)
+        {
+            int distanceX = Mathf.Abs(positionA.position.x - positionB.position.x);
+            int distanceZ = Mathf.Abs(positionA.position.z - positionB.position.z);
+
+            if (distanceX > distanceZ)
+            {
+                return 14 * distanceZ + 10 * (distanceX - distanceZ);
+            }
+
+            return 14 * distanceX + 10 * (distanceZ - distanceX);
+        }
+
+        List<Node> RetracePath(Node start, Node end)
+        {
+            List<Node> path = new List<Node>();
+            Node currentNode = end;
+
+            while (currentNode != start)
+            {
+                path.Add(currentNode);
+                currentNode = currentNode.parentNode;
+            }
+
+            return path;
         }
         public void GetPathFromMap(Node origin, UnitController unitController)
         {
@@ -82,73 +107,87 @@ namespace HOMM_BM
 
             List<Node> openSet = new List<Node>();
             HashSet<Node> closedSet = new HashSet<Node>();
-            openSet.Add(origin);
-            previousPath.Add(origin);
+
+            openSet.Add(unitController.CurrentNode);
 
             while (openSet.Count > 0)
             {
-                Node cn = openSet[0];
-                int minStep = cn.steps;
+                Node currentNode = openSet[0];
 
-                foreach (Node node in GetNeighbours(cn, unitController))
+                for (int i = 0; i < openSet.Count; i++)
                 {
-                    if (!closedSet.Contains(node))
+                    if (openSet[i].fCost < currentNode.fCost ||
+                       (openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost))
                     {
-                        if (!openSet.Contains(node))
+                        if (!currentNode.Equals(openSet[i]))
                         {
-                            if (reachableNodes.Contains(node))
+                            currentNode = openSet[i];
+                        }
+                    }
+                }
+                openSet.Remove(currentNode);
+                closedSet.Add(currentNode);
+
+                if (currentNode.Equals(origin))
+                {
+                    previousPath = RetracePath(unitController.CurrentNode, currentNode);
+                    break;
+                }
+
+                foreach (Node neighbour in GetNeighbours(currentNode, unitController))
+                {
+                    if (!closedSet.Contains(neighbour))
+                    {
+                        float moveCost = currentNode.gCost + GetDistance(currentNode, neighbour);
+                        if (moveCost < neighbour.gCost || !openSet.Contains(neighbour))
+                        {
+                            neighbour.gCost = moveCost;
+                            neighbour.hCost = GetDistance(neighbour, origin);
+                            neighbour.parentNode = currentNode;
+                            if (!openSet.Contains(neighbour))
                             {
-                                if (node.steps < minStep)
-                                {
-                                    openSet.Add(node);
-                                    previousPath.Add(node);
-                                    break;
-                                }
+                                openSet.Add(neighbour);
                             }
                         }
                     }
                 }
-                openSet.Remove(cn);
-                closedSet.Add(cn);
             }
 
             LoadNodesToPath(previousPath);
         }
 
-        //Seperated for loops to eliminate diagonals
-        List<Node> GetNeighbours(Node currentNode, UnitController unitController)
+        List<Node> GetNeighbours(Node from, UnitController unit)
         {
-            List<Node> retVal = new List<Node>();
+            List<Node> result = new List<Node>();
 
-            for (int y = -unitController.verticalStepsDown; y <= unitController.verticalStepsUp; y++)
+            for (int x = -1; x <= 1; x++)
             {
-                int _y = currentNode.position.y + y;
-
-                for (int x = -1; x <= 1; x++)
-                {
-                    int _x = currentNode.position.x + x;
-                    int _z = currentNode.position.z;
-
-                    Node node = GridManager.instance.GetNode(_x, _y, _z, unitController.gridIndex);
-                    if (node != null)
-                    {
-                        retVal.Add(node);
-                    }
-                }
-
                 for (int z = -1; z <= 1; z++)
                 {
-                    int _x = currentNode.position.x;
-                    int _z = currentNode.position.z + z;
+                    if (x == 0 && z == 0)
+                        continue;
 
-                    Node node = GridManager.instance.GetNode(_x, _y, _z, unitController.gridIndex);
-                    if (node != null)
+                    int _x = x + from.position.x;
+                    int _y = from.position.y;
+                    int _z = z + from.position.z;
+
+                    if (_x == from.position.x && _z == from.position.z)
+                        continue;
+
+                    Node node = GridManager.instance.GetNode(_x, _y, _z, unit.gridIndex);
+
+                    if (_x == unit.CurrentNode.position.x &&
+                            _z == unit.CurrentNode.position.z)
                     {
-                        retVal.Add(node);
+                        result.Add(unit.CurrentNode);
+                    }
+                    else if (node != null && node.IsWalkable())
+                    {
+                        result.Add(node);
                     }
                 }
             }
-            return retVal;
+            return result;
         }
         public void CalculateWalkablePositions()
         {
@@ -233,6 +272,12 @@ namespace HOMM_BM
             }
 
             highlightedNodes.Clear();
+        }
+        public void ClearPathData()
+        {
+            pathLine.positionCount = 0;
+            previousPath.Clear();
+            ClearHighlightedNodes();
         }
         public void LoadNodesToPath(List<Node> nodes)
         {

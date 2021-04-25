@@ -140,17 +140,10 @@ namespace HOMM_BM
         }
         void PathfindToInteractionHook()
         {
-            RequestPathfindToNode(GridManager.instance.GetNode(currentInteractionHook.interactionPoint.position, gridIndex),
-                    LoadInteractionFromInteractionHook);
+            MoveToRequestedLocation(LoadInteractionFromInteractionHook);
         }
-        public void RequestPathfindToNode(Node target, OnPathReachCallback callback)
+        public void MoveToRequestedLocation(OnPathReachCallback callback)
         {
-            //This could be problem..
-            if (!target.isWalkable)
-            {
-                callback?.Invoke();
-            }
-
             if (isInteractionPointBlank)
             {
                 LoadInteractionFromInteractionHook();
@@ -158,16 +151,24 @@ namespace HOMM_BM
                 return;
             }
 
-            PathfinderMaster.instance.RequestPathfinder(CurrentNode, target, LoadPath, callback, this);
+            PathfinderMaster.instance.RequestPathfinder(LoadPath, callback);
         }
-        public void PreviewPathToNode(Node target)
+        public void PreviewPathToNode(Node target, InteractionHook interactionHook = null)
         {
-            if (!target.isWalkable)
+            if (interactionHook != null)
             {
-                Debug.Log("Target node is not walkable");
+                PathfinderMaster.instance.RequestPathAndPreview(CurrentNode,
+                    GridManager.instance.GetNode(interactionHook.interactionPoint.position, gridIndex), this);
             }
+            else
+            {
+                if (!target.IsWalkable())
+                {
+                    Debug.Log("Target node is not walkable");
+                }
 
-            PathfinderMaster.instance.RequestPathPreview(CurrentNode, target, this);
+                PathfinderMaster.instance.RequestPathAndPreview(CurrentNode, target, this);
+            }
         }
         public void LoadPath(List<Node> path, OnPathReachCallback callback)
         {
@@ -241,13 +242,12 @@ namespace HOMM_BM
             };
 
             interactionInstance = ii;
-            targetLocationNode = targetNode;
 
             UiManager.instance.CreateUiObjectForInteraction(ii);
         }
         public override void MoveToLocation()
         {
-            RequestPathfindToNode(targetLocationNode,
+            MoveToRequestedLocation(
                     MovingToLocationCompleted);
         }
         public override void MovingToLocationCompleted()

@@ -58,6 +58,9 @@ namespace HOMM_BM
                                 currentHero.currentInteractionHook = hook;
                                 Node targetNode = GridManager.instance.GetNode(hit.point, currentHero.gridIndex);
 
+                                if (targetNode != null)
+                                    currentHero.PreviewPathToNode(targetNode, hook);
+
                                 if (PathfinderMaster.instance.IsTargetNodeNeighbour(currentHero.CurrentNode, targetNode))
                                 {
                                     currentHero.IsInteractionPointBlank = true;

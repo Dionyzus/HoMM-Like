@@ -7,10 +7,6 @@ namespace HOMM_BM
     {
         public override void InteractTick(BattleManager battleManager, RaycastHit hit)
         {
-            InteractionHook ih = hit.transform.GetComponentInParent<InteractionHook>();
-            if (ih)
-                return;
-
             battleManager.HandleMovingAction(hit.point);
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 using UnityEngine.UI;
 
 namespace HOMM_BM
@@ -19,7 +20,7 @@ namespace HOMM_BM
 
         GameObject currentUnitUi;
 
-        Queue<GameObject> unitsUiQueue = new Queue<GameObject>();
+        List<GameObject> unitsUiQueue = new List<GameObject>();
 
         Slider stepsSlider;
         public static UiManager instance;
@@ -85,7 +86,7 @@ namespace HOMM_BM
             Destroy(currentUnitUi);
         }
 
-        public void AddUnitIcons(Queue<UnitController> unitsQueue)
+        public void AddUnitIcons(List<UnitController> unitsQueue)
         {
             //Add something to differe enemy with friendly units
             foreach (UnitController unit in unitsQueue)
@@ -97,7 +98,7 @@ namespace HOMM_BM
                 button.unitController = unit;
                 go.SetActive(true);
 
-                unitsUiQueue.Enqueue(go);
+                unitsUiQueue.Add(go);
             }
         }
 
@@ -112,10 +113,32 @@ namespace HOMM_BM
             button.unitController = BattleManager.instance.PreviousUnit;
             newGo.SetActive(true);
 
-            GameObject go = unitsUiQueue.Dequeue();
+            GameObject go = unitsUiQueue.ElementAt(0);
             Destroy(go);
 
-            unitsUiQueue.Enqueue(newGo);
+            unitsUiQueue.RemoveAt(0);
+
+            unitsUiQueue.Add(newGo);
+        }
+
+        public void UpdateUiOnUnitDeath(UnitController unit)
+        {
+            if (unit != null)
+            {
+                foreach (GameObject unitUi in unitsUiQueue)
+                {
+                    UnitButton button = unitUi.GetComponentInChildren<UnitButton>();
+                    if (button != null && button.unitController != null)
+                    {
+                        if (unit.Equals(button.unitController))
+                        {
+                            unitsUiQueue.Remove(unitUi);
+                            Destroy(unitUi);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         public void OnHeroSelected(HeroController targetHero)
@@ -139,7 +162,7 @@ namespace HOMM_BM
             }
         }
 
-        public void OnUnitTurn(Queue<UnitController> unitsQueue, UnitController currentUnit, bool isInitialize)
+        public void OnUnitTurn(List<UnitController> unitsQueue, UnitController currentUnit, bool isInitialize)
         {
             if (isInitialize)
             {

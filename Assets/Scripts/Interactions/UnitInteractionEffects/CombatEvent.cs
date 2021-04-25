@@ -22,6 +22,7 @@ namespace HOMM_BM
             if (receiver.HitPoints <= 0)
             {
                 OnUnitDeath(receiver);
+                BattleManager.instance.UnitDeathCallback(receiver);
             }
             else
             {
@@ -50,8 +51,6 @@ namespace HOMM_BM
             {
                 unit.onDeathEnableCollider.SetActive(true);
             }
-
-            BattleManager.instance.UnitDeathCallback(unit);
         }
     }
 }

@@ -29,10 +29,20 @@ namespace HOMM_BM
             {
                 if (worldManager.currentHero != null)
                 {
-                    Node targetNode = GridManager.instance.GetNode(hit.point, worldManager.currentHero.gridIndex);
+                    Node targetNode = null;
 
-                    //Add something to show where player is clicking, or use path preview
-                    if (targetNode != null && Input.GetKeyDown(KeyCode.Space))
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        targetNode = GridManager.instance.GetNode(hit.point, worldManager.currentHero.gridIndex);
+
+                        if (worldManager.currentHero.IsInteractionPointBlank)
+                        {
+                            worldManager.currentHero.IsInteractionPointBlank = false;
+                        }
+                        worldManager.currentHero.PreviewPathToNode(targetNode);
+                    }
+
+                    if (PathfinderMaster.instance.StoredPath.Count > 0 && Input.GetKeyDown(KeyCode.Space))
                     {
                         worldManager.currentHero.IsInteractionInitialized = true;
                         worldManager.currentHero.InitializeMoveToInteractionContainer(targetNode);

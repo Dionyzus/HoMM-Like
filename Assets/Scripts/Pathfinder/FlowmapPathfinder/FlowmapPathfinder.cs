@@ -35,7 +35,7 @@ namespace HOMM_BM
                 int steps = currentNode.steps;
                 steps++;
 
-                if (steps < gridUnit.stepsCount)
+                if (steps <= gridUnit.stepsCount)
                 {
                     foreach (Node node in GetNeighbours(currentNode))
                     {
@@ -58,38 +58,34 @@ namespace HOMM_BM
             return reachableNodes;
         }
 
-        //Don't touch this one
         List<Node> GetNeighbours(Node currentNode)
         {
             List<Node> retVal = new List<Node>();
 
-            for (int y = -gridUnit.verticalStepsDown; y <= gridUnit.verticalStepsUp; y++)
+            for (int x = -1; x <= 1; x++)
             {
-                int _y = currentNode.position.y + y;
-
-                for (int x = -1; x <= 1; x++)
-                {
-                    int _x = currentNode.position.x + x;
-                    int _z = currentNode.position.z;
-
-                    Node neighbour = gridManager.GetNode(_x, _y, _z, gridUnit.gridIndex);
-                    if (neighbour != null)
-                    {
-                        if (neighbour.IsWalkable())
-                            retVal.Add(neighbour);
-                    }
-                }
-
                 for (int z = -1; z <= 1; z++)
                 {
-                    int _x = currentNode.position.x;
-                    int _z = currentNode.position.z + z;
+                    if (x == 0 && z == 0)
+                        continue;
 
-                    Node neighbour = gridManager.GetNode(_x, _y, _z, gridUnit.gridIndex);
-                    if (neighbour != null)
+                    int _x = x + currentNode.position.x;
+                    int _y = currentNode.position.y;
+                    int _z = z + currentNode.position.z;
+
+                    if (_x == currentNode.position.x && _z == currentNode.position.z)
+                        continue;
+
+                    Node node = gridManager.GetNode(_x, _y, _z, gridUnit.gridIndex);
+
+                    if (_x == gridUnit.CurrentNode.position.x &&
+                                _z == gridUnit.CurrentNode.position.z)
                     {
-                        if (neighbour.IsWalkable())
-                            retVal.Add(neighbour);
+                        retVal.Add(gridUnit.CurrentNode);
+                    }
+                    else if (node != null && node.IsWalkable())
+                    {
+                        retVal.Add(node);
                     }
                 }
             }

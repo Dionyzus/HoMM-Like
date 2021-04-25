@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 
 namespace HOMM_BM
@@ -10,35 +9,46 @@ namespace HOMM_BM
         public static PathfinderMaster instance;
         public LineRenderer pathLine;
 
+        public delegate void PathIsFound(List<Node> path, GridUnit.OnPathReachCallback callback);
+        PathIsFound onPathIsFound;
+        GridUnit.OnPathReachCallback onPathReach;
+
+        List<Node> storedPath = new List<Node>();
+        public List<Node> StoredPath { get => storedPath; set => storedPath = value; }
+
         private void Awake()
         {
             instance = this;
         }
-        public void RequestPathPreview(Node start, Node target, GridUnit unit)
+        public void RequestPathAndPreview(Node start, Node target, GridUnit unit)
         {
             Pathfinder pathfinder = new Pathfinder(start, target, GridManager.instance, unit);
-            pathfinder.PreviewPath();
+            storedPath = pathfinder.FindAndPreviewPath();
         }
-        public void RequestPathfinder(Node start, Node target, Pathfinder.PathIsFound onPathIsFound, GridUnit.OnPathReachCallback onPathReach, GridUnit unit)
+        public void RequestPathfinder(PathIsFound onPathIsFound, GridUnit.OnPathReachCallback onPathReach)
         {
-            Pathfinder pathfinder = new Pathfinder(start, target, onPathIsFound, onPathReach, GridManager.instance, unit);
-            pathfinder.FindPath();
+            this.onPathIsFound = onPathIsFound;
+            this.onPathReach = onPathReach;
+
+            GetStoredPath();
+        }
+        void GetStoredPath()
+        {
+            onPathIsFound?.Invoke(storedPath, onPathReach);
         }
 
         //Should check this out a little bit more
         public bool IsTargetNodeNeighbour(Node currentNode, Node targetNode)
         {
-            bool retVal = false;
+            float xDistance = Mathf.Abs(currentNode.worldPosition.x - targetNode.worldPosition.x);
+            float zDistance = Mathf.Abs(currentNode.worldPosition.z - targetNode.worldPosition.z);
 
-            float xDistance = currentNode.worldPosition.x - targetNode.worldPosition.x;
-            float zDistance = currentNode.worldPosition.z - targetNode.worldPosition.z;
-
-            if (xDistance >= -1 && xDistance <= 1 && zDistance >= -1 && zDistance <= 1)
+            if (xDistance <= 1 && zDistance <= 1)
             {
-                retVal = true;
+                return true;
             }
 
-            return retVal;
+            return false;
         }
     }
 }

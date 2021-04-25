@@ -49,8 +49,6 @@ namespace HOMM_BM
         protected bool isWalking;
         protected bool isDirty;
 
-        protected Node targetLocationNode;
-
         protected bool isInteractionInitialized;
         public bool IsInteractionInitialized { get => isInteractionInitialized; set => isInteractionInitialized = value; }
 
