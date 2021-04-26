@@ -147,6 +147,10 @@ namespace HOMM_BM
             if (isInteractionPointBlank)
             {
                 LoadInteractionFromInteractionHook();
+                if (PathfinderMaster.instance.pathLine.positionCount > 0)
+                {
+                    PathfinderMaster.instance.pathLine.positionCount = 0;
+                }
                 isInteractionPointBlank = false;
                 return;
             }
