@@ -175,7 +175,7 @@ namespace HOMM_BM
 
             AddCurrentUnitIcon(currentUnit);
 
-            BattleManager.instance.calculatePath = true;
+            BattleManager.instance.CalculatePath = true;
         }
     }
 }

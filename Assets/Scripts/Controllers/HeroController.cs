@@ -235,6 +235,8 @@ namespace HOMM_BM
                     InteractionButton.instance.OnClick();
                 }
             }
+
+            WorldManager.instance.DeactivateLookAtActionCamera();
         }
 
         public override void InitializeMoveToInteractionContainer(Node targetNode)
@@ -273,6 +275,8 @@ namespace HOMM_BM
                     InteractionButton.instance.OnClick();
                 }
             }
+
+            WorldManager.instance.DeactivateLookAtActionCamera();
         }
     }
 }

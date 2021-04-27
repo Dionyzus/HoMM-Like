@@ -15,6 +15,7 @@ namespace HOMM_BM
         Vector3Int[] gridSizes;
         List<Node[,,]> grids = new List<Node[,,]>();
         GameObject[] gridParents;
+        GridPosition[] gridPositions;
 
         Vector3 minPosition;
 
@@ -27,6 +28,11 @@ namespace HOMM_BM
         public static List<Vector3> visualizeNodes = new List<Vector3>();
 
         public static GridManager instance;
+
+        public Vector3 MinPosition { get => minPosition; set => minPosition = value; }
+        public GameObject[] GridParents { get => gridParents; set => gridParents = value; }
+        public GridPosition[] GridPositions { get => gridPositions; set => gridPositions = value; }
+
         private void Awake()
         {
             instance = this;
@@ -40,8 +46,11 @@ namespace HOMM_BM
             GridUnit[] gridUnits = FindObjectsOfType<GridUnit>();
             foreach (GridUnit unit in gridUnits)
             {
-                Node node = GetNode(unit.transform.position, unit.gridIndex);
-                unit.transform.position = node.worldPosition;
+                if (unit.gameObject.layer == ENEMY_UNITS_LAYER)
+                {
+                    Node node = GetNode(unit.transform.position, unit.gridIndex);
+                    unit.transform.position = node.worldPosition;
+                }
             }
 
             GridObject[] gridObjects = FindObjectsOfType<GridObject>();
@@ -54,7 +63,7 @@ namespace HOMM_BM
 
         void ReadLevel()
         {
-            GridPosition[] gridPositions = FindObjectsOfType<GridPosition>();
+            gridPositions = FindObjectsOfType<GridPosition>();
 
             float minX = float.MaxValue;
             float maxX = float.MinValue;

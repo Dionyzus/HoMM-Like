@@ -14,7 +14,7 @@ namespace HOMM_BM
                 {
                     battleManager.currentUnit.currentGridAction.Tick(currentNode);
 
-                    if (Input.GetMouseButtonDown(0))
+                    if (GameManager.instance.Mouse.leftButton.isPressed)
                     {
                         battleManager.currentUnit.currentGridAction.OnDoAction(battleManager.currentUnit);
                     }

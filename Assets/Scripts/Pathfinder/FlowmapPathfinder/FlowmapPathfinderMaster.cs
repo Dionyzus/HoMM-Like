@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
+    //Check if it is possible to clear some nodes, cause it looks like some are not cleared.
     public class FlowmapPathfinderMaster : MonoBehaviour
     {
         public LineRenderer pathLine;

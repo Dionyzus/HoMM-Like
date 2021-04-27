@@ -20,7 +20,7 @@ namespace HOMM_BM
             Quaternion rotation = Quaternion.LookRotation(direction);
             gridUnit.transform.rotation = Quaternion.Slerp(gridUnit.transform.rotation, rotation, deltaTime / .3f);
 
-            if (timer < 0)
+            if (timer <= 0)
             {
                 return true;
             }

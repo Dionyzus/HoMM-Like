@@ -195,6 +195,9 @@ namespace HOMM_BM
         }
         protected override void HandleInteraction(Interaction interaction, float deltaTime)
         {
+            if(currentInteractionHook)
+                BattleManager.instance.ActivateCombatCamera(currentInteractionHook.transform);
+
             interaction.StartMethod(this);
             if (interaction.TickIsFinished(this, deltaTime))
             {
@@ -227,7 +230,7 @@ namespace HOMM_BM
             currentInteraction = null;
             currentInteractionHook = null;
 
-            if(isTargetPointBlank)
+            if (isTargetPointBlank)
                 isTargetPointBlank = false;
 
             //If unit losses all hp, kill unit, leave dead body and now it is walkable
