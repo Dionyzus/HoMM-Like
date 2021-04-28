@@ -15,6 +15,7 @@ namespace HOMM_BM
         Vector3Int[] gridSizes;
         List<Node[,,]> grids = new List<Node[,,]>();
         GameObject[] gridParents;
+        //First position is bottom left !y=0!, second position is upper right !y=1!
         GridPosition[] gridPositions;
 
         Vector3 minPosition;
@@ -43,21 +44,22 @@ namespace HOMM_BM
             IGNORE_FOR_OBSTACLES = ~(1 << 8);
             ReadLevel();
 
-            GridUnit[] gridUnits = FindObjectsOfType<GridUnit>();
-            foreach (GridUnit unit in gridUnits)
+            //This will be heros initialization, unit controllers are handled differently
+            HeroController[] heroes = FindObjectsOfType<HeroController>();
+            foreach (HeroController hero in heroes)
             {
-                if (unit.gameObject.layer == ENEMY_UNITS_LAYER)
-                {
-                    Node node = GetNode(unit.transform.position, unit.gridIndex);
-                    unit.transform.position = node.worldPosition;
-                }
+                Node node = GetNode(hero.transform.position, hero.gridIndex);
+                hero.transform.position = node.worldPosition;
             }
-
-            GridObject[] gridObjects = FindObjectsOfType<GridObject>();
-            foreach (GridObject go in gridObjects)
+            //There wont be grid objects / interactions in battle state
+            if (GameManager.instance.CurrentGameState.Equals(GameManager.GameState.WORLD))
             {
-                Node node = GetNode(go.transform.position, go.gridIndex);
-                go.transform.position = node.worldPosition;
+                GridObject[] gridObjects = FindObjectsOfType<GridObject>();
+                foreach (GridObject go in gridObjects)
+                {
+                    Node node = GetNode(go.transform.position, go.gridIndex);
+                    go.transform.position = node.worldPosition;
+                }
             }
         }
 

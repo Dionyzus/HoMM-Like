@@ -87,6 +87,10 @@ namespace HOMM_BM
                     {
                         retVal.Add(node);
                     }
+                    else if (node != null)
+                    {
+                        FlowmapPathfinderMaster.instance.UnwalkableNodes.Add(node);
+                    }
                 }
             }
             return retVal;

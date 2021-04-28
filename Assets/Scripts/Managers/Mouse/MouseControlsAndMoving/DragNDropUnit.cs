@@ -13,6 +13,8 @@ namespace HOMM_BM
         UnitController unitController;
         Node initialNode;
 
+        [HideInInspector]
+        public List<Node> InvalidNodes = new List<Node>();
         public void OnPointerDown(PointerEventData eventData)
         {
             unitController = GetComponent<UnitController>();
@@ -40,18 +42,44 @@ namespace HOMM_BM
             Cursor.visible = true;
 
             List<Node> tacticalNodes = BattleManager.instance.GetNormalizedTacticalNodes();
+            Dictionary<UnitController, Node> unitsNodes = BattleManager.instance.GetUnitsNodes();
 
-            Vector3 normalizedVector = new Vector3(Mathf.Round(transform.position.x), 1, Mathf.Round(transform.position.z));
-            Node node = GridManager.instance.GetNode(normalizedVector, unitController.gridIndex);
+            Node normalizedNode = BattleManager.instance.CreateNormalizedNode(transform.position, unitController.gridIndex);
 
-            if (node == null || !tacticalNodes.Contains(node))
+            if (normalizedNode == null || !tacticalNodes.Contains(normalizedNode) || !DropIsValid(unitsNodes, normalizedNode))
             {
                 transform.position = initialNode.worldPosition;
+                if (normalizedNode != null)
+                    BattleManager.instance.InvalidNodes.Add(normalizedNode);
             }
             else
             {
-                transform.position = node.worldPosition;
+                unitsNodes[unitController] = normalizedNode;
+                transform.position = normalizedNode.worldPosition + new Vector3(0, 1, 0);
             }
+        }
+
+        bool DropIsValid(Dictionary<UnitController, Node> unitsNodes, Node normalizedNode)
+        {
+            if (unitsNodes.ContainsValue(normalizedNode))
+            {
+                return false;
+            }
+            foreach (Node subNode in normalizedNode.subNodes)
+            {
+                if (unitsNodes.ContainsValue(subNode))
+                {
+                    return false;
+                }
+            }
+            foreach (Node node in unitsNodes.Values)
+            {
+                if (node.subNodes.Contains(normalizedNode))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
         Vector3 GetMouseWorldPosition()
         {

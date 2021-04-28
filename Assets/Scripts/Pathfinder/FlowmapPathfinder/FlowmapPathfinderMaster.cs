@@ -15,6 +15,8 @@ namespace HOMM_BM
         public List<Node> previousPath = new List<Node>();
         [HideInInspector]
         public List<Node> reachableNodes = new List<Node>();
+        [HideInInspector]
+        public List<Node> UnwalkableNodes = new List<Node>();
 
         public Material standardMaterial;
         public Material highlightedMaterial;
@@ -56,8 +58,29 @@ namespace HOMM_BM
                             GetPathFromMap(currentNode, unitController);
                         }
                     }
+                    else
+                    {
+                        UnwalkableNodes.Add(currentNode);
+                    }
+                }
+                else
+                {
+                    UnwalkableNodes.Add(currentNode);
                 }
             }
+        }
+        public void ClearUnwalkableNodes()
+        {
+            foreach (Node node in UnwalkableNodes)
+            {
+                foreach (Node subNode in node.subNodes)
+                {
+                    GridManager.instance.ClearNode(subNode);
+                }
+                GridManager.instance.ClearNode(node);
+            }
+
+            UnwalkableNodes.Clear();
         }
         public void ClearFlowmapData()
         {
