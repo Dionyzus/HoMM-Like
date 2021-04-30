@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 namespace HOMM_BM
 {
-    public class DragNDropUnit : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler
+    public class DragNDropUnit : MonoBehaviour, IPointerDownHandler, IEndDragHandler, IDragHandler
     {
         private Vector3 mOffset;
         private float mouseZCoord;
@@ -15,6 +15,7 @@ namespace HOMM_BM
 
         [HideInInspector]
         public List<Node> InvalidNodes = new List<Node>();
+
         public void OnPointerDown(PointerEventData eventData)
         {
             unitController = GetComponent<UnitController>();
@@ -25,12 +26,9 @@ namespace HOMM_BM
                 transform.position).z;
 
             mOffset = transform.position - GetMouseWorldPosition();
-        }
-        public void OnBeginDrag(PointerEventData eventData)
-        {
+
             Cursor.visible = false;
         }
-
         public void OnDrag(PointerEventData eventData)
         {
             transform.position = new Vector3(GetMouseWorldPosition().x + mOffset.x, transform.position.y, GetMouseWorldPosition().z + mOffset.z);

@@ -168,8 +168,8 @@ namespace HOMM_BM
         //Later on need to add walkable check
         void InitializePreparationPhase()
         {
-            int xGridRange = Mathf.FloorToInt(Mathf.Abs(GridManager.instance.GridPositions[0].transform.position.x -
-                GridManager.instance.GridPositions[1].transform.position.x));
+            int xGridRange = Mathf.FloorToInt(Mathf.Abs(startGridPosition.transform.position.x -
+                endGridPosition.transform.position.x));
 
             Vector3 friendlyInitialPosition = startGridPosition.transform.position;
 
@@ -178,6 +178,7 @@ namespace HOMM_BM
         }
         //We wont know number of units once battle actually starts
         //Atm just reading existing units in the scene
+        //Add instantiating from prefab
         private void InitializeUnitLists()
         {
             foreach (UnitController unit in battleUnits)
@@ -220,6 +221,8 @@ namespace HOMM_BM
                         normalizedTacticalNodes.Add(normalizedNode);
 
                     unitsNodes.Add(unit, normalizedNode);
+
+                    //Adding to x side of grids as units are being placed
                     if (unit.gridIndex == 0)
                     {
                         xGridRange -= xOffsetGridIndexZero;
@@ -238,6 +241,7 @@ namespace HOMM_BM
             }
         }
 
+        //Maybe try find different way to check if position is correct
         public Node CreateNormalizedNode(Vector3 position, int gridIndex)
         {
             Vector3 normalizedPosition;
@@ -246,17 +250,16 @@ namespace HOMM_BM
                 normalizedPosition = new Vector3(Mathf.Round(position.x), 0, Mathf.Round(position.z));
                 return GridManager.instance.GetNode(normalizedPosition, gridIndex);
             }
-            normalizedPosition = new Vector3(Mathf.Round(position.x), 0, Mathf.FloorToInt(position.z));
+            normalizedPosition = new Vector3(Mathf.FloorToInt(position.x), 0, Mathf.Round(position.z));
             return GridManager.instance.GetNode(normalizedPosition, gridIndex);
         }
 
         //Probably will need to have some standard grid sizes to avoid eventual problems with calculations
         //Even tho having properly placed grid positions should ensure there are no unplanned issues
-        //Wont work with gridIndex > 0
         private void CreateTacticalNodesForSmallUnits()
         {
-            int xGridRange = Mathf.FloorToInt(Mathf.Abs(GridManager.instance.GridPositions[0].transform.position.x -
-                GridManager.instance.GridPositions[1].transform.position.x));
+            int xGridRange = Mathf.FloorToInt(Mathf.Abs(startGridPosition.transform.position.x -
+                endGridPosition.transform.position.x));
             Vector3 friendlyInitialPosition = startGridPosition.transform.position;
 
             for (int x = 0; x < xGridRange; x++)
@@ -270,15 +273,15 @@ namespace HOMM_BM
 
                 if (node != null && !unitsNodes.ContainsValue(normalizedNode))
                 {
-                    CreateReferenceForNode(node, 1);
+                    CreateReferenceForNode(node, xOffsetGridIndexZero);
                 }
-                friendlyInitialPosition.x += 1;
+                friendlyInitialPosition.x += xOffsetGridIndexZero;
             }
 
             //Second row, starts from last x node -1, since we incremented x 1 additional time
             //in first row
-            friendlyInitialPosition.x -= 1;
-            friendlyInitialPosition.z += 1;
+            friendlyInitialPosition.x -= xOffsetGridIndexZero;
+            friendlyInitialPosition.z += xOffsetGridIndexZero;
 
             for (int x = 0; x < xGridRange; x++)
             {
@@ -291,19 +294,19 @@ namespace HOMM_BM
 
                 if (node != null && !unitsNodes.ContainsValue(normalizedNode))
                 {
-                    CreateReferenceForNode(node, 1);
+                    CreateReferenceForNode(node, xOffsetGridIndexZero);
                 }
-                friendlyInitialPosition.x -= 1;
+                friendlyInitialPosition.x -= xOffsetGridIndexZero;
             }
         }
 
         private void CreateTacticalNodesForBigUnits()
         {
-            int xGridRange = Mathf.FloorToInt(Mathf.Abs(GridManager.instance.GridPositions[0].transform.position.x -
-                GridManager.instance.GridPositions[1].transform.position.x));
+            int xGridRange = Mathf.FloorToInt(Mathf.Abs(startGridPosition.transform.position.x -
+                endGridPosition.transform.position.x));
             Vector3 friendlyInitialPosition = startGridPosition.transform.position;
 
-            for (int x = 0; x < xGridRange; x += 2)
+            for (int x = 0; x < xGridRange; x += xOffsetGridIndexOne)
             {
                 Node node = GridManager.instance.GetNode(friendlyInitialPosition, 1);
                 tacticalNodes.Add(node);
@@ -314,9 +317,9 @@ namespace HOMM_BM
 
                 if (node != null && !unitsNodes.ContainsValue(normalizedNode))
                 {
-                    CreateReferenceForNode(node, 2);
+                    CreateReferenceForNode(node, xOffsetGridIndexOne);
                 }
-                friendlyInitialPosition.x += 2;
+                friendlyInitialPosition.x += xOffsetGridIndexOne;
             }
         }
 
@@ -418,11 +421,11 @@ namespace HOMM_BM
 
         void DisableDragNDropComponent()
         {
-            DragNDropUnit[] draggableUnits = GetComponentsInChildren<DragNDropUnit>();
-
-            foreach (DragNDropUnit unit in draggableUnits)
+            foreach (UnitController unit in friendlyUnits)
             {
-                unit.enabled = false;
+                DragNDropUnit draggable = unit.GetComponentInChildren<DragNDropUnit>();
+                if (draggable)
+                    draggable.enabled = false;
             }
         }
 
