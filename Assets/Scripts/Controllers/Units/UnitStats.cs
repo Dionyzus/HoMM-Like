@@ -17,7 +17,13 @@ namespace HOMM_BM
 
         //Combat specific
         public float initiative;
+        public float moral;
+        public float luck;
+
+        //Basic
         public int hitPoints;
-        public int hitDamage;
+        public int damage;
+        public int attack;
+        public int defense;
     }
 }

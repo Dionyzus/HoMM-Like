@@ -13,6 +13,8 @@ namespace HOMM_BM
         Image unitImage;
         public Image UnitImage { get => unitImage; set => unitImage = value; }
 
+        public AnimationClip takingHitAnimationClip;
+
         public UnitStats unitStats;
 
         //Unit controller specific data
@@ -20,12 +22,16 @@ namespace HOMM_BM
         public float Initiative { get => initiative; set => initiative = value; }
 
         int hitPoints;
-        int hitDamage;
+        int damage;
+        int attack;
+        int defense;
 
         private bool isTargetPointBlank;
         public bool IsTargetPointBlank { get => isTargetPointBlank; set => isTargetPointBlank = value; }
         public int HitPoints { get => hitPoints; set => hitPoints = value; }
-        public int HitDamage { get => hitDamage; set => hitDamage = value; }
+        public int Damage { get => damage; set => damage = value; }
+        public int Attack { get => attack; set => attack = value; }
+        public int Defense { get => defense; set => defense = value; }
 
         private void Awake()
         {
@@ -39,7 +45,9 @@ namespace HOMM_BM
 
             initiative = unitStats.initiative;
             hitPoints = unitStats.hitPoints;
-            hitDamage = unitStats.hitDamage;
+            damage = unitStats.damage;
+            attack = unitStats.attack;
+            defense = unitStats.defense;
         }
 
         private void Update()
@@ -131,7 +139,9 @@ namespace HOMM_BM
                 isPathInitialized = false;
 
                 index++;
-                FlowmapPathfinderMaster.instance.pathLine.positionCount -= 1;
+
+                if (FlowmapPathfinderMaster.instance.pathLine.positionCount > 0)
+                    FlowmapPathfinderMaster.instance.pathLine.positionCount -= 1;
 
                 if (index > currentPath.Count - 1)
                 {
@@ -195,7 +205,7 @@ namespace HOMM_BM
         }
         protected override void HandleInteraction(Interaction interaction, float deltaTime)
         {
-            if(currentInteractionHook)
+            if (currentInteractionHook)
                 BattleManager.instance.ActivateCombatCamera(currentInteractionHook.transform);
 
             interaction.StartMethod(this);

@@ -9,6 +9,11 @@ namespace HOMM_BM
 {
     public class UiManager : MonoBehaviour
     {
+        [SerializeField]
+        GameObject battleUi = default;
+        [SerializeField]
+        GameObject worldUi = default;
+
         public GameObject sliderPrefab;
         public GameObject heroSelectPrefab;
 
@@ -29,6 +34,17 @@ namespace HOMM_BM
             instance = this;
         }
 
+        public void ActivateBattleUi()
+        {
+            worldUi.gameObject.SetActive(false);
+            battleUi.gameObject.SetActive(true);
+        }
+        public void ActivateWorldUi()
+        {
+            battleUi.gameObject.SetActive(false);
+            worldUi.gameObject.SetActive(true);
+        }
+
         public void AddStepsSlider(HeroController hero)
         {
             GameObject go = Instantiate(sliderPrefab);
@@ -36,7 +52,7 @@ namespace HOMM_BM
             go.transform.localScale = Vector3.one;
 
             stepsSlider = go.GetComponentInChildren<Slider>();
-            stepsSlider.maxValue = hero.stepsCount;
+            stepsSlider.maxValue = hero.StepsCount;
             stepsSlider.minValue = 0;
             stepsSlider.value = stepsSlider.maxValue;
 

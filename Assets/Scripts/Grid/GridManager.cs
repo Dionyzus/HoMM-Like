@@ -15,7 +15,8 @@ namespace HOMM_BM
         Vector3Int[] gridSizes;
         List<Node[,,]> grids = new List<Node[,,]>();
         GameObject[] gridParents;
-        //First position is bottom left !y=0!, second position is upper right !y=1!
+        //First position is bottom left !y=0!, second position is upper right !y=1! -> Battle
+        //First position is bottom left !y=0!, second position is upper right !y>=2! -> World
         GridPosition[] gridPositions;
 
         Vector3 minPosition;
@@ -43,24 +44,6 @@ namespace HOMM_BM
         {
             IGNORE_FOR_OBSTACLES = ~(1 << 8);
             ReadLevel();
-
-            //This will be heros initialization, unit controllers are handled differently
-            HeroController[] heroes = FindObjectsOfType<HeroController>();
-            foreach (HeroController hero in heroes)
-            {
-                Node node = GetNode(hero.transform.position, hero.gridIndex);
-                hero.transform.position = node.worldPosition;
-            }
-            //There wont be grid objects / interactions in battle state
-            if (GameManager.instance.CurrentGameState.Equals(GameManager.GameState.WORLD))
-            {
-                GridObject[] gridObjects = FindObjectsOfType<GridObject>();
-                foreach (GridObject go in gridObjects)
-                {
-                    Node node = GetNode(go.transform.position, go.gridIndex);
-                    go.transform.position = node.worldPosition;
-                }
-            }
         }
 
         void ReadLevel()

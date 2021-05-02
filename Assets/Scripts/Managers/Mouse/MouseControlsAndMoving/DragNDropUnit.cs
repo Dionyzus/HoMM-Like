@@ -42,7 +42,7 @@ namespace HOMM_BM
             List<Node> tacticalNodes = BattleManager.instance.GetNormalizedTacticalNodes();
             Dictionary<UnitController, Node> unitsNodes = BattleManager.instance.GetUnitsNodes();
 
-            Node normalizedNode = BattleManager.instance.CreateNormalizedNode(transform.position, unitController.gridIndex);
+            Node normalizedNode = BattleManager.instance.CreateNormalizedNode(transform.position, unitController.GridIndex);
 
             if (normalizedNode == null || !tacticalNodes.Contains(normalizedNode) || !DropIsValid(unitsNodes, normalizedNode))
             {

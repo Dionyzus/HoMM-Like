@@ -35,7 +35,7 @@ namespace HOMM_BM
                 int steps = currentNode.steps;
                 steps++;
 
-                if (steps <= gridUnit.stepsCount)
+                if (steps <= gridUnit.StepsCount)
                 {
                     foreach (Node node in GetNeighbours(currentNode))
                     {
@@ -46,7 +46,7 @@ namespace HOMM_BM
                                 openSet.Add(node);
                                 node.steps = steps;
 
-                                if (node.steps <= gridUnit.stepsCount)
+                                if (node.steps <= gridUnit.StepsCount)
                                     reachableNodes.Add(node);
                             }
                         }
@@ -76,7 +76,7 @@ namespace HOMM_BM
                     if (_x == currentNode.position.x && _z == currentNode.position.z)
                         continue;
 
-                    Node node = gridManager.GetNode(_x, _y, _z, gridUnit.gridIndex);
+                    Node node = gridManager.GetNode(_x, _y, _z, gridUnit.GridIndex);
 
                     if (_x == gridUnit.CurrentNode.position.x &&
                                 _z == gridUnit.CurrentNode.position.z)

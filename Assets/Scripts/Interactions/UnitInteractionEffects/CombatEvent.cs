@@ -17,7 +17,7 @@ namespace HOMM_BM
 
         public void OnDamageReceived()
         {
-            receiver.HitPoints -= initiator.HitDamage;
+            receiver.HitPoints -= initiator.Damage;
 
             if (receiver.HitPoints <= 0)
             {
@@ -39,6 +39,7 @@ namespace HOMM_BM
             unit.Animator.Play("Dying");
             unit.Animator.SetBool("isInteracting", true);
             unit.UnitCollider.enabled = false;
+            unit.GetComponentInChildren<InteractionHook>().enabled = false;
 
             Collider[] colliders = unit.GetComponentsInChildren<Collider>();
             foreach (Collider c in colliders)

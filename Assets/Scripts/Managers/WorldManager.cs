@@ -36,12 +36,24 @@ namespace HOMM_BM
             HeroController[] heroes = FindObjectsOfType<HeroController>();
             foreach (HeroController hero in heroes)
             {
+                Node node = GridManager.instance.GetNode(hero.transform.position, hero.GridIndex);
+                hero.transform.position = node.worldPosition;
+
                 if (hero.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
                 {
                     UiManager.instance.AddHeroButton(hero);
                     UiManager.instance.AddStepsSlider(hero);
                 }
             }
+
+            GridObject[] gridObjects = FindObjectsOfType<GridObject>();
+            foreach (GridObject go in gridObjects)
+            {
+                Node node = GridManager.instance.GetNode(go.transform.position, go.gridIndex);
+                go.transform.position = node.worldPosition;
+            }
+
+            UiManager.instance.ActivateWorldUi();
         }
 
         private void Update()
@@ -89,7 +101,7 @@ namespace HOMM_BM
                         if (hook != null)
                         {
                             currentHero.currentInteractionHook = hook;
-                            Node targetNode = GridManager.instance.GetNode(hit.point, currentHero.gridIndex);
+                            Node targetNode = GridManager.instance.GetNode(hit.point, currentHero.GridIndex);
 
                             if (targetNode != null)
                                 currentHero.PreviewPathToNode(targetNode, hook);

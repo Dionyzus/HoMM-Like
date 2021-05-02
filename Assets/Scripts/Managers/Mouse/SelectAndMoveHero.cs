@@ -34,7 +34,7 @@ namespace HOMM_BM
 
                     if (GameManager.instance.Mouse.leftButton.isPressed)
                     {
-                        targetNode = GridManager.instance.GetNode(hit.point, worldManager.currentHero.gridIndex);
+                        targetNode = GridManager.instance.GetNode(hit.point, worldManager.currentHero.GridIndex);
 
                         if (worldManager.currentHero.IsInteractionPointBlank)
                         {

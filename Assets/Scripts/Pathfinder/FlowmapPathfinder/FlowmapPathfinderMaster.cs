@@ -44,7 +44,7 @@ namespace HOMM_BM
         }
         public void CalculateNewPath(Vector3 origin, UnitController unitController)
         {
-            Node currentNode = GridManager.instance.GetNode(origin, unitController.gridIndex);
+            Node currentNode = GridManager.instance.GetNode(origin, unitController.GridIndex);
 
             if (currentNode != null)
             {
@@ -177,7 +177,8 @@ namespace HOMM_BM
                 }
             }
 
-            LoadNodesToPath(previousPath);
+            if (BattleManager.instance.currentUnit.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                LoadNodesToPath(previousPath);
         }
 
         List<Node> GetNeighbours(Node from, UnitController unit)
@@ -198,7 +199,7 @@ namespace HOMM_BM
                     if (_x == from.position.x && _z == from.position.z)
                         continue;
 
-                    Node node = GridManager.instance.GetNode(_x, _y, _z, unit.gridIndex);
+                    Node node = GridManager.instance.GetNode(_x, _y, _z, unit.GridIndex);
 
                     if (_x == unit.CurrentNode.position.x &&
                             _z == unit.CurrentNode.position.z)
@@ -225,21 +226,24 @@ namespace HOMM_BM
 
             reachableNodes = flowmapPathfinder.CreateFlowmapForNode();
 
-            foreach (Node node in reachableNodes)
+            if (BattleManager.instance.currentUnit.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
             {
-                for (int i = 0; i < node.subNodes.Count; i++)
+                foreach (Node node in reachableNodes)
                 {
-                    if (node.subNodes[i].renderer != null)
+                    for (int i = 0; i < node.subNodes.Count; i++)
                     {
-                        highlightedNodes.Add(node.subNodes[i]);
-                        node.subNodes[i].renderer.material = highlightedMaterial;
+                        if (node.subNodes[i].renderer != null)
+                        {
+                            highlightedNodes.Add(node.subNodes[i]);
+                            node.subNodes[i].renderer.material = highlightedMaterial;
+                        }
                     }
-                }
 
-                if (node.renderer != null)
-                {
-                    highlightedNodes.Add(node);
-                    node.renderer.material = highlightedMaterial;
+                    if (node.renderer != null)
+                    {
+                        highlightedNodes.Add(node);
+                        node.renderer.material = highlightedMaterial;
+                    }
                 }
             }
         }
@@ -299,7 +303,9 @@ namespace HOMM_BM
         }
         public void ClearPathData()
         {
-            pathLine.positionCount = 0;
+            if (pathLine.positionCount > 0)
+                pathLine.positionCount = 0;
+
             previousPath.Clear();
             ClearHighlightedNodes();
         }

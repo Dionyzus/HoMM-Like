@@ -11,11 +11,24 @@ namespace HOMM_BM
 
         public RenderTexture heroImage;
 
+        public HeroStats heroStats;
+
         private Slider interactionSlider;
         public Slider InteractionSlider { get => interactionSlider; set => interactionSlider = value; }
 
         private bool isInteractionPointBlank;
         public bool IsInteractionPointBlank { get => isInteractionPointBlank; set => isInteractionPointBlank = value; }
+
+        public InteractionContainer moveToLocationContainer;
+
+        private void Awake()
+        {
+            gridIndex = heroStats.gridIndex;
+            stepsCount = heroStats.stepsCount;
+
+            movementSpeed = heroStats.movementSpeed;
+            rotationSpeed = heroStats.rotationSpeed;
+        }
 
         private void Update()
         {
@@ -99,7 +112,8 @@ namespace HOMM_BM
                 isPathInitialized = false;
                 index++;
 
-                PathfinderMaster.instance.pathLine.positionCount -= 1;
+                if (PathfinderMaster.instance.pathLine.positionCount > 0)
+                    PathfinderMaster.instance.pathLine.positionCount -= 1;
                 SetInteractionSliderStatus();
 
                 if (index > currentPath.Count - 1)

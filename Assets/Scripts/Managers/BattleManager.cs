@@ -16,6 +16,7 @@ namespace HOMM_BM
         //Will be enums
         bool preparationStateFinished;
         bool battleStateStarted;
+        bool cleanUpStateFinished;
 
         public Material tacticalNodesMaterial;
 
@@ -23,8 +24,10 @@ namespace HOMM_BM
         public GridPosition endGridPosition;
 
         //Probably there should be some better way to get this
-        List<UnitController> friendlyUnits = new List<UnitController>();
-        List<UnitController> enemyUnits = new List<UnitController>();
+        [HideInInspector]
+        public List<UnitController> FriendlyUnits = new List<UnitController>();
+        [HideInInspector]
+        public List<UnitController> EnemyUnits = new List<UnitController>();
 
         List<Node> tacticalNodes = new List<Node>();
         List<Node> normalizedTacticalNodes = new List<Node>();
@@ -76,6 +79,9 @@ namespace HOMM_BM
         public UnitController PreviousUnit { get => previousUnit; set => previousUnit = value; }
         public bool CalculatePath { get => calculatePath; set => calculatePath = value; }
 
+        float waitForCleanupTime;
+        float waitForNewTurn;
+
         private void Awake()
         {
             instance = this;
@@ -98,7 +104,6 @@ namespace HOMM_BM
 
             //True as in initializing
             OnCurrentUnitTurn(true);
-
         }
 
         private void Update()
@@ -113,13 +118,18 @@ namespace HOMM_BM
             {
                 preparationStateFinished = true;
 
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+
                 //Clearing
                 DisableDragNDropComponent();
                 ClearInvalidNodes();
                 ClearTacticalNodes();
+
+                return;
             }
 
-            if (preparationStateFinished && !battleStateStarted)
+            if (preparationStateFinished && !cleanUpStateFinished)
             {
                 //Initializing enemies
                 InitializeEnemySide();
@@ -128,7 +138,28 @@ namespace HOMM_BM
                 DeactivatePreparationCamera();
                 ActivateBattleCamera();
 
+                cleanUpStateFinished = true;
+
+                return;
+            }
+
+            if (cleanUpStateFinished && !battleStateStarted)
+            {
+                waitForCleanupTime += Time.deltaTime;
+
+                if (waitForCleanupTime <= 1.5f)
+                {
+                    return;
+                }
+
                 battleStateStarted = true;
+
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+
+                EnemyUnitManager.instance.Initialize();
+
+                UiManager.instance.ActivateBattleUi();
             }
 
             if (!battleStateStarted)
@@ -148,14 +179,29 @@ namespace HOMM_BM
 
             else
             {
-                //Atm just for debuging purposes
                 if (currentUnit.gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
                 {
-                    OnMoveFinished();
-                    return;
-                }
+                    waitForNewTurn += Time.deltaTime;
 
-                HandleMouse();
+                    //This timer could be avoided if all animations have animation hit event
+                    if (waitForNewTurn >= 1)
+                    {
+                        waitForNewTurn = 0;
+
+                        if (EnemyUnitManager.instance.AiInteracting || currentUnit.IsInteractionInitialized)
+                            return;
+
+                        FlowmapPathfinderMaster.instance.CalculateWalkablePositions();
+                        calculatePath = false;
+
+                        EnemyUnitManager.instance.HandleAiTurn(currentUnit);
+                        return;
+                    }
+                }
+                else
+                {
+                    HandleMouse();
+                }
             }
 
             if (calculatePath)
@@ -185,11 +231,11 @@ namespace HOMM_BM
             {
                 if (unit.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
                 {
-                    friendlyUnits.Add(unit);
+                    FriendlyUnits.Add(unit);
                 }
                 else
                 {
-                    enemyUnits.Add(unit);
+                    EnemyUnits.Add(unit);
                     unit.gameObject.SetActive(false);
                 }
             }
@@ -200,9 +246,9 @@ namespace HOMM_BM
         private void InitializeFriendlySide(int xGridRange, Vector3 friendlyInitialPosition)
         {
             //Later on add something cool with unit positions if wanted
-            foreach (UnitController unit in friendlyUnits)
+            foreach (UnitController unit in FriendlyUnits)
             {
-                Node initialNode = GridManager.instance.GetNode(friendlyInitialPosition, unit.gridIndex);
+                Node initialNode = GridManager.instance.GetNode(friendlyInitialPosition, unit.GridIndex);
 
                 if (initialNode != null)
                 {
@@ -213,17 +259,17 @@ namespace HOMM_BM
 
                     //At some point add node render chaning depending on placed/tactical,
                     //picked one should be standard, then previous position becomes tactical etc.
-                    CreateReferenceForNode(initialNode, unit.gridIndex + 1);
+                    CreateReferenceForNode(initialNode, unit.GridIndex + 1);
                     tacticalNodes.Add(initialNode);
 
-                    Node normalizedNode = CreateNormalizedNode(friendlyInitialPosition, unit.gridIndex);
+                    Node normalizedNode = CreateNormalizedNode(friendlyInitialPosition, unit.GridIndex);
                     if (normalizedNode != null)
                         normalizedTacticalNodes.Add(normalizedNode);
 
                     unitsNodes.Add(unit, normalizedNode);
 
                     //Adding to x side of grids as units are being placed
-                    if (unit.gridIndex == 0)
+                    if (unit.GridIndex == 0)
                     {
                         xGridRange -= xOffsetGridIndexZero;
                         friendlyInitialPosition.x += xOffsetGridIndexZero;
@@ -332,11 +378,12 @@ namespace HOMM_BM
             //Positions available in row 1 and 2
             enemyInitialPosition.z -= 1;
 
-            foreach (UnitController unit in enemyUnits)
+            //Atm using magic number 5 just to add a bit of spread to units
+            foreach (UnitController unit in EnemyUnits)
             {
                 Vector3 offsetPosition;
 
-                if (unit.gridIndex == 1)
+                if (unit.GridIndex == 1)
                 {
                     offsetPosition = new Vector3(enemyInitialPosition.x - 5, enemyInitialPosition.y, enemyInitialPosition.z - 1);
                 }
@@ -345,7 +392,7 @@ namespace HOMM_BM
                     offsetPosition = new Vector3(enemyInitialPosition.x - 5, enemyInitialPosition.y, enemyInitialPosition.z - 1);
                 }
 
-                Node initialNode = GridManager.instance.GetNode(offsetPosition, unit.gridIndex);
+                Node initialNode = GridManager.instance.GetNode(offsetPosition, unit.GridIndex);
                 if (initialNode != null)
                 {
                     unit.transform.position = initialNode.worldPosition;
@@ -421,7 +468,7 @@ namespace HOMM_BM
 
         void DisableDragNDropComponent()
         {
-            foreach (UnitController unit in friendlyUnits)
+            foreach (UnitController unit in FriendlyUnits)
             {
                 DragNDropUnit draggable = unit.GetComponentInChildren<DragNDropUnit>();
                 if (draggable)
@@ -445,7 +492,7 @@ namespace HOMM_BM
 
                     interactionHook = CheckForInteractionHook(hit.point + offSet);
 
-                    Node targetNode = GridManager.instance.GetNode(hit.point - offSet, currentUnit.gridIndex);
+                    Node targetNode = GridManager.instance.GetNode(hit.point - offSet, currentUnit.GridIndex);
 
                     if (interactionHook != null)
                     {
@@ -514,7 +561,7 @@ namespace HOMM_BM
             foreach (Collider hitCollider in hitColliders)
             {
                 InteractionHook ih = hitCollider.transform.GetComponentInParent<InteractionHook>();
-                if (ih != null)
+                if (ih != null && ih.gameObject.layer != currentUnit.gameObject.layer)
                     return ih;
             }
             return null;
@@ -535,6 +582,9 @@ namespace HOMM_BM
 
         public void OnCurrentUnitTurn(bool isInitialize = false)
         {
+            if (EnemyUnitManager.instance.AiInteracting)
+                EnemyUnitManager.instance.AiInteracting = false;
+
             if (currentUnit != null)
             {
                 UiManager.instance.OnUnitTurn(unitsQueue, currentUnit, isInitialize);
@@ -616,6 +666,10 @@ namespace HOMM_BM
 
         public void UnitDeathCallback(UnitController unitController)
         {
+            if (unitController.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+            {
+                EnemyUnitManager.instance.UpdateAiControllers(unitController);
+            }
             unitsQueue.Remove(unitController);
             UiManager.instance.UpdateUiOnUnitDeath(unitController);
         }

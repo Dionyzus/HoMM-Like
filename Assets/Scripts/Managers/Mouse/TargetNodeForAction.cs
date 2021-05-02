@@ -9,7 +9,7 @@ namespace HOMM_BM
         {
             if (battleManager.currentUnit != null)
             {
-                Node currentNode = GridManager.instance.GetNode(hit.point, battleManager.currentUnit.gridIndex);
+                Node currentNode = GridManager.instance.GetNode(hit.point, battleManager.currentUnit.GridIndex);
                 if (currentNode != null)
                 {
                     battleManager.currentUnit.currentGridAction.Tick(currentNode);

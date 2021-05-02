@@ -123,7 +123,7 @@ namespace HOMM_BM
                     if (_x == startNode.position.x && _z == startNode.position.z)
                         continue;
 
-                    Node node = grid.GetNode(_x, _y, _z, unit.gridIndex);
+                    Node node = grid.GetNode(_x, _y, _z, unit.GridIndex);
                     Node newNode = null;
 
                     if (node != null && node.IsWalkable())

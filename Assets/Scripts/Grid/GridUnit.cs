@@ -13,14 +13,18 @@ namespace HOMM_BM
         protected float moveTime;
         protected float rotationTime;
 
-        //Make this protected after adding hero stats
-        public float movementSpeed = 2;
-        public float rotationSpeed = .2f;
-        public int gridIndex = 0;
-        public int stepsCount = 3;
+        protected int gridIndex = 0;
+        public int GridIndex { get => gridIndex; set => gridIndex = value; }
 
-        public int verticalStepsUp = 1;
-        public int verticalStepsDown = 3;
+        protected float movementSpeed;
+        protected float rotationSpeed;
+
+        protected int stepsCount = 3;
+        public int StepsCount { get => stepsCount; set => stepsCount = value; }
+
+        //Will be used when floors are added
+        protected int verticalStepsUp = 1;
+        protected int verticalStepsDown = 3;
         public Node CurrentNode
         {
             get
@@ -31,10 +35,6 @@ namespace HOMM_BM
 
         public string actionAnimation;
         public AnimationClip animationClip;
-
-        public AnimationClip takingHitAnimationClip;
-
-        public InteractionContainer moveToLocationContainer;
 
         protected float time;
         protected int index;
