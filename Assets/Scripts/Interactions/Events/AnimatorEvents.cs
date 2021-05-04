@@ -8,17 +8,21 @@ namespace HOMM_BM
     public class AnimatorEvents : MonoBehaviour
     {
         public UnityEvent onFinish;
-
         public UnityEvent onAnimationHit;
+        public UnityEvent onProjectileFired;
 
         public void OnFinish()
         {
             onFinish.Invoke();
         }
 
+        public void OnProjectileFired()
+        {
+            onProjectileFired.Invoke();
+        }
+
         public void OnAnimationHit()
         {
-            //onAnimationHit.Invoke();
             BattleManager.instance.CurrentCombatEvent.OnDamageReceived();
         }
     }

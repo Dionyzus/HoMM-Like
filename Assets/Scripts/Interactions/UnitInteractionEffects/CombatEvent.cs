@@ -22,6 +22,7 @@ namespace HOMM_BM
             if (receiver.HitPoints <= 0)
             {
                 OnUnitDeath(receiver);
+                BattleManager.instance.unitReceivedHitDebug = true;
                 BattleManager.instance.UnitDeathCallback(receiver);
             }
             else

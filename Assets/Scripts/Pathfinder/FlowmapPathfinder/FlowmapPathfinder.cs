@@ -7,15 +7,15 @@ namespace HOMM_BM
     public class FlowmapPathfinder
     {
         GridManager gridManager;
-        GridUnit gridUnit;
+        UnitController unitController;
 
         public delegate void OnCompleteCallback(List<Node> reachableNodes);
         OnCompleteCallback onCompleteCallback;
 
-        public FlowmapPathfinder(GridManager gridManager, GridUnit gridUnit, OnCompleteCallback onCompleteCallback = null)
+        public FlowmapPathfinder(GridManager gridManager, UnitController unitController, OnCompleteCallback onCompleteCallback = null)
         {
             this.gridManager = gridManager;
-            this.gridUnit = gridUnit;
+            this.unitController = unitController;
             this.onCompleteCallback = onCompleteCallback;
         }
         public List<Node> CreateFlowmapForNode()
@@ -24,10 +24,10 @@ namespace HOMM_BM
             List<Node> openSet = new List<Node>();
             HashSet<Node> closedSet = new HashSet<Node>();
 
-            gridUnit.CurrentNode.steps = 0;
+            unitController.CurrentNode.steps = 0;
 
-            reachableNodes.Add(gridUnit.CurrentNode);
-            openSet.Add(gridUnit.CurrentNode);
+            reachableNodes.Add(unitController.CurrentNode);
+            openSet.Add(unitController.CurrentNode);
 
             while (openSet.Count > 0)
             {
@@ -35,9 +35,9 @@ namespace HOMM_BM
                 int steps = currentNode.steps;
                 steps++;
 
-                if (steps <= gridUnit.StepsCount)
+                if (steps <= unitController.StepsCount)
                 {
-                    foreach (Node node in GetNeighbours(currentNode))
+                    foreach (Node node in GetNeighbours(currentNode, steps))
                     {
                         if (!closedSet.Contains(node))
                         {
@@ -46,7 +46,7 @@ namespace HOMM_BM
                                 openSet.Add(node);
                                 node.steps = steps;
 
-                                if (node.steps <= gridUnit.StepsCount)
+                                if (node.steps <= unitController.StepsCount)
                                     reachableNodes.Add(node);
                             }
                         }
@@ -58,7 +58,7 @@ namespace HOMM_BM
             return reachableNodes;
         }
 
-        List<Node> GetNeighbours(Node currentNode)
+        List<Node> GetNeighbours(Node currentNode, int steps)
         {
             List<Node> retVal = new List<Node>();
 
@@ -69,6 +69,20 @@ namespace HOMM_BM
                     if (x == 0 && z == 0)
                         continue;
 
+                    //Restrict main diagonal to -1 of maximum unit steps
+                    if (x == z && steps == unitController.StepsCount - 1)
+                    {
+                        continue;
+                    }
+                    if (x == -1 && z == 1 && steps == unitController.StepsCount - 1)
+                    {
+                        continue;
+                    }
+                    if (x == 1 && z == -1 && steps == unitController.StepsCount - 1)
+                    {
+                        continue;
+                    }
+
                     int _x = x + currentNode.position.x;
                     int _y = currentNode.position.y;
                     int _z = z + currentNode.position.z;
@@ -76,12 +90,12 @@ namespace HOMM_BM
                     if (_x == currentNode.position.x && _z == currentNode.position.z)
                         continue;
 
-                    Node node = gridManager.GetNode(_x, _y, _z, gridUnit.GridIndex);
+                    Node node = gridManager.GetNode(_x, _y, _z, unitController.GridIndex);
 
-                    if (_x == gridUnit.CurrentNode.position.x &&
-                                _z == gridUnit.CurrentNode.position.z)
+                    if (_x == unitController.CurrentNode.position.x &&
+                                _z == unitController.CurrentNode.position.z)
                     {
-                        retVal.Add(gridUnit.CurrentNode);
+                        retVal.Add(unitController.CurrentNode);
                     }
                     else if (node != null && node.IsWalkable())
                     {

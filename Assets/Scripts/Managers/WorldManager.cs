@@ -58,7 +58,7 @@ namespace HOMM_BM
 
         private void Update()
         {
-            if (!GameManager.instance.CurrentGameState.Equals(GameManager.GameState.WORLD))
+            if (!GameManager.instance.CurrentGameState.Equals(Enums.GameState.WORLD))
                 return;
 
             if (currentHero != null)

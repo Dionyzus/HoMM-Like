@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
-    public class InitiateAttack : Interaction
+    public class InitiateMeleeAttack : Interaction
     {
         float timer;
         public override void OnEnd(GridUnit gridUnit)

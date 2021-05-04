@@ -28,8 +28,8 @@ namespace HOMM_BM
             }
         }
 
-        GameState currentGameState;
-        public GameState CurrentGameState { get => currentGameState; set => currentGameState = value; }
+        Enums.GameState currentGameState;
+        public Enums.GameState CurrentGameState { get => currentGameState; set => currentGameState = value; }
 
         private void Awake()
         {
@@ -44,20 +44,14 @@ namespace HOMM_BM
 
             currentGameState = LevelManager.instance.gameState;
 
-            if (LevelManager.instance.gameState.Equals(GameState.WORLD))
+            if (LevelManager.instance.gameState.Equals(Enums.GameState.WORLD))
             {
                 WorldManager.instance.Initialize();
             }
-            if (LevelManager.instance.gameState.Equals(GameState.BATTLE))
+            if (LevelManager.instance.gameState.Equals(Enums.GameState.BATTLE))
             {
                 BattleManager.instance.Initialize();
             }
-        }
-
-        public enum GameState
-        {
-            BATTLE,
-            WORLD
         }
     }
 }

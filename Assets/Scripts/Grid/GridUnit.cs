@@ -25,6 +25,7 @@ namespace HOMM_BM
         //Will be used when floors are added
         protected int verticalStepsUp = 1;
         protected int verticalStepsDown = 3;
+
         public Node CurrentNode
         {
             get

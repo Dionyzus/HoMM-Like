@@ -11,11 +11,29 @@ namespace HOMM_BM
         {
             if (gridUnit != null)
             {
+                UnitController unitController = (UnitController)gridUnit;
                 InteractionHook ih = gridUnit.currentInteractionHook;
+
                 if (ih != null)
                 {
                     //Basically always the same, since we just want to store interactionHook
-                    ih.interaction = new InitiateAttack();
+                    if (unitController.AttackType.Equals(Enums.UnitAttackType.RANGED))
+                    {
+                        ih.interaction = new InitiateRangedAttack();
+                    }
+                    else if (unitController.AttackType.Equals(Enums.UnitAttackType.MELEE))
+                    {
+                        ih.interaction = new InitiateMeleeAttack();
+                    }
+                    else if(unitController.AttackType.Equals(Enums.UnitAttackType.MAGIC))
+                    {
+                        Debug.Log("Future magic attack");
+                        //ih.interaction = new InitiateMagicAttack();
+                    } else
+                    {
+                        Debug.Log("Missing attack type!");
+                    }
+
                     gridUnit.StoreInteractionHook(ih);
                     return;
                 }

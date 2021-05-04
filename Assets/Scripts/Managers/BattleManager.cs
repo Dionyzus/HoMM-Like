@@ -35,8 +35,6 @@ namespace HOMM_BM
         [HideInInspector]
         public List<Node> InvalidNodes = new List<Node>();
 
-        //int xGridRange;
-        //Vector3 friendlyInitialPosition;
         Vector3 enemyInitialPosition;
 
         //I guess there could a better way to solve this, maybe 
@@ -108,7 +106,7 @@ namespace HOMM_BM
 
         private void Update()
         {
-            if (!GameManager.instance.CurrentGameState.Equals(GameManager.GameState.BATTLE))
+            if (!GameManager.instance.CurrentGameState.Equals(Enums.GameState.BATTLE))
                 return;
 
             if (!preparationStateFinished)
@@ -183,7 +181,7 @@ namespace HOMM_BM
                 {
                     waitForNewTurn += Time.deltaTime;
 
-                    //This timer could be avoided if all animations have animation hit event
+                    //This timer could be avoided if all attacks have animation hit event
                     if (waitForNewTurn >= 1)
                     {
                         waitForNewTurn = 0;
@@ -510,7 +508,25 @@ namespace HOMM_BM
                                 }
                             }
                         }
-                        if ((interactionHook.interactionContainer != null && FlowmapPathfinderMaster.instance.previousPath.Count != 0) || isTargetPointBlank)
+                        //Will need to add check for distance if unit doesn't have full field range
+                        if (interactionHook.interactionContainer != null && currentUnit.AttackType.Equals(Enums.UnitAttackType.RANGED))
+                        {
+                            if (GameManager.instance.Mouse.leftButton.isPressed)
+                            {
+                                currentUnit.currentInteractionHook = interactionHook;
+                                currentUnit.IsInteractionInitialized = true;
+                                currentUnit.CreateInteractionContainer(interactionHook.interactionContainer);
+
+                                UnitController targetUnit = interactionHook.GetComponentInParent<UnitController>();
+
+                                if (targetUnit != null)
+                                {
+                                    currentCombatEvent = new CombatEvent(currentUnit, targetUnit);
+                                }
+                            }
+                        }
+
+                        else if ((interactionHook.interactionContainer != null && FlowmapPathfinderMaster.instance.previousPath.Count != 0) || isTargetPointBlank)
                         {
                             if (GameManager.instance.Mouse.leftButton.isPressed)
                             {

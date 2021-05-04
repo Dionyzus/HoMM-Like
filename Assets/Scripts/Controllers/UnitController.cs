@@ -17,6 +17,9 @@ namespace HOMM_BM
 
         public UnitStats unitStats;
 
+        [SerializeField]
+        Enums.UnitAttackType attackType;
+
         //Unit controller specific data
         float initiative;
         public float Initiative { get => initiative; set => initiative = value; }
@@ -32,6 +35,16 @@ namespace HOMM_BM
         public int Damage { get => damage; set => damage = value; }
         public int Attack { get => attack; set => attack = value; }
         public int Defense { get => defense; set => defense = value; }
+        public Enums.UnitAttackType AttackType { get => attackType; set => attackType = value; }
+        public bool ProjectileHitTarget { get => projectileHitTarget; set => projectileHitTarget = value; }
+
+        //Ranged
+        [SerializeField]
+        GameObject projectilePrefab = default;
+        [SerializeField]
+        Transform projectileSpawnPoint = default;
+
+        bool projectileHitTarget;
 
         private void Awake()
         {
@@ -156,6 +169,21 @@ namespace HOMM_BM
 
             return isFinished;
         }
+        public void PerformRangedAttack()
+        {
+            GameObject projectileInstance = Instantiate(projectilePrefab, projectileSpawnPoint.transform.position, Quaternion.identity);
+
+            RangedProjectile rangedProjectile = projectileInstance.GetComponent<RangedProjectile>();
+
+            if (rangedProjectile != null)
+            {
+                rangedProjectile.TargetUnit = currentInteractionHook.GetComponentInParent<UnitController>();
+                rangedProjectile.IsTargetSet = true;
+
+                projectileInstance.SetActive(true);
+            }
+        }
+
         public void LoadPathAndStartMoving(List<Node> path, bool reverse = true)
         {
             moveIsBasedOnAnimation = false;
@@ -205,7 +233,7 @@ namespace HOMM_BM
         }
         protected override void HandleInteraction(Interaction interaction, float deltaTime)
         {
-            if (currentInteractionHook)
+            if (currentInteractionHook && attackType.Equals(Enums.UnitAttackType.MELEE))
                 BattleManager.instance.ActivateCombatCamera(currentInteractionHook.transform);
 
             interaction.StartMethod(this);
@@ -243,9 +271,6 @@ namespace HOMM_BM
             if (isTargetPointBlank)
                 isTargetPointBlank = false;
 
-            //If unit losses all hp, kill unit, leave dead body and now it is walkable
-            //UnitDeadDebug stuff
-
             //Maaybe keep interaction UI this for some cool inteeractions tracking
             if (currentInteractionInstance.uiObject != null)
             {
@@ -255,9 +280,6 @@ namespace HOMM_BM
                     InteractionButton.instance.OnClick();
                 }
             }
-
-            //Keep this until adding select next unit
-            //BattleManager.instance.calculatePath = true;
 
             //If animation doesn't have hit event set
             if (!BattleManager.instance.unitReceivedHitDebug)
