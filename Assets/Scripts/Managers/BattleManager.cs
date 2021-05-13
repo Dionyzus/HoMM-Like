@@ -20,6 +20,14 @@ namespace HOMM_BM
 
         public Material tacticalNodesMaterial;
 
+        //Storing range unit data when it needs to melee
+        UnitAttackType storedAttackType;
+        int storedDamageValue;
+        AnimationClip storedAnimationClip;
+        string storedActionAnimation;
+
+        bool unitDataRestored;
+
         public GridPosition startGridPosition;
         public GridPosition endGridPosition;
 
@@ -76,6 +84,7 @@ namespace HOMM_BM
         UnitController previousUnit;
         public UnitController PreviousUnit { get => previousUnit; set => previousUnit = value; }
         public bool CalculatePath { get => calculatePath; set => calculatePath = value; }
+        public List<UnitController> UnitsQueue { get => unitsQueue; set => unitsQueue = value; }
 
         float waitForCleanupTime;
         float waitForNewTurn;
@@ -106,7 +115,7 @@ namespace HOMM_BM
 
         private void Update()
         {
-            if (!GameManager.instance.CurrentGameState.Equals(Enums.GameState.BATTLE))
+            if (!GameManager.instance.CurrentGameState.Equals(GameState.BATTLE))
                 return;
 
             if (!preparationStateFinished)
@@ -179,6 +188,12 @@ namespace HOMM_BM
             {
                 if (currentUnit.gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
                 {
+                    if (SimulationManager.instance.AiInteracting || currentUnit.IsInteractionInitialized)
+                        return;
+
+                    SimulationManager.instance.Initialize();
+                    return;
+
                     waitForNewTurn += Time.deltaTime;
 
                     //This timer could be avoided if all attacks have animation hit event
@@ -229,10 +244,12 @@ namespace HOMM_BM
             {
                 if (unit.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
                 {
+                    unit.UnitSide = UnitSide.MIN_UNIT;
                     FriendlyUnits.Add(unit);
                 }
                 else
                 {
+                    unit.UnitSide = UnitSide.MAX_UNIT;
                     EnemyUnits.Add(unit);
                     unit.gameObject.SetActive(false);
                 }
@@ -508,20 +525,28 @@ namespace HOMM_BM
                                 }
                             }
                         }
-                        //Will need to add check for distance if unit doesn't have full field range
-                        if (interactionHook.interactionContainer != null && currentUnit.AttackType.Equals(Enums.UnitAttackType.RANGED))
+                        if (interactionHook.interactionContainer != null && currentUnit.AttackType.Equals(UnitAttackType.RANGED))
                         {
-                            if (GameManager.instance.Mouse.leftButton.isPressed)
+                            float distance = Vector3.Distance(currentUnit.transform.position, interactionHook.transform.position);
+                            if (isTargetPointBlank)
                             {
-                                currentUnit.currentInteractionHook = interactionHook;
-                                currentUnit.IsInteractionInitialized = true;
-                                currentUnit.CreateInteractionContainer(interactionHook.interactionContainer);
+                                StoreRangedUnitData();
+                            }
 
-                                UnitController targetUnit = interactionHook.GetComponentInParent<UnitController>();
-
-                                if (targetUnit != null)
+                            else if (distance <= currentUnit.MaximumRange)
+                            {
+                                if (GameManager.instance.Mouse.leftButton.isPressed)
                                 {
-                                    currentCombatEvent = new CombatEvent(currentUnit, targetUnit);
+                                    currentUnit.currentInteractionHook = interactionHook;
+                                    currentUnit.IsInteractionInitialized = true;
+                                    currentUnit.CreateInteractionContainer(interactionHook.interactionContainer);
+
+                                    UnitController targetUnit = interactionHook.GetComponentInParent<UnitController>();
+
+                                    if (targetUnit != null)
+                                    {
+                                        currentCombatEvent = new CombatEvent(currentUnit, targetUnit);
+                                    }
                                 }
                             }
                         }
@@ -563,12 +588,32 @@ namespace HOMM_BM
                         {
                             FlowmapPathfinderMaster.instance.UnwalkableNodes.Add(targetNode);
                         }
+                        if (!unitDataRestored && storedAttackType.Equals(UnitAttackType.RANGED))
+                        {
+                            RestoreRangedUnitData();
+                        }
                     }
                 }
 
                 if (interactionHook == null && currentMouseLogic != null)
                     currentMouseLogic.InteractTick(this, hit);
             }
+        }
+
+        private void StoreRangedUnitData()
+        {
+            storedAttackType = currentUnit.AttackType;
+            storedDamageValue = currentUnit.Damage;
+            storedAnimationClip = currentUnit.animationClip;
+            storedActionAnimation = currentUnit.actionAnimation;
+
+            currentUnit.AttackType = UnitAttackType.MELEE;
+            currentUnit.Damage = currentUnit.MeleeAttackDamage;
+            currentUnit.animationClip = currentUnit.meleeAnimationClip;
+            currentUnit.actionAnimation = currentUnit.meleeActionAnimation;
+
+            if (unitDataRestored)
+                unitDataRestored = false;
         }
 
         public InteractionHook CheckForInteractionHook(Vector3 center)
@@ -598,8 +643,11 @@ namespace HOMM_BM
 
         public void OnCurrentUnitTurn(bool isInitialize = false)
         {
-            if (EnemyUnitManager.instance.AiInteracting)
-                EnemyUnitManager.instance.AiInteracting = false;
+            //if (EnemyUnitManager.instance.AiInteracting)
+            //    EnemyUnitManager.instance.AiInteracting = false;
+
+            if (SimulationManager.instance.AiInteracting)
+                SimulationManager.instance.AiInteracting = false;
 
             if (currentUnit != null)
             {
@@ -665,6 +713,11 @@ namespace HOMM_BM
         {
             FlowmapPathfinderMaster.instance.ClearUnwalkableNodes();
 
+            if (!unitDataRestored && storedAttackType.Equals(UnitAttackType.RANGED))
+            {
+                RestoreRangedUnitData();
+            }
+
             DeactivateCombatCamera();
             ActivateBattleCamera();
 
@@ -678,6 +731,21 @@ namespace HOMM_BM
             currentUnit = unitsQueue.First();
 
             OnCurrentUnitTurn();
+        }
+
+        private void RestoreRangedUnitData()
+        {
+            currentUnit.AttackType = storedAttackType;
+            currentUnit.Damage = storedDamageValue;
+            currentUnit.animationClip = storedAnimationClip;
+            currentUnit.actionAnimation = storedActionAnimation;
+
+            storedAttackType = UnitAttackType.RANGED;
+            storedDamageValue = 0;
+            storedAnimationClip = null;
+            storedActionAnimation = null;
+
+            unitDataRestored = true;
         }
 
         public void UnitDeathCallback(UnitController unitController)

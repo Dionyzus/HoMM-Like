@@ -17,15 +17,15 @@ namespace HOMM_BM
                 if (ih != null)
                 {
                     //Basically always the same, since we just want to store interactionHook
-                    if (unitController.AttackType.Equals(Enums.UnitAttackType.RANGED))
+                    if (unitController.AttackType.Equals(UnitAttackType.RANGED))
                     {
                         ih.interaction = new InitiateRangedAttack();
                     }
-                    else if (unitController.AttackType.Equals(Enums.UnitAttackType.MELEE))
+                    else if (unitController.AttackType.Equals(UnitAttackType.MELEE))
                     {
                         ih.interaction = new InitiateMeleeAttack();
                     }
-                    else if(unitController.AttackType.Equals(Enums.UnitAttackType.MAGIC))
+                    else if(unitController.AttackType.Equals(UnitAttackType.MAGIC))
                     {
                         Debug.Log("Future magic attack");
                         //ih.interaction = new InitiateMagicAttack();

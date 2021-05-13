@@ -21,8 +21,7 @@ namespace HOMM_BM
         {
             if (isTargetSet)
             {
-                Vector3 targetPosition = targetUnit.transform.position;
-                targetPosition.y += 1;
+                Vector3 targetPosition = targetUnit.CurrentNode.worldPosition;
 
                 float distance = Vector3.Distance(transform.position, targetPosition);
                 combatCameraActivationDistance = distance * 0.9f;

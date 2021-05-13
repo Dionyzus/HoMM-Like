@@ -34,8 +34,13 @@ namespace HOMM_BM
             }
         }
 
+        //Should actually be a list of actions, so unit can choose
+        //available one
         public string actionAnimation;
         public AnimationClip animationClip;
+
+        public string meleeActionAnimation;
+        public AnimationClip meleeAnimationClip;
 
         protected float time;
         protected int index;

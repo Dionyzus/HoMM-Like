@@ -6,7 +6,7 @@ namespace HOMM_BM
 {
     public class LevelManager : MonoBehaviour
     {
-        public Enums.GameState gameState;
+        public GameState gameState;
 
         public static LevelManager instance;
 
@@ -15,7 +15,7 @@ namespace HOMM_BM
             instance = this;
         }
 
-        public void SetGameState(Enums.GameState gameState)
+        public void SetGameState(GameState gameState)
         {
             GameManager.instance.CurrentGameState = gameState;
         }

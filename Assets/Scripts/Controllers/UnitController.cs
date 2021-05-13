@@ -7,6 +7,7 @@ namespace HOMM_BM
 {
     public class UnitController : GridUnit
     {
+        UnitSide unitSide;
         public GridAction currentGridAction;
         public GameObject onDeathEnableCollider;
 
@@ -18,14 +19,14 @@ namespace HOMM_BM
         public UnitStats unitStats;
 
         [SerializeField]
-        Enums.UnitAttackType attackType;
+        UnitAttackType attackType;
 
         //Unit controller specific data
         float initiative;
         public float Initiative { get => initiative; set => initiative = value; }
 
-        int hitPoints;
-        int damage;
+        public int hitPoints;
+        public int damage;
         int attack;
         int defense;
 
@@ -35,10 +36,17 @@ namespace HOMM_BM
         public int Damage { get => damage; set => damage = value; }
         public int Attack { get => attack; set => attack = value; }
         public int Defense { get => defense; set => defense = value; }
-        public Enums.UnitAttackType AttackType { get => attackType; set => attackType = value; }
+        public UnitAttackType AttackType { get => attackType; set => attackType = value; }
         public bool ProjectileHitTarget { get => projectileHitTarget; set => projectileHitTarget = value; }
+        public float MaximumRange { get => maximumRange; set => maximumRange = value; }
+        public int MeleeAttackDamage { get => meleeAttackDamage; set => meleeAttackDamage = value; }
+        public UnitSide UnitSide { get => unitSide; set => unitSide = value; }
 
         //Ranged
+        [SerializeField]
+        float maximumRange = 10f;
+        [SerializeField]
+        int meleeAttackDamage;
         [SerializeField]
         GameObject projectilePrefab = default;
         [SerializeField]
@@ -61,6 +69,11 @@ namespace HOMM_BM
             damage = unitStats.damage;
             attack = unitStats.attack;
             defense = unitStats.defense;
+
+            if (attackType.Equals(UnitAttackType.RANGED))
+            {
+                meleeAttackDamage = damage / 3;
+            }
         }
 
         private void Update()
@@ -233,7 +246,7 @@ namespace HOMM_BM
         }
         protected override void HandleInteraction(Interaction interaction, float deltaTime)
         {
-            if (currentInteractionHook && attackType.Equals(Enums.UnitAttackType.MELEE))
+            if (currentInteractionHook && attackType.Equals(UnitAttackType.MELEE))
                 BattleManager.instance.ActivateCombatCamera(currentInteractionHook.transform);
 
             interaction.StartMethod(this);

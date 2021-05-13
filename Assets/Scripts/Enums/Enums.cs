@@ -4,18 +4,34 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
-    public class Enums
+    public enum GameState
     {
-        public enum GameState
-        {
-            BATTLE,
-            WORLD
-        }
-        public enum UnitAttackType
-        {
-            MELEE,
-            RANGED,
-            MAGIC
-        }
+        BATTLE,
+        WORLD
+    }
+    public enum UnitAttackType
+    {
+        MELEE,
+        RANGED,
+        MAGIC
+    }
+    public enum ScoreValue
+    {
+        STANDARD = 1,
+        MEDIUM = 2,
+        HIGH = 3,
+        TOP = 5
+    }
+    public enum TargetPriority
+    {
+        INITITAL = 1,
+        NEW = 5,
+        FAVOURABLE = 10,
+        TOP = 15
+    }
+    public enum UnitSide
+    {
+        MAX_UNIT,
+        MIN_UNIT
     }
 }

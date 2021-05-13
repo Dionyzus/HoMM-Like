@@ -14,6 +14,8 @@ namespace HOMM_BM
         public Vector3 worldPosition;
         public Renderer renderer;
 
+        public int score = 1;
+
         public List<Node> subNodes = new List<Node>();
 
         public bool isWalkable = false;
