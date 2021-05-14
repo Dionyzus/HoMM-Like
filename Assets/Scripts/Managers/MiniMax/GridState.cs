@@ -10,16 +10,6 @@ namespace HOMM_BM
         int MAX = 1000;
         int MIN = -1000;
 
-        List<Node[,,]> grids = new List<Node[,,]>();
-        Vector3Int[] gridSizes;
-        GridPosition[] gridPositions;
-
-        public int[] scales = { 1, 2 };
-        int scaleY = 2;
-
-        Vector3 minPosition;
-        GameObject[] gridParents;
-
         //UnitController currentUnit;
         SimpleUnit currentSimple;
 
@@ -81,8 +71,6 @@ namespace HOMM_BM
         }
         public void Initialize()
         {
-            ReadLevel();
-
             ReadGridUnits();
         }
 
@@ -108,126 +96,6 @@ namespace HOMM_BM
                     humanSimples.Add(simpleUnit);
                 }
             }
-        }
-
-        public void SelfDestruct()
-        {
-            for (int i = 0; i < grids.Count; i++)
-            {
-                grids[i] = null;
-            }
-
-            for (int i = 0; i < gridParents.Length; i++)
-            {
-                Object.Destroy(gridParents[i]);
-            }
-        }
-
-        void ReadLevel()
-        {
-            gridPositions = Object.FindObjectsOfType<GridPosition>();
-
-            float minX = float.MaxValue;
-            float maxX = float.MinValue;
-            float minY = minX;
-            float maxY = maxX;
-            float minZ = minX;
-            float maxZ = maxX;
-
-            for (int i = 0; i < gridPositions.Length; i++)
-            {
-                Transform t = gridPositions[i].transform;
-
-                if (t.position.x < minX)
-                {
-                    minX = t.position.x;
-                }
-                if (t.position.x > maxX)
-                {
-                    maxX = t.position.x;
-                }
-                if (t.position.y < minY)
-                {
-                    minY = t.position.y;
-                }
-                if (t.position.y > maxY)
-                {
-                    maxY = t.position.y;
-                }
-                if (t.position.z < minZ)
-                {
-                    minZ = t.position.z;
-                }
-                if (t.position.z > maxZ)
-                {
-                    maxZ = t.position.z;
-                }
-            }
-
-            minPosition = Vector3.zero;
-            minPosition.x = minX;
-            minPosition.y = minY;
-            minPosition.z = minZ;
-
-            gridParents = new GameObject[scales.Length];
-            gridSizes = new Vector3Int[scales.Length];
-
-            for (int i = 0; i < scales.Length; i++)
-            {
-                gridParents[i] = new GameObject("GridStateParentIndex " + i);
-
-                gridSizes[i] = new Vector3Int
-                {
-                    x = Mathf.FloorToInt((maxX - minX) / scales[i]),
-                    y = Mathf.FloorToInt((maxY - minY) / scaleY),
-                    z = Mathf.FloorToInt((maxZ - minZ) / scales[i])
-                };
-                grids.Add(CreateGrid(gridSizes[i], scales[i], i));
-            }
-        }
-
-        Node[,,] CreateGrid(Vector3Int gridSize, int scaleXZ, int gridIndex)
-        {
-            Node[,,] grid = new Node[gridSize.x + 1, gridSize.y + 1, gridSize.z + 1];
-
-            for (int x = 0; x < gridSize.x; x++)
-            {
-                for (int y = 0; y < gridSize.y + 1; y++)
-                {
-                    for (int z = 0; z < gridSize.z + 1; z++)
-                    {
-                        Node node = new Node();
-
-                        node.position.x = x;
-                        node.position.y = y;
-                        node.position.z = z;
-                        node.gridIndex = gridIndex;
-
-                        node.pivotPosition.x = x * scaleXZ;
-                        node.pivotPosition.y = y * scaleY;
-                        node.pivotPosition.z = z * scaleXZ;
-                        node.pivotPosition += minPosition;
-
-                        grid[x, y, z] = node;
-
-                        CreateNode(node, scaleXZ);
-                    }
-                }
-            }
-
-            return grid;
-        }
-
-        void CreateNode(Node node, int scaleXZ)
-        {
-            Vector3 targetPosition = node.pivotPosition;
-            targetPosition.y += 1;
-            Vector3 nodeScale = (Vector3.one * .95f) * scaleXZ;
-
-            targetPosition.x += nodeScale.x / 2;
-            targetPosition.z += nodeScale.z / 2;
-
-            node.worldPosition = targetPosition;
         }
 
         List<Node> CalculateWalkablePositions()
@@ -311,7 +179,7 @@ namespace HOMM_BM
                     if (_x == currentNode.position.x && _z == currentNode.position.z)
                         continue;
 
-                    Node node = GridManager.instance.GetNode(_x, _y, _z, 0);
+                    Node node = GridManager.instance.GetNode(_x, _y, _z, currentSimple.CurrentNode.gridIndex, true);
 
                     if (_x == currentSimple.CurrentNode.position.x &&
                                 _z == currentSimple.CurrentNode.position.z)
@@ -321,10 +189,6 @@ namespace HOMM_BM
                     else if (node != null && node.IsWalkable())
                     {
                         retVal.Add(node);
-                    }
-                    else if (node != null)
-                    {
-                        FlowmapPathfinderMaster.instance.UnwalkableNodes.Add(node);
                     }
                 }
             }
@@ -418,7 +282,7 @@ namespace HOMM_BM
             }
 
             //return maxTotalHitPoints - minTotalHitPoints;
-            return -Mathf.FloorToInt(Vector3.Distance(unitsQueue.ElementAt(0).CurrentNode.worldPosition, unitsQueue.ElementAt(1).CurrentNode.worldPosition) * 10);
+            return Mathf.FloorToInt(Vector3.Distance(unitsQueue.ElementAt(0).CurrentNode.position, unitsQueue.ElementAt(1).CurrentNode.position) * 10);
         }
 
         public bool IsGameOver()

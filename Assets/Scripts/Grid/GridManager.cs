@@ -116,7 +116,7 @@ namespace HOMM_BM
             return grid;
         }
 
-        void CreateNodeOnGrid(Vector3Int position, int gridIndex)
+        void CreateNodeOnGrid(Vector3Int position, int gridIndex, bool isSimulation = false)
         {
             int scaleXZ = scales[gridIndex];
 
@@ -142,7 +142,7 @@ namespace HOMM_BM
             grids[gridIndex][node.position.x, node.position.y, node.position.z] = node;
             int targetGridIndex = gridIndex - 1;
 
-            if (targetGridIndex >= 0)
+            if (!isSimulation && targetGridIndex >= 0)
             {
                 FindSubNodes(node, scaleXZ, 0);
             }
@@ -151,7 +151,7 @@ namespace HOMM_BM
                 node.UpdateWalkability();
             }
 
-            if (node.IsWalkable())
+            if (!isSimulation && node.IsWalkable())
                 CreateNodeReferences(node, gridIndex, nodeScale);
         }
 
@@ -233,7 +233,7 @@ namespace HOMM_BM
             return GetNode(position.x, position.y, position.z, gridIndex);
         }
 
-        public Node GetNode(int x, int y, int z, int gridIndex)
+        public Node GetNode(int x, int y, int z, int gridIndex, bool isSimulation = false)
         {
             Vector3Int size = gridSizes[gridIndex];
 
@@ -244,7 +244,7 @@ namespace HOMM_BM
             }
             if (grids[gridIndex][x, y, z] == null)
             {
-                CreateNodeOnGrid(new Vector3Int(x, y, z), gridIndex);
+                CreateNodeOnGrid(new Vector3Int(x, y, z), gridIndex, isSimulation);
             }
             return grids[gridIndex][x, y, z];
         }

@@ -29,8 +29,6 @@ namespace HOMM_BM
             GridState gridState = new GridState(simpleUnitsQueue);
             (int evaluation, UnitMove unitMove) miniMaxResult = PerformMiniMax(gridState, depth, -1000, 1000);
 
-            gridState.SelfDestruct();
-
             return miniMaxResult.unitMove;
         }
 
@@ -53,7 +51,6 @@ namespace HOMM_BM
                     UnitMove unitMove = new UnitMove(newGridState.CurrentSimple, newGridState.DebugSimple, node);
 
                     newGridState.MoveUnit(node);
-                    newGridState.SelfDestruct();
 
                     (int evaluation, UnitMove unitMove) miniMaxResult = PerformMiniMax(newGridState, depth - 1, alpha, beta);
 
@@ -77,7 +74,6 @@ namespace HOMM_BM
                     UnitMove unitMove = new UnitMove(newGridState.CurrentSimple, newGridState.DebugSimple, node);
 
                     newGridState.MoveUnit(node);
-                    newGridState.SelfDestruct();
 
                     (int evaluation, UnitMove unitMove) miniMaxResult = PerformMiniMax(newGridState, depth - 1, alpha, beta);
 

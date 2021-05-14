@@ -27,7 +27,7 @@ namespace HOMM_BM
             unitsQueue = new List<UnitController>(BattleManager.instance.UnitsQueue);
             currentUnit = unitsQueue.First();
 
-            MiniMax minimax = new MiniMax(unitsQueue, 1);
+            MiniMax minimax = new MiniMax(unitsQueue, 2);
             UnitMove unitMove = minimax.StartMiniMax();
 
             if (unitMove == null)
@@ -59,8 +59,16 @@ namespace HOMM_BM
             else
             {
                 Debug.Log("Unit: " + unitMove.SimpleUnit.Layer + " In want to walk: " + unitMove.TargetNode.worldPosition);
-                FlowmapPathfinderMaster.instance.GetPathFromMap(unitMove.TargetNode, currentUnit);
-                FlowmapPathfinderMaster.instance.InitiateMovingOnPath(currentUnit);
+                aiInteracting = true;
+                if (currentUnit.CurrentNode == unitMove.TargetNode)
+                {
+                    BattleManager.instance.OnMoveFinished();
+                }
+                else
+                {
+                    FlowmapPathfinderMaster.instance.GetPathFromMap(unitMove.TargetNode, currentUnit);
+                    FlowmapPathfinderMaster.instance.InitiateMovingOnPath(currentUnit);
+                }
             }
 
             if (isInteractionInitialized)
