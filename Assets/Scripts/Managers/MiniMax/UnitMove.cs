@@ -6,30 +6,14 @@ namespace HOMM_BM
 {
     public class UnitMove
     {
-        Node targetNode;
-        UnitController unitController;
-        UnitController targetUnit;
-        SimpleUnit simpleUnit;
-        SimpleUnit targetSimple;
+        private Node node;
+        private int moveEvaluation = 1;
+        private SimpleUnit targetAvailableFromNode;
+        private bool isAttackMove;
 
-        public Node TargetNode { get => targetNode; set => targetNode = value; }
-        public UnitController UnitController { get => unitController; set => unitController = value; }
-        public UnitController TargetUnit { get => targetUnit; set => targetUnit = value; }
-        public SimpleUnit SimpleUnit { get => simpleUnit; set => simpleUnit = value; }
-        public SimpleUnit TargetSimple { get => targetSimple; set => targetSimple = value; }
-
-        public UnitMove(UnitController unitController, UnitController targetUnit, Node targetNode)
-        {
-            this.unitController = unitController;
-            this.targetUnit = targetUnit;
-            this.targetNode = targetNode;
-        }
-
-        public UnitMove(SimpleUnit simpleUnit, SimpleUnit targetSimple, Node targetNode)
-        {
-            this.simpleUnit = simpleUnit;
-            this.targetSimple = targetSimple;
-            this.targetNode = targetNode;
-        }
+        public Node TargetNode { get => node; set => node = value; }
+        public int MoveEvaluation { get => moveEvaluation; set => moveEvaluation = value; }
+        public SimpleUnit TargetAvailableFromNode { get => targetAvailableFromNode; set => targetAvailableFromNode = value; }
+        public bool IsAttackMove { get => isAttackMove; set => isAttackMove = value; }
     }
 }

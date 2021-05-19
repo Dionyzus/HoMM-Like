@@ -16,7 +16,7 @@ namespace HOMM_BM
         public float rotationSpeed;
 
         //Combat specific
-        public float initiative;
+        public int initiative;
         public float moral;
         public float luck;
 

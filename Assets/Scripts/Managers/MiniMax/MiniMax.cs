@@ -8,12 +8,13 @@ namespace HOMM_BM
     public class MiniMax
     {
         List<UnitController> unitsQueue = new List<UnitController>();
-        int depth;
+        int depthSearch;
+        UnitMove bestUnitMove;
 
         public MiniMax(List<UnitController> unitsQueue, int depth)
         {
             this.unitsQueue = unitsQueue;
-            this.depth = depth;
+            depthSearch = depth;
         }
 
         public UnitMove StartMiniMax()
@@ -22,70 +23,72 @@ namespace HOMM_BM
 
             foreach (UnitController unit in unitsQueue)
             {
-                SimpleUnit simpleUnit = new SimpleUnit(unit.unitStats, unit.CurrentNode, unit.gameObject.layer);
+                UnitStatsReference unitStats = new UnitStatsReference(unit.HitPoints, unit.Damage, unit.Attack, unit.Defense, unit.Initiative, unit.StepsCount);
+
+                SimpleUnit simpleUnit = new SimpleUnit(unitStats, unit.CurrentNode, unit.gameObject.layer, unit.GetInstanceID());
+
                 simpleUnitsQueue.Add(simpleUnit);
             }
+            GridState gridState = new GridState(simpleUnitsQueue, SimulationManager.instance.MoveCount, SimulationManager.instance.MoveCount);
+            PerformMiniMax(gridState, depthSearch, -1000000, 1000000);
 
-            GridState gridState = new GridState(simpleUnitsQueue);
-            (int evaluation, UnitMove unitMove) miniMaxResult = PerformMiniMax(gridState, depth, -1000, 1000);
-
-            return miniMaxResult.unitMove;
+            return bestUnitMove;
         }
 
-        (int, UnitMove) PerformMiniMax(GridState gridState, int depth, int alpha, int beta)
+        int PerformMiniMax(GridState gridState, int depth, int alpha, int beta)
         {
             if (depth == 0 || gridState.IsGameOver())
             {
-                return (gridState.Evaluate(), null);
+                return gridState.Evaluate();
             }
-
-            List<Node> legalMoves = gridState.UpdateUnitMoves();
 
             if (gridState.CurrentSimple.Layer == GridManager.ENEMY_UNITS_LAYER)
             {
-                UnitMove maximizerBestMove = null;
+                List<UnitMove> legalMoves = gridState.GetLegalMoves();
+                gridState.EvaluateMoves(legalMoves);
 
-                foreach (Node node in legalMoves)
+                legalMoves = legalMoves.OrderByDescending(move => move.MoveEvaluation).ToList();
+
+                for (int i = 0, len = legalMoves.Count; i < len; ++i)
                 {
-                    GridState newGridState = new GridState(gridState.UnitsQueue);
-                    UnitMove unitMove = new UnitMove(newGridState.CurrentSimple, newGridState.DebugSimple, node);
+                    GridState newGridState = new GridState(gridState);
+                    newGridState.MoveUnit(legalMoves[i]);
 
-                    newGridState.MoveUnit(node);
+                    int evaluation = PerformMiniMax(newGridState, depth - 1, alpha, beta);
 
-                    (int evaluation, UnitMove unitMove) miniMaxResult = PerformMiniMax(newGridState, depth - 1, alpha, beta);
-
-                    if (alpha < miniMaxResult.evaluation)
+                    if (evaluation > alpha)
                     {
-                        alpha = miniMaxResult.evaluation;
-                        maximizerBestMove = unitMove;
+                        alpha = evaluation;
+                        if (depth == depthSearch)
+                            bestUnitMove = legalMoves[i];
                     }
                     if (beta <= alpha)
                         break;
                 }
-                return (alpha, maximizerBestMove);
+                return alpha;
             }
             else
             {
-                UnitMove minimizerBestMove = null;
+                List<UnitMove> legalMoves = gridState.GetLegalMoves();
+                gridState.EvaluateMoves(legalMoves);
 
-                foreach (Node node in legalMoves)
+                legalMoves = legalMoves.OrderByDescending(move => move.MoveEvaluation).ToList();
+
+                for (int i = 0, len = legalMoves.Count; i < len; ++i)
                 {
-                    GridState newGridState = new GridState(gridState.UnitsQueue);
-                    UnitMove unitMove = new UnitMove(newGridState.CurrentSimple, newGridState.DebugSimple, node);
+                    GridState newGridState = new GridState(gridState);
+                    newGridState.MoveUnit(legalMoves[i]);
 
-                    newGridState.MoveUnit(node);
+                    int evaluation = PerformMiniMax(newGridState, depth - 1, alpha, beta);
 
-                    (int evaluation, UnitMove unitMove) miniMaxResult = PerformMiniMax(newGridState, depth - 1, alpha, beta);
-
-                    if (beta > miniMaxResult.evaluation)
+                    if (evaluation < beta)
                     {
-                        beta = miniMaxResult.evaluation;
-                        minimizerBestMove = unitMove;
+                        beta = evaluation;
                     }
                     if (beta <= alpha)
                         break;
                 }
-                return (beta, minimizerBestMove);
+                return beta;
             }
         }
     }

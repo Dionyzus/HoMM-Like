@@ -89,6 +89,8 @@ namespace HOMM_BM
         float waitForCleanupTime;
         float waitForNewTurn;
 
+        bool calculatingAiMove;
+
         private void Awake()
         {
             instance = this;
@@ -191,23 +193,11 @@ namespace HOMM_BM
                     if (SimulationManager.instance.AiInteracting || currentUnit.IsInteractionInitialized)
                         return;
 
-                    SimulationManager.instance.Initialize();
-                    return;
-
-                    waitForNewTurn += Time.deltaTime;
-
-                    //This timer could be avoided if all attacks have animation hit event
-                    if (waitForNewTurn >= 1)
+                    if (!calculatingAiMove)
                     {
-                        waitForNewTurn = 0;
+                        calculatingAiMove = true;
+                        SimulationManager.instance.Initialize();
 
-                        if (EnemyUnitManager.instance.AiInteracting || currentUnit.IsInteractionInitialized)
-                            return;
-
-                        FlowmapPathfinderMaster.instance.CalculateWalkablePositions();
-                        calculatePath = false;
-
-                        EnemyUnitManager.instance.HandleAiTurn(currentUnit);
                         return;
                     }
                 }
@@ -643,11 +633,11 @@ namespace HOMM_BM
 
         public void OnCurrentUnitTurn(bool isInitialize = false)
         {
-            //if (EnemyUnitManager.instance.AiInteracting)
-            //    EnemyUnitManager.instance.AiInteracting = false;
-
             if (SimulationManager.instance.AiInteracting)
                 SimulationManager.instance.AiInteracting = false;
+
+            if (calculatingAiMove)
+                calculatingAiMove = false;
 
             if (currentUnit != null)
             {

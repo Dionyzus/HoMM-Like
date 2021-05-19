@@ -9,7 +9,11 @@ namespace HOMM_BM
     {
         public static SimulationManager instance;
 
+        public int MoveCount;
+
         UnitController currentUnit;
+        UnitController targetUnit;
+
         List<UnitController> unitsQueue = new List<UnitController>();
 
         bool isInteractionInitialized;
@@ -27,8 +31,10 @@ namespace HOMM_BM
             unitsQueue = new List<UnitController>(BattleManager.instance.UnitsQueue);
             currentUnit = unitsQueue.First();
 
-            MiniMax minimax = new MiniMax(unitsQueue, 2);
+            MiniMax minimax = new MiniMax(unitsQueue, 4);
             UnitMove unitMove = minimax.StartMiniMax();
+
+            MoveCount++;
 
             if (unitMove == null)
             {
@@ -37,12 +43,18 @@ namespace HOMM_BM
                 return;
             }
 
-            if (unitMove.SimpleUnit == null)
+            if (unitMove.TargetAvailableFromNode != null)
             {
-                Debug.Log("No unit for the move!");
+                foreach (UnitController unit in unitsQueue)
+                {
+                    if (unitMove.TargetAvailableFromNode.UnitId.Equals(unit.GetInstanceID()))
+                    {
+                        targetUnit = unit;
+                    }
+                }
             }
 
-            if (unitMove.TargetSimple != null)
+            if (targetUnit != null)
             {
                 isInteractionInitialized = true;
 
@@ -58,7 +70,6 @@ namespace HOMM_BM
             }
             else
             {
-                Debug.Log("Unit: " + unitMove.SimpleUnit.Layer + " In want to walk: " + unitMove.TargetNode.worldPosition);
                 aiInteracting = true;
                 if (currentUnit.CurrentNode == unitMove.TargetNode)
                 {
@@ -74,9 +85,10 @@ namespace HOMM_BM
             if (isInteractionInitialized)
             {
                 isInteractionInitialized = false;
-                HandeAiAction(unitMove);
+                HandeAiAction();
 
-                unitMove.TargetSimple = null;
+                if (targetUnit != null)
+                    targetUnit = null;
             }
         }
         bool IsTargetNodeNeighbour(Node currentNode, Node targetNode)
@@ -90,13 +102,13 @@ namespace HOMM_BM
             }
             return false;
         }
-        void HandeAiAction(UnitMove unitMove)
+        void HandeAiAction()
         {
-            InteractionHook ih = unitMove.TargetUnit.GetComponentInChildren<InteractionHook>();
+            InteractionHook ih = targetUnit.GetComponentInChildren<InteractionHook>();
 
             if (ih == null || !ih.enabled)
             {
-                unitMove.TargetUnit = null;
+                targetUnit = null;
                 return;
             }
 
@@ -104,7 +116,7 @@ namespace HOMM_BM
             currentUnit.IsInteractionInitialized = true;
             currentUnit.CreateInteractionContainer(currentUnit.currentInteractionHook.interactionContainer);
 
-            BattleManager.instance.CurrentCombatEvent = new CombatEvent(currentUnit, unitMove.TargetUnit);
+            BattleManager.instance.CurrentCombatEvent = new CombatEvent(currentUnit, targetUnit);
 
             if (BattleManager.instance.unitIsMoving)
             {

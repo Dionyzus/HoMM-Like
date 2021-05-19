@@ -34,4 +34,9 @@ namespace HOMM_BM
         MAX_UNIT,
         MIN_UNIT
     }
+    public enum EvaluationScore
+    {
+        ATTACK_MOVE = 9,
+        ROAMING_MOVE = 4
+    }
 }

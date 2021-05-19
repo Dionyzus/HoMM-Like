@@ -14,8 +14,6 @@ namespace HOMM_BM
         public Vector3 worldPosition;
         public Renderer renderer;
 
-        public int score = 1;
-
         public List<Node> subNodes = new List<Node>();
 
         public bool isWalkable = false;
@@ -26,8 +24,6 @@ namespace HOMM_BM
             origin.y += GridManager.instance.groundDistanceOffset;
 
             float distance = GridManager.instance.groundDistanceCheck;
-
-            //Debug.DrawRay(origin, Vector3.down * distance, Color.red, 5);
 
             if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, distance, GridManager.IGNORE_FOR_OBSTACLES))
             {
@@ -77,24 +73,18 @@ namespace HOMM_BM
             Collider[] colliders = Physics.OverlapBox(origin,
                 GridManager.instance.readExtents / 2, Quaternion.identity, GridManager.IGNORE_FOR_OBSTACLES);
 
-            //Debug.DrawLine(origin, origin + GridManager.instance.readExtents / 2, Color.blue, 20);
-            //Debug.DrawLine(origin, origin - GridManager.instance.readExtents / 2, Color.yellow, 20);
-
             GridManager.visualizeNodes.Add(origin);
 
             for (int i = 0; i < colliders.Length; i++)
             {
-                //if(!colliders[i].isTrigger)
-                //    isWalkable = false;
                 isWalkable = false;
             }
         }
 
-        //A* pathfinding
         public Node parentNode;
         public float hCost;
         public float gCost;
-        public float fCost
+        public float FCost
         {
             get
             {

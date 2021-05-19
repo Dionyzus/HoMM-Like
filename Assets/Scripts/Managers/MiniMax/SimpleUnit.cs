@@ -6,12 +6,13 @@ namespace HOMM_BM
 {
     public class SimpleUnit
     {
-        UnitStats unitStats;
+        UnitStatsReference unitStats;
         Node currentNode;
         int layer;
         int stepsCount;
+        int unitId;
 
-        public UnitStats UnitStats { get => unitStats; set => unitStats = value; }
+        public UnitStatsReference UnitStats { get => unitStats; set => unitStats = value; }
         public Node CurrentNode { get => currentNode; set => currentNode = value; }
         public int Layer { get => layer; set => layer = value; }
 
@@ -19,31 +20,33 @@ namespace HOMM_BM
         int damage;
         int attack;
         int defense;
-        float initiative;
+        int initiative;
         public int HitPoints { get => hitPoints; set => hitPoints = value; }
         public int Damage { get => damage; set => damage = value; }
         public int Attack { get => attack; set => attack = value; }
         public int Defense { get => defense; set => defense = value; }
-        public float Initiative { get => initiative; set => initiative = value; }
+        public int Initiative { get => initiative; set => initiative = value; }
         public int StepsCount { get => stepsCount; set => stepsCount = value; }
+        public int UnitId { get => unitId; set => unitId = value; }
 
-        public SimpleUnit(UnitStats unitStats, Node currentNode, int layer)
+        public SimpleUnit(UnitStatsReference unitStats, Node currentNode, int layer, int unitId)
         {
             this.unitStats = unitStats;
             InitializeUnitStats();
 
             this.currentNode = currentNode;
             this.layer = layer;
+            this.unitId = unitId;
         }
         
         void InitializeUnitStats()
         {
-            hitPoints = unitStats.hitPoints;
-            damage = unitStats.damage;
-            attack = unitStats.attack;
-            defense = unitStats.defense;
-            initiative = unitStats.initiative;
-            stepsCount = unitStats.stepsCount;
+            hitPoints = unitStats.HitPoints;
+            damage = unitStats.Damage;
+            attack = unitStats.Attack;
+            defense = unitStats.Defense;
+            initiative = unitStats.Initiative;
+            stepsCount = unitStats.StepsCount;
         }
     }
 }

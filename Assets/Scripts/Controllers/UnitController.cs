@@ -22,8 +22,8 @@ namespace HOMM_BM
         UnitAttackType attackType;
 
         //Unit controller specific data
-        float initiative;
-        public float Initiative { get => initiative; set => initiative = value; }
+        int initiative;
+        public int Initiative { get => initiative; set => initiative = value; }
 
         public int hitPoints;
         public int damage;

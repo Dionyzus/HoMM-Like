@@ -140,8 +140,8 @@ namespace HOMM_BM
 
                 for (int i = 0; i < openSet.Count; i++)
                 {
-                    if (openSet[i].fCost < currentNode.fCost ||
-                       (openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost))
+                    if (openSet[i].FCost < currentNode.FCost ||
+                       (openSet[i].FCost == currentNode.FCost && openSet[i].hCost < currentNode.hCost))
                     {
                         if (!currentNode.Equals(openSet[i]))
                         {
