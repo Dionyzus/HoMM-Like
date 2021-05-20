@@ -31,7 +31,7 @@ namespace HOMM_BM
             unitsQueue = new List<UnitController>(BattleManager.instance.UnitsQueue);
             currentUnit = unitsQueue.First();
 
-            MiniMax minimax = new MiniMax(unitsQueue, 4);
+            MiniMax minimax = new MiniMax(unitsQueue, 3);
             UnitMove unitMove = minimax.StartMiniMax();
 
             MoveCount++;

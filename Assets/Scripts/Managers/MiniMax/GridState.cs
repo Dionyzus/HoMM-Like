@@ -141,8 +141,10 @@ namespace HOMM_BM
         {
             List<SimpleUnit> availableTargets = FindAvailableTargets();
 
-            //if (availableTargets.Count > 0)
-            //    EvaluateAvailableTargets(availableTargets);
+            Dictionary<SimpleUnit, TargetPriority> evaluatedTargets = new Dictionary<SimpleUnit, TargetPriority>();
+
+            if (availableTargets.Count > 0)
+                evaluatedTargets = EvaluateAvailableTargets(availableTargets);
 
             List<UnitMoveInfo> unitMovesInfo = new List<UnitMoveInfo>();
 
@@ -157,6 +159,15 @@ namespace HOMM_BM
                 if (unitMoves[i].IsAttackMove)
                 {
                     unitMoves[i].MoveEvaluation += (int)EvaluationScore.ATTACK_MOVE;
+
+                    foreach (SimpleUnit target in evaluatedTargets.Keys)
+                    {
+                        if (target.UnitId == unitMoves[i].TargetAvailableFromNode.UnitId)
+                        {
+                            unitMoves[i].MoveEvaluation += (int)evaluatedTargets[target];
+                            break;
+                        }
+                    }
                 }
                 else
                 {
@@ -187,55 +198,41 @@ namespace HOMM_BM
             }
         }
 
-        Dictionary<SimpleUnit, int> EvaluateAvailableTargets(List<SimpleUnit> availableTargets)
+        Dictionary<SimpleUnit, TargetPriority> EvaluateAvailableTargets(List<SimpleUnit> availableTargets)
         {
-            Dictionary<SimpleUnit, int> targetsPriorityScores = new Dictionary<SimpleUnit, int>();
+            Dictionary<SimpleUnit, TargetPriority> targetsPriorityScores = new Dictionary<SimpleUnit, TargetPriority>();
 
-            int priorityScore = 0;
-
-            SimpleUnit currentTarget = availableTargets.ElementAt(0);
-            targetsPriorityScores.Add(currentTarget, (int)TargetPriority.INITITAL);
-
-            foreach (SimpleUnit unit in availableTargets)
+            foreach (SimpleUnit target in availableTargets)
             {
-                if (unit.UnitId == currentTarget.UnitId)
-                    continue;
+                targetsPriorityScores.Add(target, TargetPriority.INITITAL);
+            }
 
-                priorityScore += AddToDecision(new StatComparatorHolder(currentTarget.HitPoints, unit.HitPoints), FloatExtension.Less, (int)ScoreValue.STANDARD);
-                priorityScore += AddToDecision(new StatComparatorHolder(currentTarget.Defense, unit.Defense), FloatExtension.Less, (int)ScoreValue.STANDARD);
-                priorityScore += AddToDecision(new StatComparatorHolder(unit.HitPoints, currentSimple.Damage), FloatExtension.LessOrEqual, (int)ScoreValue.HIGH);
+            SimpleUnit currentTarget = availableTargets[0];
+            int priorityScore = (int)TargetPriority.INITITAL;
+
+            foreach (SimpleUnit target in availableTargets)
+            {
+                priorityScore += AddToDecision(new StatComparatorHolder(target.HitPoints, currentTarget.HitPoints), FloatExtension.Less, (int)ScoreValue.STANDARD);
+                priorityScore += AddToDecision(new StatComparatorHolder(target.Defense, currentTarget.Defense), FloatExtension.Less, (int)ScoreValue.STANDARD);
+                priorityScore += AddToDecision(new StatComparatorHolder(target.HitPoints, currentSimple.Damage), FloatExtension.LessOrEqual, (int)ScoreValue.HIGH);
 
                 StatComparatorHolder[] statHolders = new StatComparatorHolder[] {
-                        new StatComparatorHolder(unit.HitPoints, currentSimple.Damage),
-                        new StatComparatorHolder(unit.Damage, currentSimple.HitPoints) };
+                        new StatComparatorHolder(target.HitPoints, currentSimple.Damage),
+                        new StatComparatorHolder(target.Damage, currentSimple.HitPoints) };
 
                 Func<float, float, bool>[] comparisons = new Func<float, float, bool>[] { FloatExtension.LessOrEqual, FloatExtension.More };
 
                 priorityScore += AddToDecision(statHolders, comparisons, (int)ScoreValue.TOP);
-                priorityScore += AddToDecision(unit, (int)ScoreValue.TOP);
+                priorityScore += AddToDecision(target, (int)ScoreValue.TOP);
 
-                targetsPriorityScores.Add(unit, priorityScore);
+                targetsPriorityScores[target] = priorityScore.ConvertToTargetPriority();
 
-                if (priorityScore > targetsPriorityScores[currentTarget])
+                if (currentTarget != target && priorityScore > (int)targetsPriorityScores[currentTarget])
                 {
-                    currentTarget = unit;
+                    currentTarget = target;
                 }
-            }
 
-            foreach (SimpleUnit unit in targetsPriorityScores.Keys)
-            {
-                if (targetsPriorityScores[unit] >= (int)TargetPriority.TOP)
-                {
-                    targetsPriorityScores[unit] = (int)TargetPriority.TOP;
-                }
-                if (targetsPriorityScores[unit] >= (int)TargetPriority.FAVOURABLE)
-                {
-                    targetsPriorityScores[unit] = (int)TargetPriority.FAVOURABLE;
-                }
-                if (targetsPriorityScores[unit] >= (int)TargetPriority.NEW)
-                {
-                    targetsPriorityScores[unit] = (int)TargetPriority.NEW;
-                }
+                priorityScore = (int)TargetPriority.INITITAL;
             }
 
             return targetsPriorityScores;
@@ -400,20 +397,20 @@ namespace HOMM_BM
             int minUnitsCount = GetUnitsOfLayer(GridManager.FRIENDLY_UNITS_LAYER).Count;
             int unitsCountDifference = maxUnitsCount - minUnitsCount;
 
-            int maxUnitsScore = CalculateScore(GridManager.ENEMY_UNITS_LAYER);
-            int minUnitsScore = CalculateScore(GridManager.FRIENDLY_UNITS_LAYER);
-            int unitsScoresDifference = maxUnitsScore - minUnitsScore;
+            int maxStatsScore = CalculateStatsScore(GridManager.ENEMY_UNITS_LAYER);
+            int minStatsScore = CalculateStatsScore(GridManager.FRIENDLY_UNITS_LAYER);
+            int statsScoreDifference = maxStatsScore - minStatsScore;
 
             int totalEvaluation = unitsTotalHitPointsDifference;
-            totalEvaluation += unitsScoresDifference * 5;
-            totalEvaluation += unitsCountDifference * 10;
+            totalEvaluation += statsScoreDifference * (int)EvaluationBoost.STATS_SCORE;
+            totalEvaluation += unitsCountDifference * (int)EvaluationBoost.UNITS_COUNT;
 
             int maxTotalDistance = CalculateDistancesToTargets(GridManager.ENEMY_UNITS_LAYER, GridManager.FRIENDLY_UNITS_LAYER);
 
             return totalEvaluation - maxTotalDistance;
         }
 
-        private int CalculateScore(int layer)
+        private int CalculateStatsScore(int layer)
         {
             int retVal = 0;
             foreach (SimpleUnit unit in unitsQueue)
@@ -422,7 +419,7 @@ namespace HOMM_BM
                 {
                     retVal += unit.Defense;
                     retVal += unit.Attack;
-                    retVal += unit.Initiative * 2;
+                    retVal += unit.Initiative * (int)EvaluationBoost.INITIATIVE;
                 }
             }
 

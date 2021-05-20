@@ -24,7 +24,7 @@ namespace HOMM_BM
     }
     public enum TargetPriority
     {
-        INITITAL = 1,
+        INITITAL = 2,
         NEW = 5,
         FAVOURABLE = 10,
         TOP = 15
@@ -38,5 +38,11 @@ namespace HOMM_BM
     {
         ATTACK_MOVE = 9,
         ROAMING_MOVE = 4
+    }
+    public enum EvaluationBoost
+    {
+        INITIATIVE = 2,
+        STATS_SCORE = 5,
+        UNITS_COUNT = 10
     }
 }

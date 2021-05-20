@@ -22,4 +22,39 @@ namespace HOMM_BM
             return first > second;
         }
     }
+    public static class IntExtension
+    {
+        public static TargetPriority ConvertToTargetPriority(this int value)
+        {
+            if (value >= (int)TargetPriority.TOP)
+            {
+                return TargetPriority.TOP;
+            }
+            if (value >= (int)TargetPriority.FAVOURABLE)
+            {
+                return TargetPriority.FAVOURABLE;
+            }
+            if (value >= (int)TargetPriority.NEW)
+            {
+                return TargetPriority.NEW;
+            }
+            if (value >= (int)TargetPriority.INITITAL)
+            {
+                return TargetPriority.INITITAL;
+            }
+            return TargetPriority.INITITAL;
+        }
+        public static int CalculateDamage(this int hitPoints, int attackerStackSize, int defenderStackSize, int attack, int defense)
+        {
+            float attackPower = attack / defense;
+            int stackDifference = attackerStackSize - defenderStackSize;
+
+            if (stackDifference <= 0)
+            {
+                stackDifference = 1;
+            }
+
+            return hitPoints - (int)Math.Round(stackDifference * attackPower);
+        }
+    }
 }
