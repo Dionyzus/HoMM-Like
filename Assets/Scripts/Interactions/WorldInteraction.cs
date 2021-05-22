@@ -7,11 +7,21 @@ namespace HOMM_BM
     public class WorldInteraction : Interaction
     {
         float timer;
+
         public override void OnEnd(GridUnit gridUnit)
         {
+            HeroController heroController = (HeroController)gridUnit;
+            if (gridUnit.currentInteractionHook.Amount == 1)
+            {
+                heroController.Inventory.AddItem(gridUnit.currentInteractionHook.Item);
+            }
+            else
+            {
+                heroController.Inventory.AddItems(gridUnit.currentInteractionHook.Item, gridUnit.currentInteractionHook.Amount);
+            }
+
             gridUnit.ActionIsDone();
         }
-
         public override bool TickIsFinished(GridUnit gridUnit, float deltaTime)
         {
             timer -= deltaTime;

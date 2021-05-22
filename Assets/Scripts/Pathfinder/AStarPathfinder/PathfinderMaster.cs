@@ -13,6 +13,9 @@ namespace HOMM_BM
         PathIsFound onPathIsFound;
         GridUnit.OnPathReachCallback onPathReach;
 
+        [HideInInspector]
+        public List<Node> CreatedNodes = new List<Node>();
+
         List<Node> storedPath = new List<Node>();
         public List<Node> StoredPath { get => storedPath; set => storedPath = value; }
 
@@ -49,6 +52,20 @@ namespace HOMM_BM
             }
 
             return false;
+        }
+
+        public void ClearCreatedNodes()
+        {
+            foreach (Node node in CreatedNodes)
+            {
+                foreach (Node subNode in node.subNodes)
+                {
+                    GridManager.instance.ClearNode(subNode);
+                }
+                GridManager.instance.ClearNode(node);
+            }
+
+            CreatedNodes.Clear();
         }
     }
 }

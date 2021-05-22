@@ -46,8 +46,8 @@ namespace HOMM_BM
                 }
             }
 
-            GridObject[] gridObjects = FindObjectsOfType<GridObject>();
-            foreach (GridObject go in gridObjects)
+            InteractionHook[] gridObjects = FindObjectsOfType<InteractionHook>();
+            foreach (InteractionHook go in gridObjects)
             {
                 Node node = GridManager.instance.GetNode(go.transform.position, go.gridIndex);
                 go.transform.position = node.worldPosition;
@@ -104,7 +104,10 @@ namespace HOMM_BM
                             Node targetNode = GridManager.instance.GetNode(hit.point, currentHero.GridIndex);
 
                             if (targetNode != null)
+                            {
                                 currentHero.PreviewPathToNode(targetNode, hook);
+                                PathfinderMaster.instance.CreatedNodes.Add(targetNode);
+                            }
 
                             if (PathfinderMaster.instance.IsTargetNodeNeighbour(currentHero.CurrentNode, targetNode))
                             {

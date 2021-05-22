@@ -45,4 +45,17 @@ namespace HOMM_BM
         STATS_SCORE = 5,
         UNITS_COUNT = 10
     }
+    public enum ArtifactType
+    {
+        HELMET,
+        CHEST_PLATE,
+        GAUNTLETS,
+        GREAVES,
+        WEAPON,
+        SHIELD,
+        RING,
+        AMULET,
+        BELT,
+        VAMBRACE
+    }
 }

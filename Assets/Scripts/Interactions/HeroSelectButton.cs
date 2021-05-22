@@ -14,7 +14,7 @@ namespace HOMM_BM
         {
             button = GetComponent<Button>();
             button.onClick.AddListener(OnClick);
-            button.GetComponentInChildren<RawImage>().texture = heroController.heroImage;
+            button.GetComponentInChildren<RawImage>().texture = heroController.renderTexture;
         }
 
         public void OnClick()

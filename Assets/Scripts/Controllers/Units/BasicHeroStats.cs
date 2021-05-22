@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using System.Collections.ObjectModel;
 
 namespace HOMM_BM
 {
-    [CreateAssetMenu(menuName = "Hero/Hero Stats")]
-    public class HeroStats : ScriptableObject
+    [CreateAssetMenu(menuName = "Hero/Basic Hero Stats")]
+	public class BasicHeroStats : ScriptableObject
     {
         //Grid specific
         public int gridIndex;
@@ -14,5 +16,5 @@ namespace HOMM_BM
         //Movement specific
         public float movementSpeed;
         public float rotationSpeed;
-    }
+	}
 }

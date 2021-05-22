@@ -9,7 +9,7 @@ namespace HOMM_BM
     {
         public static SimulationManager instance;
 
-        public int MoveCount;
+        private int moveCount;
 
         UnitController currentUnit;
         UnitController targetUnit;
@@ -20,6 +20,7 @@ namespace HOMM_BM
         bool isTargetPointBlank;
         bool aiInteracting;
         public bool AiInteracting { get => aiInteracting; set => aiInteracting = value; }
+        public int MoveCount { get => moveCount; set => moveCount = value; }
 
         public void Awake()
         {

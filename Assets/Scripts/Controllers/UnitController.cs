@@ -23,6 +23,8 @@ namespace HOMM_BM
 
         //Unit controller specific data
         int initiative;
+        int moral;
+        int luck;
         public int Initiative { get => initiative; set => initiative = value; }
 
         public int hitPoints;
@@ -54,6 +56,11 @@ namespace HOMM_BM
 
         bool projectileHitTarget;
 
+        private UnitStatsReference unitStatsReference;
+        public UnitStatsReference UnitStatsReference { get => unitStatsReference; set => unitStatsReference = value; }
+        public int Moral { get => moral; set => moral = value; }
+        public int Luck { get => luck; set => luck = value; }
+
         private void Awake()
         {
             unitImage = GetComponentInChildren<Image>();
@@ -74,6 +81,8 @@ namespace HOMM_BM
             {
                 meleeAttackDamage = damage / 3;
             }
+
+            unitStatsReference = new UnitStatsReference(hitPoints, damage, attack, defense, initiative, moral, luck);
         }
 
         private void Update()
@@ -82,6 +91,8 @@ namespace HOMM_BM
 
             //Check this out...
             //animator.applyRootMotion = IsInteracting;
+            if (animator == null)
+                animator = GetComponentInChildren<Animator>();
             animator.SetBool("isWalking", isWalking);
 
             if (isInteractionInitialized && isTargetPointBlank)

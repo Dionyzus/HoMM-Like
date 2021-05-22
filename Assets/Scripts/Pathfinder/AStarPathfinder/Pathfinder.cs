@@ -127,11 +127,18 @@ namespace HOMM_BM
                     Node newNode = null;
 
                     if (node != null && node.IsWalkable())
+                    {
                         newNode = GetNeighbour(node, from, GridManager.IGNORE_FOR_OBSTACLES);
+                        PathfinderMaster.instance.CreatedNodes.Add(node);
+                    }
 
                     if (newNode != null)
                     {
                         result.Add(newNode);
+                    }
+                    else if (newNode != null)
+                    {
+                        PathfinderMaster.instance.CreatedNodes.Add(newNode);
                     }
                 }
             }
