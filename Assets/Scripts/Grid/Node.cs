@@ -73,8 +73,6 @@ namespace HOMM_BM
             Collider[] colliders = Physics.OverlapBox(origin,
                 GridManager.instance.readExtents / 2, Quaternion.identity, GridManager.IGNORE_FOR_OBSTACLES);
 
-            GridManager.visualizeNodes.Add(origin);
-
             for (int i = 0; i < colliders.Length; i++)
             {
                 isWalkable = false;

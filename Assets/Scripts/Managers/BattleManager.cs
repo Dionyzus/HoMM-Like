@@ -97,6 +97,8 @@ namespace HOMM_BM
         }
         public void Initialize()
         {
+            UiManager.instance.DeactivateWorldUi();
+
             battleUnits = FindObjectsOfType<UnitController>();
             Array.Sort(battleUnits,
                     delegate (UnitController unitA, UnitController unitB) { return unitB.Initiative.CompareTo(unitA.Initiative); });
@@ -230,18 +232,26 @@ namespace HOMM_BM
         //Add instantiating from prefab
         private void InitializeUnitLists()
         {
+            int multiplier = 3;
+            int stackSize = 2;
             foreach (UnitController unit in battleUnits)
             {
                 if (unit.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
                 {
                     unit.UnitSide = UnitSide.MIN_UNIT;
+                    unit.StackSize = stackSize * multiplier;
                     FriendlyUnits.Add(unit);
+                    stackSize += 3;
+                    multiplier += 1;
                 }
                 else
                 {
                     unit.UnitSide = UnitSide.MAX_UNIT;
+                    unit.StackSize = stackSize * multiplier;
                     EnemyUnits.Add(unit);
                     unit.gameObject.SetActive(false);
+                    stackSize += 4;
+                    multiplier += 3;
                 }
             }
         }
@@ -486,7 +496,7 @@ namespace HOMM_BM
             if (currentUnit.IsInteractionInitialized || currentUnit.IsInteracting || currentUnit.currentInteractionHook != null)
                 return;
 
-            Ray ray = MainCamera.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
+            Ray ray = Camera.main.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
 
             if (Physics.Raycast(ray, out RaycastHit hit, 100))
             {

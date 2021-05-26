@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HOMM_BM
 {
@@ -9,7 +10,7 @@ namespace HOMM_BM
     {
         [SerializeField]
         UnitStats unitStats = default;
-        [Space]
+
         public UnitAttackType UnitAttackType;
 
         public override Item GetCopy()
@@ -38,25 +39,18 @@ namespace HOMM_BM
             AddStat(unitStats.attack, "Attack");
             AddStat(unitStats.defense, "Defense");
 
+            sb.AppendLine();
             return sb.ToString();
         }
 
-        private void AddStat(float value, string statName, bool isPercent = false)
+        private void AddStat(float value, string statName)
         {
             if (value != 0)
             {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-
-                if (value > 0)
-                    sb.Append("+");
-
-                else
-                {
-                    sb.Append(value);
-                    sb.Append(" ");
-                }
                 sb.Append(statName);
+                sb.Append(" ");
+                sb.Append(value);
+                sb.AppendLine();
             }
         }
     }

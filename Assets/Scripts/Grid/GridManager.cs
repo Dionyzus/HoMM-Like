@@ -26,9 +26,6 @@ namespace HOMM_BM
         public static int ENEMY_UNITS_LAYER = 10;
         public static int FRIENDLY_UNITS_LAYER = 8;
 
-        public bool visualizeCollisions = true;
-        public static List<Vector3> visualizeNodes = new List<Vector3>();
-
         public static GridManager instance;
 
         public Vector3 MinPosition { get => minPosition; set => minPosition = value; }
@@ -263,47 +260,6 @@ namespace HOMM_BM
             {
                 grids[i] = CreateGrid(gridSizes[i]);
             }
-        }
-
-        private void OnDrawGizmos()
-        {
-            if (visualizeCollisions)
-            {
-                Gizmos.color = Color.red;
-                for (int i = 0; i < visualizeNodes.Count; i++)
-                {
-                    Gizmos.DrawWireCube(visualizeNodes[i], readExtents);
-                }
-            }
-        }
-        public static Vector3Int FindOrientationOnGrid(Vector3 direction)
-        {
-            Vector3Int retVal = Vector3Int.zero;
-
-            //north
-            if (IsInAngle(direction, Vector3.forward))
-            {
-                retVal.z = 1;
-            }
-            //east
-            else if (IsInAngle(direction, Vector3.right))
-            {
-                retVal.x = 1;
-            }
-            //west
-            else if (IsInAngle(direction, Vector3.left))
-            {
-                retVal.x = -1;
-            }
-
-            return retVal;
-        }
-        static bool IsInAngle(Vector3 forward, Vector3 targetDirection)
-        {
-            float angle = Vector3.Angle(forward, targetDirection);
-            if (angle < 90)
-                return true;
-            return false;
         }
     }
 }

@@ -91,13 +91,6 @@ namespace HOMM_BM
 
         public Interaction currentInteraction;
 
-
-        void Awake()
-        {
-            //Maybe seperate enemy and friendly units
-            //gameObject.layer = 8;
-        }
-
         void Start()
         {
             animator = GetComponentInChildren<Animator>();

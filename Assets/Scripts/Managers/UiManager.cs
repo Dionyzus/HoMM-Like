@@ -14,41 +14,70 @@ namespace HOMM_BM
         [SerializeField]
         GameObject worldUi = default;
 
-        public GameObject sliderPrefab;
-        public GameObject heroSelectPrefab;
+        public GameObject SliderPrefab;
+        public GameObject HeroSelectPrefab;
 
-        public GameObject interactionPrefab;
-        public Transform interactionsParent;
+        public GameObject InteractionPrefab;
+        public Transform InteractionsParent;
 
-        public GameObject currentUnitPrefab;
-        public GameObject unitPrefab;
+        public GameObject CurrentUnitPrefab;
+        public GameObject UnitPrefab;
 
         GameObject currentUnitUi;
 
         List<GameObject> unitsUiQueue = new List<GameObject>();
 
+        [SerializeField]
+        Sprite friendlyBackgroundImage;
+        [SerializeField]
+        Sprite enemyBackgroundImage;
+
         Slider stepsSlider;
         public static UiManager instance;
+
+        public Sprite FriendlyBackgroundImage { get => friendlyBackgroundImage; set => friendlyBackgroundImage = value; }
+        public Sprite EnemyBackgroundImage { get => enemyBackgroundImage; set => enemyBackgroundImage = value; }
+
+        public GameObject InventoryPrefab;
+
         private void Awake()
         {
             instance = this;
         }
 
+        public void AddHeroInventory(HeroController hero)
+        {
+            GameObject go = Instantiate(InventoryPrefab);
+            go.transform.SetParent(worldUi.transform);
+            go.transform.localScale = Vector3.one;
+            RectTransform transform = go.transform.GetComponentInChildren<RectTransform>();
+            transform.localPosition = Vector3.zero;
+
+            go.gameObject.SetActive(true);
+
+            hero.InitializeInventory(go.GetComponent<InventoryReference>());
+        }
         public void ActivateBattleUi()
         {
-            worldUi.gameObject.SetActive(false);
             battleUi.gameObject.SetActive(true);
+        }
+        public void DeactivateBattleUi()
+        {
+            battleUi.gameObject.SetActive(false);
         }
         public void ActivateWorldUi()
         {
-            battleUi.gameObject.SetActive(false);
             worldUi.gameObject.SetActive(true);
+        }
+        public void DeactivateWorldUi()
+        {
+            worldUi.gameObject.SetActive(false);
         }
 
         public void AddStepsSlider(HeroController hero)
         {
-            GameObject go = Instantiate(sliderPrefab);
-            go.transform.SetParent(sliderPrefab.transform.parent);
+            GameObject go = Instantiate(SliderPrefab);
+            go.transform.SetParent(SliderPrefab.transform.parent);
             go.transform.localScale = Vector3.one;
 
             stepsSlider = go.GetComponentInChildren<Slider>();
@@ -67,8 +96,8 @@ namespace HOMM_BM
 
         public void CreateUiObjectForInteraction(InteractionInstance instance)
         {
-            GameObject go = Instantiate(interactionPrefab);
-            go.transform.SetParent(interactionsParent);
+            GameObject go = Instantiate(InteractionPrefab);
+            go.transform.SetParent(InteractionsParent);
             go.transform.localScale = Vector3.one;
             go.SetActive(true);
 
@@ -78,8 +107,8 @@ namespace HOMM_BM
         }
         public void AddHeroButton(HeroController heroController)
         {
-            GameObject go = Instantiate(heroSelectPrefab);
-            go.transform.SetParent(heroSelectPrefab.transform.parent);
+            GameObject go = Instantiate(HeroSelectPrefab);
+            go.transform.SetParent(HeroSelectPrefab.transform.parent);
             go.transform.localScale = Vector3.one;
             HeroSelectButton button = go.GetComponentInChildren<HeroSelectButton>();
             button.heroController = heroController;
@@ -88,11 +117,11 @@ namespace HOMM_BM
 
         void AddCurrentUnitIcon(UnitController unitController)
         {
-            GameObject go = Instantiate(currentUnitPrefab);
-            go.transform.SetParent(currentUnitPrefab.transform.parent);
+            GameObject go = Instantiate(CurrentUnitPrefab);
+            go.transform.SetParent(CurrentUnitPrefab.transform.parent);
             go.transform.localScale = Vector3.one;
             UnitButton button = go.GetComponentInChildren<UnitButton>();
-            button.unitController = unitController;
+            button.UnitController = unitController;
             go.SetActive(true);
 
             currentUnitUi = go;
@@ -107,11 +136,11 @@ namespace HOMM_BM
             //Add something to differe enemy with friendly units
             foreach (UnitController unit in unitsQueue)
             {
-                GameObject go = Instantiate(unitPrefab);
-                go.transform.SetParent(unitPrefab.transform.parent);
+                GameObject go = Instantiate(UnitPrefab);
+                go.transform.SetParent(UnitPrefab.transform.parent);
                 go.transform.localScale = Vector3.one;
                 UnitButton button = go.GetComponentInChildren<UnitButton>();
-                button.unitController = unit;
+                button.UnitController = unit;
                 go.SetActive(true);
 
                 unitsUiQueue.Add(go);
@@ -122,11 +151,11 @@ namespace HOMM_BM
         {
             ClearCurrentUnitUi();
 
-            GameObject newGo = Instantiate(unitPrefab);
-            newGo.transform.SetParent(unitPrefab.transform.parent);
+            GameObject newGo = Instantiate(UnitPrefab);
+            newGo.transform.SetParent(UnitPrefab.transform.parent);
             newGo.transform.localScale = Vector3.one;
             UnitButton button = newGo.GetComponentInChildren<UnitButton>();
-            button.unitController = BattleManager.instance.PreviousUnit;
+            button.UnitController = BattleManager.instance.PreviousUnit;
             newGo.SetActive(true);
 
             GameObject go = unitsUiQueue.ElementAt(0);
@@ -144,9 +173,9 @@ namespace HOMM_BM
                 foreach (GameObject unitUi in unitsUiQueue)
                 {
                     UnitButton button = unitUi.GetComponentInChildren<UnitButton>();
-                    if (button != null && button.unitController != null)
+                    if (button != null && button.UnitController != null)
                     {
-                        if (unit.Equals(button.unitController))
+                        if (unit.Equals(button.UnitController))
                         {
                             unitsUiQueue.Remove(unitUi);
                             Destroy(unitUi);
@@ -176,6 +205,8 @@ namespace HOMM_BM
                     outline.enabled = true;
                 }
             }
+
+            AddHeroInventory(targetHero);
         }
 
         public void OnUnitTurn(List<UnitController> unitsQueue, UnitController currentUnit, bool isInitialize)

@@ -7,15 +7,15 @@ namespace HOMM_BM
 {
     public class StatTooltip : MonoBehaviour
     {
-        [SerializeField] TextMeshProUGUI StatNameText;
-        [SerializeField] TextMeshProUGUI StatModifiersLabelText;
-        [SerializeField] TextMeshProUGUI StatModifiersText;
+        [SerializeField] TextMeshProUGUI statNameText;
+        [SerializeField] TextMeshProUGUI statModifiersLabelText;
+        [SerializeField] TextMeshProUGUI statModifiersText;
 
         private readonly StringBuilder sb = new StringBuilder();
 
-        public TextMeshProUGUI StatNameText1 { get => StatNameText; set => StatNameText = value; }
-        public TextMeshProUGUI StatModifiersLabelText1 { get => StatModifiersLabelText; set => StatModifiersLabelText = value; }
-        public TextMeshProUGUI StatModifiersText1 { get => StatModifiersText; set => StatModifiersText = value; }
+        public TextMeshProUGUI StatNameText { get => statNameText; set => statNameText = value; }
+        public TextMeshProUGUI StatModifiersLabelText { get => statModifiersLabelText; set => statModifiersLabelText = value; }
+        public TextMeshProUGUI StatModifiersText { get => statModifiersText; set => statModifiersText = value; }
 
         private void Awake()
         {
@@ -24,8 +24,8 @@ namespace HOMM_BM
 
         public void ShowTooltip(HeroStat stat, string statName)
         {
-            StatNameText1.text = GetStatTopText(stat, statName);
-            StatModifiersText1.text = GetStatModifiersText(stat);
+            StatNameText.text = GetStatTopText(stat, statName);
+            StatModifiersText.text = GetStatModifiersText(stat);
             gameObject.SetActive(true);
         }
 

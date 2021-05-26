@@ -12,9 +12,13 @@ namespace HOMM_BM
         public StatDisplay[] StatDisplays { get => statDisplays; set => statDisplays = value; }
         public string[] StatNames { get => statNames; set => statNames = value; }
 
-        private void OnValidate()
+        public void Initialize()
         {
-            StatDisplays = GetComponentsInChildren<StatDisplay>();
+            statDisplays = GetComponentsInChildren<StatDisplay>();
+            foreach (StatDisplay statDisplay in statDisplays)
+            {
+                statDisplay.Initialize();
+            }
             UpdateStatNames();
         }
 
@@ -51,7 +55,7 @@ namespace HOMM_BM
         {
             for (int i = 0; i < StatNames.Length; i++)
             {
-                StatDisplays[i].Name = StatNames[i];
+                StatDisplays[i].StatName = StatNames[i];
             }
         }
     }

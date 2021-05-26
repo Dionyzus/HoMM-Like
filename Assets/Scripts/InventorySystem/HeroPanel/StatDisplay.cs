@@ -18,42 +18,42 @@ namespace HOMM_BM
             }
         }
 
-        private string name;
-        public string Name
+        private string statName;
+        public string StatName
         {
-            get { return name; }
+            get { return statName; }
             set
             {
-                name = value;
-                nameText.text = name.ToUpper();
+                statName = value;
+                nameText.text = statName.ToUpper();
             }
         }
 
         [SerializeField] TextMeshProUGUI nameText;
         [SerializeField] TextMeshProUGUI valueText;
-        [SerializeField] StatTooltip tooltip;
+        [SerializeField] StatTooltip statTooltip;
 
         private bool showingTooltip;
 
-        private void OnValidate()
+        public void Initialize()
         {
             TextMeshProUGUI[] texts = GetComponentsInChildren<TextMeshProUGUI>();
             nameText = texts[0];
             valueText = texts[1];
 
-            if (tooltip == null)
-                tooltip = FindObjectOfType<StatTooltip>();
+            if (statTooltip == null)
+                statTooltip = FindObjectOfType<StatTooltip>();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            tooltip.ShowTooltip(Stat, Name);
+            statTooltip.ShowTooltip(Stat, StatName);
             showingTooltip = true;
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            tooltip.HideTooltip();
+            statTooltip.HideTooltip();
             showingTooltip = false;
         }
 
@@ -62,7 +62,7 @@ namespace HOMM_BM
             valueText.text = heroStat.Value.ToString();
             if (showingTooltip)
             {
-                tooltip.ShowTooltip(Stat, Name);
+                statTooltip.ShowTooltip(Stat, StatName);
             }
         }
     }

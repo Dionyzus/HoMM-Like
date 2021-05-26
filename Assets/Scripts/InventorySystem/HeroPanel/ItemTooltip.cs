@@ -6,13 +6,13 @@ namespace HOMM_BM
 {
     public class ItemTooltip : MonoBehaviour
     {
-        [SerializeField] TextMeshProUGUI ItemNameText;
-        [SerializeField] TextMeshProUGUI ItemTypeText;
-        [SerializeField] TextMeshProUGUI ItemDescriptionText;
+        [SerializeField] TextMeshProUGUI itemNameText;
+        [SerializeField] TextMeshProUGUI itemTypeText;
+        [SerializeField] TextMeshProUGUI itemDescriptionText;
 
-        public TextMeshProUGUI ItemNameText1 { get => ItemNameText; set => ItemNameText = value; }
-        public TextMeshProUGUI ItemTypeText1 { get => ItemTypeText; set => ItemTypeText = value; }
-        public TextMeshProUGUI ItemDescriptionText1 { get => ItemDescriptionText; set => ItemDescriptionText = value; }
+        public TextMeshProUGUI ItemNameText { get => itemNameText; set => itemNameText = value; }
+        public TextMeshProUGUI ItemTypeText { get => itemTypeText; set => itemTypeText = value; }
+        public TextMeshProUGUI ItemDescriptionText { get => itemDescriptionText; set => itemDescriptionText = value; }
 
         private void Awake()
         {
@@ -21,9 +21,9 @@ namespace HOMM_BM
 
         public void ShowTooltip(Item item)
         {
-            ItemNameText1.text = item.ItemName;
-            ItemTypeText1.text = item.GetItemType();
-            ItemDescriptionText1.text = item.GetDescription();
+            ItemNameText.text = item.ItemName;
+            ItemTypeText.text = item.GetItemType();
+            ItemDescriptionText.text = item.GetDescription();
             gameObject.SetActive(true);
         }
 

@@ -10,6 +10,13 @@ namespace HOMM_BM
         private const string InventoryFileName = "Inventory";
         private const string EquipmentFileName = "Equipment";
 
+        public static ItemSaveManager instance;
+
+        private void Awake()
+        {
+            instance = this;
+        }
+
         public ItemDatabase ItemDatabase { get => itemDatabase; set => itemDatabase = value; }
 
         public void LoadInventory(HeroController hero)

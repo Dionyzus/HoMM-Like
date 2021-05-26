@@ -18,8 +18,10 @@ namespace HOMM_BM
         public event Action<BaseItemSlot> OnDragEvent;
         public event Action<BaseItemSlot> OnDropEvent;
 
-        private void Start()
+        public void Initialize()
         {
+            artifactSlots = EquipmentSlotsParent.GetComponentsInChildren<ArtifactSlot>();
+
             for (int i = 0; i < artifactSlots.Length; i++)
             {
                 artifactSlots[i].OnPointerEnterEvent += slot => OnPointerEnterEvent(slot);
@@ -30,11 +32,6 @@ namespace HOMM_BM
                 artifactSlots[i].OnDragEvent += slot => OnDragEvent(slot);
                 artifactSlots[i].OnDropEvent += slot => OnDropEvent(slot);
             }
-        }
-
-        private void OnValidate()
-        {
-            artifactSlots = EquipmentSlotsParent.GetComponentsInChildren<ArtifactSlot>();
         }
 
         public bool AddItem(EquippableItem item, out EquippableItem previousItem)

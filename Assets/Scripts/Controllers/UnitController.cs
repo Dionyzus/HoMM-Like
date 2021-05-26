@@ -61,6 +61,9 @@ namespace HOMM_BM
         public int Moral { get => moral; set => moral = value; }
         public int Luck { get => luck; set => luck = value; }
 
+        int stackSize;
+        public int StackSize { get => stackSize; set => stackSize = value; }
+
         private void Awake()
         {
             unitImage = GetComponentInChildren<Image>();

@@ -31,6 +31,8 @@ namespace HOMM_BM
         }
         public void Initialize()
         {
+            UiManager.instance.DeactivateBattleUi();
+
             ActivatePanAndZoomCamera();
 
             HeroController[] heroes = FindObjectsOfType<HeroController>();
@@ -90,7 +92,7 @@ namespace HOMM_BM
         {
             if (GameManager.instance.Mouse.leftButton.isPressed)
             {
-                Ray ray = MainCamera.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
+                Ray ray = Camera.main.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
 
                 if (Physics.Raycast(ray, out RaycastHit hit, 100))
                 {
@@ -168,7 +170,7 @@ namespace HOMM_BM
             if (currentHero != null && (currentHero.IsInteracting || currentHero.currentInteractionHook != null))
                 return;
 
-            Ray ray = MainCamera.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
+            Ray ray = Camera.main.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
             if (Physics.Raycast(ray, out RaycastHit hit, 100))
             {
                 if (EventSystem.current.IsPointerOverGameObject())

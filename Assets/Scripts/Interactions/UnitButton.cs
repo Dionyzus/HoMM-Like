@@ -2,26 +2,35 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace HOMM_BM
 {
     public class UnitButton : MonoBehaviour
     {
-        Button button;
-        public UnitController unitController;
+        [SerializeField]
+        TextMeshProUGUI stackSize = default;
+        [SerializeField]
+        Image backgroundImage = default;
+        [SerializeField]
+        Image unitIcon = default;
+
+        UnitController unitController;
+        public UnitController UnitController { get => unitController; set => unitController = value; }
 
         private void Start()
         {
-            button = GetComponent<Button>();
-            button.onClick.AddListener(OnClick);
-            button.GetComponentInChildren<Image>().sprite = unitController.UnitImage.sprite;
-        }
+            unitIcon.sprite = unitController.UnitImage.sprite;
+            stackSize.text = unitController.StackSize.ToString();
 
-        public void OnClick()
-        {
-            //Show unit stats, but probably should check how right click can be used
-
-            //BattleManager.instance.OnCurrentUnitTurn(unitController);
+            if (unitController.gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
+            {
+                backgroundImage.sprite = UiManager.instance.EnemyBackgroundImage;
+            }
+            else
+            {
+                backgroundImage.sprite = UiManager.instance.FriendlyBackgroundImage;
+            }
         }
     }
 }

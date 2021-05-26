@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace HOMM_BM
 {
@@ -10,6 +11,10 @@ namespace HOMM_BM
         [SerializeField]
         Image heroImage;
         public Image HeroImage { get => heroImage; set => heroImage = value; }
+
+        [SerializeField]
+        TextMeshProUGUI heroName;
+        public TextMeshProUGUI HeroName { get => heroName; set => heroName = value; }
 
         protected override void OnValidate()
         {
@@ -56,9 +61,13 @@ namespace HOMM_BM
             return false;
         }
 
-        public void SetHeroImage(HeroController hero)
+        public void SetHeroImage(Image image)
         {
-            heroImage.sprite = hero.heroImage.sprite;
+            heroImage.sprite = image.sprite;
+        }
+        public void SetHeroName(string name)
+        {
+            heroName.text = name;
         }
     }
 }

@@ -28,8 +28,10 @@ namespace HOMM_BM
             }
         }
 
+        [SerializeField]
         GameState currentGameState;
         public GameState CurrentGameState { get => currentGameState; set => currentGameState = value; }
+        public bool StateInitialized { get => stateInitialized; set => stateInitialized = value; }
 
         private void Awake()
         {
@@ -41,16 +43,29 @@ namespace HOMM_BM
         {
             Keyboard = InputSystem.GetDevice<Keyboard>();
             Mouse = InputSystem.GetDevice<Mouse>();
+        }
 
-            currentGameState = LevelManager.instance.gameState;
+        bool stateInitialized;
 
-            if (LevelManager.instance.gameState.Equals(GameState.WORLD))
+        private void Update()
+        {
+            if (LevelManager.instance != null)
             {
-                WorldManager.instance.Initialize();
-            }
-            if (LevelManager.instance.gameState.Equals(GameState.BATTLE))
-            {
-                BattleManager.instance.Initialize();
+                currentGameState = LevelManager.instance.gameState;
+
+                if (!stateInitialized)
+                {
+                    if (LevelManager.instance.gameState.Equals(GameState.WORLD))
+                    {
+                        WorldManager.instance.Initialize();
+                        stateInitialized = true;
+                    }
+                    if (LevelManager.instance.gameState.Equals(GameState.BATTLE))
+                    {
+                        BattleManager.instance.Initialize();
+                        stateInitialized = true;
+                    }
+                }
             }
         }
     }

@@ -11,6 +11,9 @@ namespace HOMM_BM
 
         public RenderTexture renderTexture;
         public Image heroImage;
+        public string heroName = "";
+
+        public GameObject heroModel;
 
         public BasicHeroStats basicHeroStats;
 
@@ -28,15 +31,13 @@ namespace HOMM_BM
         public HeroStat Attack;
         public HeroStat Defense;
 
-        [Header("Public")]
-        public Inventory Inventory;
-        public ArtifactsPanel ArtifactsPanel;
+        Inventory inventory;
+        ArtifactsPanel artifactsPanel;
 
-        [Header("Serialize Field")]
-        [SerializeField] StatPanel statPanel;
-        [SerializeField] ItemTooltip itemTooltip;
-        [SerializeField] Image draggableItem;
-        [SerializeField] ItemSaveManager itemSaveManager;
+        StatPanel statPanel;
+        ItemTooltip itemTooltip;
+        Image draggableItem;
+        ItemSaveManager itemSaveManager;
 
         private BaseItemSlot dragItemSlot;
         private ItemContainer openItemContainer;
@@ -45,12 +46,59 @@ namespace HOMM_BM
         public ItemTooltip ItemTooltip { get => itemTooltip; set => itemTooltip = value; }
         public Image DraggableItem { get => draggableItem; set => draggableItem = value; }
         public ItemSaveManager ItemSaveManager { get => itemSaveManager; set => itemSaveManager = value; }
+        public InventoryReference InventoryReference { get => inventoryReference; set => inventoryReference = value; }
+        public Inventory Inventory { get => inventory; set => inventory = value; }
+        public ArtifactsPanel ArtifactsPanel { get => artifactsPanel; set => artifactsPanel = value; }
 
-        private void OnValidate()
+        private InventoryReference inventoryReference;
+        public void InitializeInventory(InventoryReference reference)
         {
-            if (ItemTooltip == null)
-                ItemTooltip = FindObjectOfType<ItemTooltip>();
+            inventoryReference = reference;
+
+            itemSaveManager = inventoryReference.ItemSaveManager;
+            inventory = inventoryReference.Inventory;
+            statPanel = inventoryReference.StatPanel;
+            artifactsPanel = inventoryReference.ArtifactsPanel;
+            itemTooltip = inventoryReference.ItemTooltip;
+            draggableItem = inventoryReference.DraggableItem;
+
+            statPanel.Initialize();
+            statPanel.SetStats(Logistics, Luck, Attack, Defense);
+            statPanel.UpdateStatValues();
+
+            artifactsPanel.Initialize();
+
+            inventory.SetHeroImage(heroImage);
+            inventory.SetHeroName(heroName);
+
+            inventory.OnRightClickEvent += InventoryRightClick;
+            artifactsPanel.OnRightClickEvent += EquipmentPanelRightClick;
+
+            inventory.OnPointerEnterEvent += ShowTooltip;
+            artifactsPanel.OnPointerEnterEvent += ShowTooltip;
+
+            inventory.OnPointerExitEvent += HideTooltip;
+            artifactsPanel.OnPointerExitEvent += HideTooltip;
+
+            inventory.OnBeginDragEvent += BeginDrag;
+            artifactsPanel.OnBeginDragEvent += BeginDrag;
+
+            inventory.OnEndDragEvent += EndDrag;
+            artifactsPanel.OnEndDragEvent += EndDrag;
+
+            inventory.OnDragEvent += Drag;
+            artifactsPanel.OnDragEvent += Drag;
+
+            inventory.OnDropEvent += Drop;
+            artifactsPanel.OnDropEvent += Drop;
+
+            if (itemSaveManager != null)
+            {
+                itemSaveManager.LoadInventory(this);
+                itemSaveManager.LoadEquipment(this);
+            }
         }
+
         private void Awake()
         {
             gridIndex = basicHeroStats.gridIndex;
@@ -58,41 +106,6 @@ namespace HOMM_BM
 
             movementSpeed = basicHeroStats.movementSpeed;
             rotationSpeed = basicHeroStats.rotationSpeed;
-
-            StatPanel.SetStats(Logistics, Luck, Attack, Defense);
-            StatPanel.UpdateStatValues();
-
-            Inventory.OnRightClickEvent += InventoryRightClick;
-            ArtifactsPanel.OnRightClickEvent += EquipmentPanelRightClick;
-
-            Inventory.OnPointerEnterEvent += ShowTooltip;
-            ArtifactsPanel.OnPointerEnterEvent += ShowTooltip;
-
-            Inventory.OnPointerExitEvent += HideTooltip;
-            ArtifactsPanel.OnPointerExitEvent += HideTooltip;
-
-            Inventory.OnBeginDragEvent += BeginDrag;
-            ArtifactsPanel.OnBeginDragEvent += BeginDrag;
-
-            Inventory.OnEndDragEvent += EndDrag;
-            ArtifactsPanel.OnEndDragEvent += EndDrag;
-
-            Inventory.OnDragEvent += Drag;
-            ArtifactsPanel.OnDragEvent += Drag;
-
-            Inventory.OnDropEvent += Drop;
-            ArtifactsPanel.OnDropEvent += Drop;
-        }
-
-        private void Start()
-        {
-            if (ItemSaveManager != null)
-            {
-                ItemSaveManager.LoadInventory(this);
-                ItemSaveManager.LoadEquipment(this);
-            }
-
-            Inventory.SetHeroImage(this);
         }
 
         private void OnDestroy()
@@ -392,15 +405,15 @@ namespace HOMM_BM
         {
             if (itemSlot.Item != null)
             {
-                ItemTooltip.ShowTooltip(itemSlot.Item);
+                itemTooltip.ShowTooltip(itemSlot.Item);
             }
         }
 
         private void HideTooltip(BaseItemSlot itemSlot)
         {
-            if (ItemTooltip.gameObject.activeSelf)
+            if (itemTooltip.gameObject.activeSelf)
             {
-                ItemTooltip.HideTooltip();
+                itemTooltip.HideTooltip();
             }
         }
 
@@ -409,21 +422,21 @@ namespace HOMM_BM
             if (itemSlot.Item != null)
             {
                 dragItemSlot = itemSlot;
-                DraggableItem.sprite = itemSlot.Item.Icon;
-                DraggableItem.transform.position = GameManager.instance.Mouse.position.ReadValue();
-                DraggableItem.gameObject.SetActive(true);
+                draggableItem.sprite = itemSlot.Item.Icon;
+                draggableItem.transform.position = GameManager.instance.Mouse.position.ReadValue();
+                draggableItem.gameObject.SetActive(true);
             }
         }
 
         private void Drag(BaseItemSlot itemSlot)
         {
-            DraggableItem.transform.position = GameManager.instance.Mouse.position.ReadValue();
+            draggableItem.transform.position = GameManager.instance.Mouse.position.ReadValue();
         }
 
         private void EndDrag(BaseItemSlot itemSlot)
         {
             dragItemSlot = null;
-            DraggableItem.gameObject.SetActive(false);
+            draggableItem.gameObject.SetActive(false);
         }
 
         private void Drop(BaseItemSlot dropItemSlot)
@@ -464,7 +477,7 @@ namespace HOMM_BM
                 if (dragEquipItem != null) dragEquipItem.Unequip(this);
                 if (dropEquipItem != null) dropEquipItem.Equip(this);
             }
-            StatPanel.UpdateStatValues();
+            statPanel.UpdateStatValues();
 
             Item draggedItem = dragItemSlot.Item;
             int draggedItemAmount = dragItemSlot.Amount;
@@ -478,34 +491,34 @@ namespace HOMM_BM
 
         public void Equip(EquippableItem item)
         {
-            if (Inventory.RemoveItem(item))
+            if (inventory.RemoveItem(item))
             {
                 EquippableItem previousItem;
-                if (ArtifactsPanel.AddItem(item, out previousItem))
+                if (artifactsPanel.AddItem(item, out previousItem))
                 {
                     if (previousItem != null)
                     {
-                        Inventory.AddItem(previousItem);
+                        inventory.AddItem(previousItem);
                         previousItem.Unequip(this);
-                        StatPanel.UpdateStatValues();
+                        statPanel.UpdateStatValues();
                     }
                     item.Equip(this);
-                    StatPanel.UpdateStatValues();
+                    statPanel.UpdateStatValues();
                 }
                 else
                 {
-                    Inventory.AddItem(item);
+                    inventory.AddItem(item);
                 }
             }
         }
 
         public void Unequip(EquippableItem item)
         {
-            if (Inventory.CanAddItem(item) && ArtifactsPanel.RemoveItem(item))
+            if (inventory.CanAddItem(item) && artifactsPanel.RemoveItem(item))
             {
                 item.Unequip(this);
-                StatPanel.UpdateStatValues();
-                Inventory.AddItem(item);
+                statPanel.UpdateStatValues();
+                inventory.AddItem(item);
             }
         }
 
@@ -514,7 +527,7 @@ namespace HOMM_BM
             Item item = itemSlot.Item;
             if (item != null && openItemContainer.CanAddItem(item))
             {
-                Inventory.RemoveItem(item);
+                inventory.RemoveItem(item);
                 openItemContainer.AddItem(item);
             }
         }
@@ -525,7 +538,7 @@ namespace HOMM_BM
             if (item != null && Inventory.CanAddItem(item))
             {
                 openItemContainer.RemoveItem(item);
-                Inventory.AddItem(item);
+                inventory.AddItem(item);
             }
         }
 
@@ -533,8 +546,8 @@ namespace HOMM_BM
         {
             openItemContainer = itemContainer;
 
-            Inventory.OnRightClickEvent -= InventoryRightClick;
-            Inventory.OnRightClickEvent += TransferToItemContainer;
+            inventory.OnRightClickEvent -= InventoryRightClick;
+            inventory.OnRightClickEvent += TransferToItemContainer;
 
             itemContainer.OnRightClickEvent += TransferToInventory;
 
@@ -550,8 +563,8 @@ namespace HOMM_BM
         {
             openItemContainer = null;
 
-            Inventory.OnRightClickEvent += InventoryRightClick;
-            Inventory.OnRightClickEvent -= TransferToItemContainer;
+            inventory.OnRightClickEvent += InventoryRightClick;
+            inventory.OnRightClickEvent -= TransferToItemContainer;
 
             itemContainer.OnRightClickEvent -= TransferToInventory;
 

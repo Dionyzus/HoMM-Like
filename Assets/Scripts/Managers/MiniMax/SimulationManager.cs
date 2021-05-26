@@ -41,6 +41,8 @@ namespace HOMM_BM
             {
                 Debug.Log("AI won!");
                 aiInteracting = true;
+
+                GameReferencesManager.instance.LoadTargetScene("WorldMap");
                 return;
             }
 
