@@ -15,5 +15,10 @@ namespace HOMM_BM
 
         public GameObject sceneTrigger;
         public Transform sceneTriggerSpawnPosition;
+
+        [SerializeField]
+        StringUnitControllerDictionary units = new StringUnitControllerDictionary();
+
+        public StringUnitControllerDictionary Units { get => units; set => units = value; }
     }
 }

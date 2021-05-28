@@ -60,25 +60,25 @@ namespace HOMM_BM
         {
             sb.Length = 0;
 
-            foreach (StatModifier mod in stat.StatModifiers)
+            foreach (StatModifier modifier in stat.StatModifiers)
             {
                 if (sb.Length > 0)
                     sb.AppendLine();
 
-                if (mod.Value > 0)
+                if (modifier.Value > 0)
                     sb.Append("+");
 
-                if (mod.Type == StatModType.Flat)
+                if (modifier.Type == StatModType.Flat)
                 {
-                    sb.Append(mod.Value);
+                    sb.Append(modifier.Value);
                 }
                 else
                 {
-                    sb.Append(mod.Value * 100);
+                    sb.Append(modifier.Value * 100);
                     sb.Append("%");
                 }
 
-                Item item = mod.Source as Item;
+                Item item = modifier.Source as Item;
 
                 if (item != null)
                 {

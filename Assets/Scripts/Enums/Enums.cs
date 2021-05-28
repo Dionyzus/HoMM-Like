@@ -58,4 +58,10 @@ namespace HOMM_BM
         BELT,
         VAMBRACE
     }
+    public enum UnitType
+    {
+        MUTANT,
+        NIGHTSHADE,
+        ZOMBIE
+    }
 }

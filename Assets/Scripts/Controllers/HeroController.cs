@@ -50,6 +50,7 @@ namespace HOMM_BM
         public Inventory Inventory { get => inventory; set => inventory = value; }
         public ArtifactsPanel ArtifactsPanel { get => artifactsPanel; set => artifactsPanel = value; }
 
+        [SerializeField]
         private InventoryReference inventoryReference;
         public void InitializeInventory(InventoryReference reference)
         {

@@ -18,6 +18,7 @@ namespace HOMM_BM
         public void OnDamageReceived()
         {
             receiver.HitPoints -= initiator.Damage;
+            receiver.UpdateStackSize();
 
             if (receiver.HitPoints <= 0)
             {

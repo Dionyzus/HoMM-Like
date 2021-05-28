@@ -32,5 +32,10 @@ namespace HOMM_BM
                 backgroundImage.sprite = UiManager.instance.FriendlyBackgroundImage;
             }
         }
+
+        public void UpdateStackSizeText()
+        {
+            stackSize.text = unitController.StackSize.ToString();
+        }
     }
 }

@@ -12,6 +12,12 @@ namespace HOMM_BM
         UnitStats unitStats = default;
 
         public UnitAttackType UnitAttackType;
+        public UnitType Unit;
+
+        public string GetUnit()
+        {
+            return Unit.ToString().ToUpper();
+        }
 
         public override Item GetCopy()
         {

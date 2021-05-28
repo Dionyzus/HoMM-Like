@@ -133,7 +133,6 @@ namespace HOMM_BM
 
         public void AddUnitIcons(List<UnitController> unitsQueue)
         {
-            //Add something to differe enemy with friendly units
             foreach (UnitController unit in unitsQueue)
             {
                 GameObject go = Instantiate(UnitPrefab);
@@ -206,7 +205,8 @@ namespace HOMM_BM
                 }
             }
 
-            AddHeroInventory(targetHero);
+            if (targetHero.InventoryReference == null)
+                AddHeroInventory(targetHero);
         }
 
         public void OnUnitTurn(List<UnitController> unitsQueue, UnitController currentUnit, bool isInitialize)
@@ -217,12 +217,26 @@ namespace HOMM_BM
             }
             else
             {
+                UpdateStackSizeUi(currentUnit);
                 UpdateUnitIcons();
             }
 
             AddCurrentUnitIcon(currentUnit);
 
             BattleManager.instance.CalculatePath = true;
+        }
+
+        void UpdateStackSizeUi(UnitController unitController)
+        {
+            foreach (GameObject unit in unitsUiQueue)
+            {
+                UnitButton button = unit.GetComponentInChildren<UnitButton>();
+                if (button.UnitController == unitController)
+                {
+                    button.UpdateStackSizeText();
+                    break;
+                }
+            }
         }
     }
 }

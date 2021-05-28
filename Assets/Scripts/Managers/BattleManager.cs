@@ -232,26 +232,18 @@ namespace HOMM_BM
         //Add instantiating from prefab
         private void InitializeUnitLists()
         {
-            int multiplier = 3;
-            int stackSize = 2;
             foreach (UnitController unit in battleUnits)
             {
                 if (unit.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
                 {
                     unit.UnitSide = UnitSide.MIN_UNIT;
-                    unit.StackSize = stackSize * multiplier;
                     FriendlyUnits.Add(unit);
-                    stackSize += 3;
-                    multiplier += 1;
                 }
                 else
                 {
                     unit.UnitSide = UnitSide.MAX_UNIT;
-                    unit.StackSize = stackSize * multiplier;
                     EnemyUnits.Add(unit);
                     unit.gameObject.SetActive(false);
-                    stackSize += 4;
-                    multiplier += 3;
                 }
             }
         }

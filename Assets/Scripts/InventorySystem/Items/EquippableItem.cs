@@ -58,7 +58,13 @@ namespace HOMM_BM
 
         public override string GetItemType()
         {
-            return ArtifactType.ToString();
+            string artifactType = ArtifactType.ToString();
+
+            if (ArtifactType.ToString().Contains("_"))
+            {
+                artifactType = artifactType.Replace("_", " ");
+            }
+            return artifactType;
         }
 
         public override string GetDescription()

@@ -64,6 +64,8 @@ namespace HOMM_BM
         int stackSize;
         public int StackSize { get => stackSize; set => stackSize = value; }
 
+        int initialTotalHitPoints;
+
         private void Awake()
         {
             unitImage = GetComponentInChildren<Image>();
@@ -75,7 +77,7 @@ namespace HOMM_BM
             rotationSpeed = unitStats.rotationSpeed;
 
             initiative = unitStats.initiative;
-            hitPoints = unitStats.hitPoints;
+
             damage = unitStats.damage;
             attack = unitStats.attack;
             defense = unitStats.defense;
@@ -86,6 +88,12 @@ namespace HOMM_BM
             }
 
             unitStatsReference = new UnitStatsReference(hitPoints, damage, attack, defense, initiative, moral, luck);
+        }
+
+        public void InitializeUnitHitPoints()
+        {
+            hitPoints = unitStats.hitPoints * stackSize;
+            initialTotalHitPoints = hitPoints;
         }
 
         private void Update()
@@ -195,6 +203,20 @@ namespace HOMM_BM
             transform.position = Vector3.Lerp(originPosition, targetPosition, time);
 
             return isFinished;
+        }
+        public void UpdateStackSize()
+        {
+            if (hitPoints != initialTotalHitPoints)
+            {
+                if (hitPoints % unitStats.hitPoints == 0)
+                {
+                    stackSize = hitPoints / unitStats.hitPoints;
+                }
+                else
+                {
+                    stackSize = Mathf.RoundToInt(hitPoints / unitStats.hitPoints) + 1;
+                }
+            }
         }
         public void PerformRangedAttack()
         {

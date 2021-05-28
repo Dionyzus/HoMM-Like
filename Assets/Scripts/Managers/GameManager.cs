@@ -32,6 +32,7 @@ namespace HOMM_BM
         GameState currentGameState;
         public GameState CurrentGameState { get => currentGameState; set => currentGameState = value; }
         public bool StateInitialized { get => stateInitialized; set => stateInitialized = value; }
+        public bool WorldInitialized { get => worldInitialized; set => worldInitialized = value; }
 
         private void Awake()
         {
@@ -46,6 +47,7 @@ namespace HOMM_BM
         }
 
         bool stateInitialized;
+        bool worldInitialized;
 
         private void Update()
         {
@@ -55,10 +57,13 @@ namespace HOMM_BM
 
                 if (!stateInitialized)
                 {
-                    if (LevelManager.instance.gameState.Equals(GameState.WORLD))
+                    if (!worldInitialized)
                     {
-                        WorldManager.instance.Initialize();
-                        stateInitialized = true;
+                        if (LevelManager.instance.gameState.Equals(GameState.WORLD))
+                        {
+                            WorldManager.instance.Initialize();
+                            stateInitialized = true;
+                        }
                     }
                     if (LevelManager.instance.gameState.Equals(GameState.BATTLE))
                     {
