@@ -8,6 +8,8 @@ namespace HOMM_BM
     public class UnitController : GridUnit
     {
         UnitSide unitSide;
+        UnitType unitType;
+
         public GridAction currentGridAction;
         public GameObject onDeathEnableCollider;
 
@@ -63,6 +65,7 @@ namespace HOMM_BM
 
         int stackSize;
         public int StackSize { get => stackSize; set => stackSize = value; }
+        public UnitType UnitType { get => unitType; set => unitType = value; }
 
         int initialTotalHitPoints;
 

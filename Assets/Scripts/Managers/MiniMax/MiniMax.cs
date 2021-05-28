@@ -25,7 +25,7 @@ namespace HOMM_BM
             {
                 UnitStatsReference unitStats = new UnitStatsReference(unit.HitPoints, unit.Damage, unit.Attack, unit.Defense, unit.Initiative, unit.StepsCount);
 
-                SimpleUnit simpleUnit = new SimpleUnit(unitStats, unit.CurrentNode, unit.gameObject.layer, unit.GetInstanceID());
+                SimpleUnit simpleUnit = new SimpleUnit(unitStats, unit.CurrentNode, unit.UnitSide, unit.GetInstanceID());
 
                 simpleUnitsQueue.Add(simpleUnit);
             }
@@ -42,7 +42,7 @@ namespace HOMM_BM
                 return gridState.Evaluate();
             }
 
-            if (gridState.CurrentSimple.Layer == GridManager.ENEMY_UNITS_LAYER)
+            if (gridState.CurrentSimple.UnitSide == UnitSide.MAX_UNIT)
             {
                 List<UnitMove> legalMoves = gridState.GetLegalMoves();
                 gridState.EvaluateMoves(legalMoves);

@@ -34,7 +34,7 @@ namespace HOMM_BM
 
             foreach (SimpleUnit unit in gridState.unitsQueue)
             {
-                SimpleUnit newSimpleUnit = new SimpleUnit(unit.UnitStats, unit.CurrentNode, unit.Layer, unit.UnitId);
+                SimpleUnit newSimpleUnit = new SimpleUnit(unit.UnitStats, unit.CurrentNode, unit.UnitSide, unit.UnitId);
 
                 unitsQueue.Add(newSimpleUnit);
             }
@@ -84,7 +84,7 @@ namespace HOMM_BM
 
             foreach (SimpleUnit unit in unitsQueue)
             {
-                if (unit.Layer == currentSimple.Layer)
+                if (unit.UnitSide == currentSimple.UnitSide)
                     continue;
                 else
                 {
@@ -122,7 +122,7 @@ namespace HOMM_BM
                         newAttackMove.IsAttackMove = true;
                         newAttackMove.TargetNode = reachableNodes[i];
 
-                        newAttackMove.TargetAvailableFromNode = new SimpleUnit(target.UnitStats, target.CurrentNode, target.Layer, target.UnitId);
+                        newAttackMove.TargetAvailableFromNode = new SimpleUnit(target.UnitStats, target.CurrentNode, target.UnitSide, target.UnitId);
 
                         legalMoves.Add(newAttackMove);
                     }
@@ -380,8 +380,8 @@ namespace HOMM_BM
 
         public int Evaluate()
         {
-            int maxTotalHitPoints = CalculateHitPoints(GridManager.ENEMY_UNITS_LAYER);
-            int minTotalHitPoints = CalculateHitPoints(GridManager.FRIENDLY_UNITS_LAYER);
+            int maxTotalHitPoints = CalculateHitPoints(UnitSide.MAX_UNIT);
+            int minTotalHitPoints = CalculateHitPoints(UnitSide.MIN_UNIT);
             int unitsTotalHitPointsDifference = maxTotalHitPoints - minTotalHitPoints;
 
             if (maxTotalHitPoints == 0)
@@ -393,29 +393,29 @@ namespace HOMM_BM
                 return 10000 - (moveCount - initialMoveCount);
             }
 
-            int maxUnitsCount = GetUnitsOfLayer(GridManager.ENEMY_UNITS_LAYER).Count;
-            int minUnitsCount = GetUnitsOfLayer(GridManager.FRIENDLY_UNITS_LAYER).Count;
+            int maxUnitsCount = GetUnitsOfLayer(UnitSide.MAX_UNIT).Count;
+            int minUnitsCount = GetUnitsOfLayer(UnitSide.MIN_UNIT).Count;
             int unitsCountDifference = maxUnitsCount - minUnitsCount;
 
-            int maxStatsScore = CalculateStatsScore(GridManager.ENEMY_UNITS_LAYER);
-            int minStatsScore = CalculateStatsScore(GridManager.FRIENDLY_UNITS_LAYER);
+            int maxStatsScore = CalculateStatsScore(UnitSide.MAX_UNIT);
+            int minStatsScore = CalculateStatsScore(UnitSide.MIN_UNIT);
             int statsScoreDifference = maxStatsScore - minStatsScore;
 
             int totalEvaluation = unitsTotalHitPointsDifference;
             totalEvaluation += statsScoreDifference * (int)EvaluationBoost.STATS_SCORE;
             totalEvaluation += unitsCountDifference * (int)EvaluationBoost.UNITS_COUNT;
 
-            int maxTotalDistance = CalculateDistancesToTargets(GridManager.ENEMY_UNITS_LAYER, GridManager.FRIENDLY_UNITS_LAYER);
+            int maxTotalDistance = CalculateDistancesToTargets(UnitSide.MIN_UNIT, UnitSide.MAX_UNIT);
 
             return totalEvaluation - maxTotalDistance;
         }
 
-        private int CalculateStatsScore(int layer)
+        private int CalculateStatsScore(UnitSide unitSide)
         {
             int retVal = 0;
             foreach (SimpleUnit unit in unitsQueue)
             {
-                if (unit.Layer == layer)
+                if (unit.UnitSide == unitSide)
                 {
                     retVal += unit.Defense;
                     retVal += unit.Attack;
@@ -433,7 +433,7 @@ namespace HOMM_BM
 
             foreach (SimpleUnit unit in unitsQueue)
             {
-                if (unit.Layer == 10)
+                if (unit.UnitSide == UnitSide.MAX_UNIT)
                 {
                     aiSimplesCount += 1;
                 }
@@ -450,23 +450,23 @@ namespace HOMM_BM
             return false;
         }
 
-        int CalculateHitPoints(int layer)
+        int CalculateHitPoints(UnitSide unitSide)
         {
             int retVal = 0;
 
             foreach (SimpleUnit unit in unitsQueue)
             {
-                if (unit.Layer == layer)
+                if (unit.UnitSide == unitSide)
                     retVal += unit.HitPoints;
             }
 
             return retVal;
         }
 
-        int CalculateDistancesToTargets(int alliesLayer, int axisLayer)
+        int CalculateDistancesToTargets(UnitSide minSide, UnitSide maxSide)
         {
-            List<SimpleUnit> allyUnits = GetUnitsOfLayer(alliesLayer);
-            List<SimpleUnit> axisUnits = GetUnitsOfLayer(axisLayer);
+            List<SimpleUnit> allyUnits = GetUnitsOfLayer(minSide);
+            List<SimpleUnit> axisUnits = GetUnitsOfLayer(maxSide);
 
             int totalDistance = 0;
 
@@ -490,13 +490,13 @@ namespace HOMM_BM
             return totalDistance;
         }
 
-        List<SimpleUnit> GetUnitsOfLayer(int layer)
+        List<SimpleUnit> GetUnitsOfLayer(UnitSide unitSide)
         {
             List<SimpleUnit> units = new List<SimpleUnit>();
 
             foreach (SimpleUnit unit in unitsQueue)
             {
-                if(unit.Layer == layer)
+                if(unit.UnitSide == unitSide)
                 {
                     units.Add(unit);
                 }

@@ -40,9 +40,7 @@ namespace HOMM_BM
             if (unitMove == null)
             {
                 Debug.Log("AI won!");
-                aiInteracting = true;
-
-                GameReferencesManager.instance.LoadTargetScene("WorldMap");
+                BattleManager.instance.ResolveBattle(true);
                 return;
             }
 

@@ -715,14 +715,34 @@ namespace HOMM_BM
 
             unitReceivedHitDebug = false;
 
-            unitsQueue.RemoveAt(0);
-            unitsQueue.Add(currentUnit);
+            int axisCount = CheckBattleState();
 
-            previousUnit = currentUnit;
+            if (axisCount == 0)
+                ResolveBattle();
+            else
+            {
+                unitsQueue.RemoveAt(0);
+                unitsQueue.Add(currentUnit);
 
-            currentUnit = unitsQueue.First();
+                previousUnit = currentUnit;
 
-            OnCurrentUnitTurn();
+                currentUnit = unitsQueue.First();
+
+                OnCurrentUnitTurn();
+            }
+        }
+
+        int CheckBattleState()
+        {
+            int axisCount = 0;
+
+            foreach (UnitController unit in unitsQueue)
+            {
+                if (unit.UnitSide == UnitSide.MAX_UNIT)
+                    axisCount++;
+            }
+
+            return axisCount;
         }
 
         private void RestoreRangedUnitData()
@@ -748,6 +768,39 @@ namespace HOMM_BM
             }
             unitsQueue.Remove(unitController);
             UiManager.instance.UpdateUiOnUnitDeath(unitController);
+        }
+
+        public void ResolveBattle(bool ai = false)
+        {
+            if (ai)
+            {
+                Debug.Log("Hero Died");
+                SimulationManager.instance.AiInteracting = true;
+                return;
+            }
+
+            SimpleHero currentHero = GameReferencesManager.instance.SimpleHero;
+
+            foreach (UnitController unit in unitsQueue)
+            {
+                foreach (ItemSlot slot in currentHero.inventoryReference.Inventory.ItemSlots)
+                {
+                    if (slot.Item == null)
+                        continue;
+
+                    if (slot.Item.GetType().Equals(typeof(UnitItem)))
+                    {
+                        UnitItem unitItem = (UnitItem)slot.Item;
+                        if (unit.UnitType == unitItem.UnitType)
+                        {
+                            slot.Amount = unit.StackSize;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            GameReferencesManager.instance.LoadTargetScene("WorldMap");
         }
     }
 }

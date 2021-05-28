@@ -8,13 +8,13 @@ namespace HOMM_BM
     {
         UnitStatsReference unitStats;
         Node currentNode;
-        int layer;
+        UnitSide unitSide;
         int stepsCount;
         int unitId;
 
         public UnitStatsReference UnitStats { get => unitStats; set => unitStats = value; }
         public Node CurrentNode { get => currentNode; set => currentNode = value; }
-        public int Layer { get => layer; set => layer = value; }
+        public UnitSide UnitSide { get => unitSide; set => unitSide = value; }
 
         int hitPoints;
         int damage;
@@ -29,13 +29,13 @@ namespace HOMM_BM
         public int StepsCount { get => stepsCount; set => stepsCount = value; }
         public int UnitId { get => unitId; set => unitId = value; }
 
-        public SimpleUnit(UnitStatsReference unitStats, Node currentNode, int layer, int unitId)
+        public SimpleUnit(UnitStatsReference unitStats, Node currentNode, UnitSide unitSide, int unitId)
         {
             this.unitStats = unitStats;
             InitializeUnitStats();
 
             this.currentNode = currentNode;
-            this.layer = layer;
+            this.unitSide = unitSide;
             this.unitId = unitId;
         }
         

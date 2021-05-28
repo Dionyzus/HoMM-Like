@@ -10,13 +10,16 @@ namespace HOMM_BM
     {
         public static GameReferencesManager instance;
 
+        [SerializeField]
+        DialogPrompt dialogPrompt = default;
+
         HeroController heroController;
         SimpleHero simpleHero;
 
-        GameObject sceneTriggerGo;
-
         UnitItem interactionUnit;
         int stackSize;
+
+        public SimpleHero SimpleHero { get => simpleHero; set => simpleHero = value; }
 
         private void Awake()
         {
@@ -58,8 +61,6 @@ namespace HOMM_BM
                     Destroy(simpleHero.gameObject);
                     simpleHero = null;
                 }
-                if (sceneTriggerGo != null)
-                    SceneStateHandler.instance.UpdateActiveState("SceneTrigger", sceneTriggerGo);
 
                 heroController.gameObject.SetActive(true);
 
@@ -69,25 +70,27 @@ namespace HOMM_BM
 
             if (GameManager.instance.CurrentGameState == GameState.WORLD && heroController == null)
             {
-                if (sceneTriggerGo == null)
-                {
-                    sceneTriggerGo = Instantiate(ResourcesManager.Instance.sceneTrigger);
-                    sceneTriggerGo.transform.position = ResourcesManager.Instance.sceneTriggerSpawnPosition.position;
-                }
-
-                SceneStateHandler.instance.SetActiveState("SceneTrigger", sceneTriggerGo, true);
-
                 InitializeHeroController();
+                InstantiateInteractions();
             }
-            if (GameManager.instance.CurrentGameState == GameState.BATTLE && simpleHero == null)
+            if (GameManager.instance.CurrentGameState == GameState.BATTLE)
             {
-
                 GameManager.instance.WorldInitialized = true;
 
                 InitializeSimpleHero();
                 InitializeCurrentHeroInventoryUnits();
 
                 InstantiateInteractionUnits();
+            }
+        }
+        void InstantiateInteractions()
+        {
+            foreach (KeyValuePair<InteractionHook, Transform> entry in ResourcesManager.Instance.Interactions)
+            {
+                InteractionHook interactionGo = Instantiate(entry.Key);
+                interactionGo.transform.position = entry.Value.position;
+
+                interactionGo.gameObject.SetActive(true);
             }
         }
         void InitializeHeroController()
@@ -103,6 +106,8 @@ namespace HOMM_BM
 
             heroController.transform.position = ResourcesManager.Instance.heroControllerSpawnPosition.position;
             heroController.transform.rotation = ResourcesManager.Instance.heroControllerSpawnPosition.rotation;
+
+            heroController.ReallyEnterTheBattlePrompt = dialogPrompt;
 
             heroController.transform.SetParent(this.transform);
             heroController.gameObject.SetActive(true);
@@ -149,6 +154,7 @@ namespace HOMM_BM
         void InstantiateUnit(UnitItem unitItem, int amount)
         {
             UnitController unitInstance = Instantiate(ResourcesManager.Instance.Units[unitItem.GetUnit()]);
+            unitInstance.UnitType = unitItem.UnitType;
             unitInstance.StackSize = amount;
             unitInstance.transform.localScale = Vector3.one;
 

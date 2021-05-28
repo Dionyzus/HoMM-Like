@@ -42,6 +42,8 @@ namespace HOMM_BM
         private BaseItemSlot dragItemSlot;
         private ItemContainer openItemContainer;
 
+        DialogPrompt reallyEnterTheBattlePrompt;
+
         public StatPanel StatPanel { get => statPanel; set => statPanel = value; }
         public ItemTooltip ItemTooltip { get => itemTooltip; set => itemTooltip = value; }
         public Image DraggableItem { get => draggableItem; set => draggableItem = value; }
@@ -49,6 +51,7 @@ namespace HOMM_BM
         public InventoryReference InventoryReference { get => inventoryReference; set => inventoryReference = value; }
         public Inventory Inventory { get => inventory; set => inventory = value; }
         public ArtifactsPanel ArtifactsPanel { get => artifactsPanel; set => artifactsPanel = value; }
+        public DialogPrompt ReallyEnterTheBattlePrompt { get => reallyEnterTheBattlePrompt; set => reallyEnterTheBattlePrompt = value; }
 
         [SerializeField]
         private InventoryReference inventoryReference;
@@ -312,7 +315,7 @@ namespace HOMM_BM
             if (interaction.TickIsFinished(this, deltaTime))
             {
                 interaction.OnEnd(this);
-                currentInteraction = null;
+                //currentInteraction = null;
             }
         }
         public override void ActionIsDone()
@@ -326,9 +329,12 @@ namespace HOMM_BM
         }
         public override void InteractionCompleted()
         {
-            currentInteraction = null;
+            if (currentInteraction.GetType() != typeof(SceneTriggerInteraction))
+            {
+                Destroy(currentInteractionHook.gameObject);
+            }
 
-            Destroy(currentInteractionHook.gameObject);
+            currentInteraction = null;
             currentInteractionHook = null;
 
             if (currentInteractionInstance.uiObject != null)
