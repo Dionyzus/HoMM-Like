@@ -30,22 +30,22 @@ namespace HOMM_BM
         public void Equip(HeroController hero)
         {
             if (LogisticsBonus != 0)
-                hero.Logistics.AddModifier(new StatModifier(LogisticsBonus, StatModType.Flat, this));
+                hero.Logistics.AddModifier(new StatModifier(LogisticsBonus, StatModType.FLAT, this));
             if (LuckBonus != 0)
-                hero.Luck.AddModifier(new StatModifier(LuckBonus, StatModType.Flat, this));
+                hero.Luck.AddModifier(new StatModifier(LuckBonus, StatModType.FLAT, this));
             if (AttackBonus != 0)
-                hero.Attack.AddModifier(new StatModifier(AttackBonus, StatModType.Flat, this));
+                hero.Attack.AddModifier(new StatModifier(AttackBonus, StatModType.FLAT, this));
             if (DefenseBonus != 0)
-                hero.Defense.AddModifier(new StatModifier(DefenseBonus, StatModType.Flat, this));
+                hero.Defense.AddModifier(new StatModifier(DefenseBonus, StatModType.FLAT, this));
 
             if (LogisticsPercentBonus != 0)
-                hero.Logistics.AddModifier(new StatModifier(LogisticsPercentBonus, StatModType.PercentMult, this));
+                hero.Logistics.AddModifier(new StatModifier(LogisticsPercentBonus, StatModType.PERCENT_MULT, this));
             if (LuckPercentBonus != 0)
-                hero.Luck.AddModifier(new StatModifier(LuckPercentBonus, StatModType.PercentMult, this));
+                hero.Luck.AddModifier(new StatModifier(LuckPercentBonus, StatModType.PERCENT_MULT, this));
             if (AttackPercentBonus != 0)
-                hero.Attack.AddModifier(new StatModifier(AttackPercentBonus, StatModType.PercentMult, this));
+                hero.Attack.AddModifier(new StatModifier(AttackPercentBonus, StatModType.PERCENT_MULT, this));
             if (DefensePercentBonus != 0)
-                hero.Defense.AddModifier(new StatModifier(DefensePercentBonus, StatModType.PercentMult, this));
+                hero.Defense.AddModifier(new StatModifier(DefensePercentBonus, StatModType.PERCENT_MULT, this));
         }
 
         public void Unequip(HeroController hero)

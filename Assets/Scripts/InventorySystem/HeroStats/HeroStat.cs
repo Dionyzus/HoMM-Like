@@ -92,21 +92,21 @@ namespace HOMM_BM
 			{
 				StatModifier mod = statModifiers[i];
 
-				if (mod.Type == StatModType.Flat)
+				if (mod.Type == StatModType.FLAT)
 				{
 					finalValue += mod.Value;
 				}
-				else if (mod.Type == StatModType.PercentAdd)
+				else if (mod.Type == StatModType.PERCENT_ADD)
 				{
 					sumPercentAdd += mod.Value;
 
-					if (i + 1 >= statModifiers.Count || statModifiers[i + 1].Type != StatModType.PercentAdd)
+					if (i + 1 >= statModifiers.Count || statModifiers[i + 1].Type != StatModType.PERCENT_ADD)
 					{
 						finalValue *= 1 + sumPercentAdd;
 						sumPercentAdd = 0;
 					}
 				}
-				else if (mod.Type == StatModType.PercentMult)
+				else if (mod.Type == StatModType.PERCENT_MULT)
 				{
 					finalValue *= 1 + mod.Value;
 				}

@@ -7,8 +7,6 @@ namespace HOMM_BM
     [CreateAssetMenu(menuName = "Resources Manager/Resources Manager Asset")]
     public class ResourcesManagerAsset : ScriptableObject
     {
-        public DialogPrompt enterBattleDialog;
-
         public GameObject heroController;
         public Transform heroControllerSpawnPosition;
 
@@ -20,12 +18,8 @@ namespace HOMM_BM
         //public Transform sceneTriggerSpawnPosition;
 
         [SerializeField]
-        InteractionHookTransformDictionary interactions = new InteractionHookTransformDictionary();
-
-        [SerializeField]
         StringUnitControllerDictionary units = new StringUnitControllerDictionary();
 
         public StringUnitControllerDictionary Units { get => units; set => units = value; }
-        public InteractionHookTransformDictionary Interactions { get => interactions; set => interactions = value; }
     }
 }

@@ -58,10 +58,28 @@ namespace HOMM_BM
         BELT,
         VAMBRACE
     }
+    public enum StatModType
+    {
+        FLAT = 100,
+        PERCENT_ADD = 200,
+        PERCENT_MULT = 300,
+    }
     public enum UnitType
     {
         MUTANT,
         NIGHTSHADE,
         ZOMBIE
+    }
+    public enum StackSplit
+    {
+        MINIMAL = 1,
+        REGULAR = 2,
+        MAXIMAL = 3
+    }
+    public enum StackDescription
+    {
+        NORMAL = 15,
+        LARGE = 30,
+        HORDE = 50
     }
 }

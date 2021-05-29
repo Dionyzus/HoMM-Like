@@ -405,7 +405,7 @@ namespace HOMM_BM
             totalEvaluation += statsScoreDifference * (int)EvaluationBoost.STATS_SCORE;
             totalEvaluation += unitsCountDifference * (int)EvaluationBoost.UNITS_COUNT;
 
-            int maxTotalDistance = CalculateDistancesToTargets(UnitSide.MIN_UNIT, UnitSide.MAX_UNIT);
+            int maxTotalDistance = CalculateDistancesToTargets(UnitSide.MAX_UNIT, UnitSide.MIN_UNIT);
 
             return totalEvaluation - maxTotalDistance;
         }
@@ -463,10 +463,10 @@ namespace HOMM_BM
             return retVal;
         }
 
-        int CalculateDistancesToTargets(UnitSide minSide, UnitSide maxSide)
+        int CalculateDistancesToTargets(UnitSide alliesSide, UnitSide axisSide)
         {
-            List<SimpleUnit> allyUnits = GetUnitsOfLayer(minSide);
-            List<SimpleUnit> axisUnits = GetUnitsOfLayer(maxSide);
+            List<SimpleUnit> allyUnits = GetUnitsOfLayer(alliesSide);
+            List<SimpleUnit> axisUnits = GetUnitsOfLayer(axisSide);
 
             int totalDistance = 0;
 

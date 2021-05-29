@@ -10,7 +10,7 @@ namespace HOMM_BM
     public class Item : ScriptableObject
     {
         [SerializeField] string id;
-        public string ID { get { return id; } }
+        public string ID { get { return id; } set { this.id = value; } }
         public string ItemName;
         public Sprite Icon;
         [Range(1, 999)]

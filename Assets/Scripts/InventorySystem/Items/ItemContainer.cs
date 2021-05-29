@@ -101,6 +101,25 @@ namespace HOMM_BM
             }
             return false;
         }
+        public virtual bool AddItemsToItemSlot(BaseItemSlot itemSlot, Item item, int amount)
+        {
+            if (itemSlot.Item != null)
+            {
+                if (itemSlot.CanAddStack(item))
+                {
+                    itemSlot.Item = item;
+                    itemSlot.Amount += amount;
+                    return true;
+                }
+            }
+            if (itemSlot.Item == null)
+            {
+                itemSlot.Item = item;
+                itemSlot.Amount += amount;
+                return true;
+            }
+            return false;
+        }
         public virtual bool RemoveItem(Item item)
         {
             for (int i = 0; i < ItemSlots.Count; i++)

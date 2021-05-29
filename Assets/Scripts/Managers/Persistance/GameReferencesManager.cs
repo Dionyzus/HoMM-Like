@@ -12,14 +12,19 @@ namespace HOMM_BM
 
         [SerializeField]
         DialogPrompt dialogPrompt = default;
+        [SerializeField]
+        SplitArmyPrompt splitArmyPrompt = default;
 
         HeroController heroController;
         SimpleHero simpleHero;
 
         UnitItem interactionUnit;
         int stackSize;
+        int interactionStackSize;
 
+        private const string INTERACTIONS = "Interactions";
         public SimpleHero SimpleHero { get => simpleHero; set => simpleHero = value; }
+        public int InteractionStackSize { get => interactionStackSize; set => interactionStackSize = value; }
 
         private void Awake()
         {
@@ -36,6 +41,7 @@ namespace HOMM_BM
         public void PrepareInteractionUnit(UnitItem unitItem, int stackSize)
         {
             interactionUnit = unitItem;
+            interactionStackSize = stackSize;
             this.stackSize = stackSize;
         }
         public void LoadTargetScene(string sceneName)
@@ -62,6 +68,8 @@ namespace HOMM_BM
                     simpleHero = null;
                 }
 
+                UpdateSceneStateHandler();
+
                 heroController.gameObject.SetActive(true);
 
                 UiManager.instance.DeactivateBattleUi();
@@ -71,26 +79,64 @@ namespace HOMM_BM
             if (GameManager.instance.CurrentGameState == GameState.WORLD && heroController == null)
             {
                 InitializeHeroController();
-                InstantiateInteractions();
+                InitializeSceneStateHandler();
             }
             if (GameManager.instance.CurrentGameState == GameState.BATTLE)
             {
+                SceneStateHandler.instance.InteractionHooks.Clear();
+
                 GameManager.instance.WorldInitialized = true;
 
                 InitializeSimpleHero();
                 InitializeCurrentHeroInventoryUnits();
 
-                InstantiateInteractionUnits();
+                if (stackSize >= (int)StackDescription.LARGE)
+                {
+                    InitializeInteractionUnits((int)StackSplit.MAXIMAL);
+                }
+                else if (stackSize > (int)StackDescription.NORMAL && stackSize < (int)StackDescription.LARGE)
+                {
+                    InitializeInteractionUnits((int)StackSplit.REGULAR);
+                }
+                else
+                {
+                    InitializeInteractionUnits((int)StackSplit.MINIMAL);
+                }
             }
         }
-        void InstantiateInteractions()
+        void InitializeSceneStateHandler()
         {
-            foreach (KeyValuePair<InteractionHook, Transform> entry in ResourcesManager.Instance.Interactions)
-            {
-                InteractionHook interactionGo = Instantiate(entry.Key);
-                interactionGo.transform.position = entry.Value.position;
+            GameObject interactionsParent = GameObject.FindWithTag(INTERACTIONS);
+            InteractionHook[] interactions = interactionsParent.GetComponentsInChildren<InteractionHook>();
 
-                interactionGo.gameObject.SetActive(true);
+            SetActivateStateForInteractions(interactions);
+        }
+
+        void UpdateSceneStateHandler()
+        {
+            GameObject interactionsParent = GameObject.FindWithTag(INTERACTIONS);
+            InteractionHook[] interactions = interactionsParent.GetComponentsInChildren<InteractionHook>();
+
+            UpdateActiveStateForInteractions(interactions);
+        }
+        void UpdateActiveStateForInteractions(InteractionHook[] interactions)
+        {
+            foreach (InteractionHook hook in interactions)
+            {
+                bool interactionActive = SceneStateHandler.instance.GetActiveState(hook.transform.name);
+                if (!interactionActive)
+                    hook.gameObject.SetActive(false);
+                else
+                    SceneStateHandler.instance.InteractionHooks.Add(hook);
+            }
+        }
+
+        void SetActivateStateForInteractions(InteractionHook[] interactions)
+        {
+            foreach (InteractionHook hook in interactions)
+            {
+                SceneStateHandler.instance.InteractionHooks.Add(hook);
+                SceneStateHandler.instance.SetActiveState(hook.transform.name, true);
             }
         }
         void InitializeHeroController()
@@ -108,6 +154,7 @@ namespace HOMM_BM
             heroController.transform.rotation = ResourcesManager.Instance.heroControllerSpawnPosition.rotation;
 
             heroController.ReallyEnterTheBattlePrompt = dialogPrompt;
+            heroController.SplitArmyPrompt = splitArmyPrompt;
 
             heroController.transform.SetParent(this.transform);
             heroController.gameObject.SetActive(true);
@@ -142,7 +189,33 @@ namespace HOMM_BM
                 }
             }
         }
-        void InstantiateInteractionUnits()
+        void InitializeInteractionUnits(int divider)
+        {
+            if (stackSize <= (int)StackDescription.NORMAL)
+            {
+                InstantiateStack(stackSize);
+                return;
+            }
+            int newStackSize = Mathf.FloorToInt(stackSize / divider);
+            InstantiateStack(newStackSize);
+
+            stackSize -= newStackSize;
+
+            if (stackSize >= (int)StackDescription.LARGE)
+            {
+                InitializeInteractionUnits((int)StackSplit.MAXIMAL);
+            }
+            else if (stackSize > (int)StackDescription.NORMAL && stackSize < (int)StackDescription.LARGE)
+            {
+                InitializeInteractionUnits((int)StackSplit.REGULAR);
+            }
+            else
+            {
+                InitializeInteractionUnits((int)StackSplit.MINIMAL);
+            }
+        }
+
+        private void InstantiateStack(int stackSize)
         {
             UnitController unitInstance = Instantiate(ResourcesManager.Instance.Units[interactionUnit.GetUnit()]);
             unitInstance.StackSize = stackSize;
@@ -151,6 +224,7 @@ namespace HOMM_BM
             unitInstance.InitializeUnitHitPoints();
             unitInstance.gameObject.SetActive(true);
         }
+
         void InstantiateUnit(UnitItem unitItem, int amount)
         {
             UnitController unitInstance = Instantiate(ResourcesManager.Instance.Units[unitItem.GetUnit()]);

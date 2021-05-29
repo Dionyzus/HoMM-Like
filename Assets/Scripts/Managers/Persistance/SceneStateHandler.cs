@@ -8,24 +8,40 @@ namespace HOMM_BM
     public class SceneStateHandler : MonoBehaviour
     {
         public static SceneStateHandler instance;
+
+        [SerializeField]
+        List<InteractionHook> interactionHooks = new List<InteractionHook>();
+
+        public List<InteractionHook> InteractionHooks { get => interactionHooks; set => interactionHooks = value; }
+
         void Awake()
         {
             instance = this;
         }
-        public void SetActiveState(string keyName, GameObject go, bool state)
+        public void SetActiveState(string keyName, bool state)
         {
             PlayerPrefs.SetInt(keyName, state ? 1 : 0);
-            go.SetActive(state);
         }
-        public void UpdateActiveState(string keyName, GameObject go)
+        public bool GetActiveState(string keyName)
         {
             if (PlayerPrefs.GetInt(keyName) == 1)
             {
-                go.SetActive(false);
+                return true;
             }
             else
             {
-                go.SetActive(true);
+                return false;
+            }
+        }
+        public void UpdateActiveState(string keyName)
+        {
+            if (PlayerPrefs.GetInt(keyName) == 1)
+            {
+                PlayerPrefs.SetInt(keyName, 0);
+            }
+            else
+            {
+                PlayerPrefs.SetInt(keyName, 1);
             }
         }
     }

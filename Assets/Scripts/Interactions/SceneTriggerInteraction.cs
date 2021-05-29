@@ -27,8 +27,13 @@ namespace HOMM_BM
             gridUnit.ActionIsDone();
         }
 
-        void EnterTheBattle(string targetScene)
+        void EnterTheBattle(HeroController heroController, string targetScene)
         {
+            InteractionHook interactionHook = SceneStateHandler.instance.InteractionHooks
+                    .Find(hook => hook.GetInstanceID() == heroController.currentInteractionHook.GetInstanceID());
+
+            SceneStateHandler.instance.UpdateActiveState(interactionHook.transform.name);
+
             GameReferencesManager.instance.LoadTargetScene(targetScene);
         }
         public override bool TickIsFinished(GridUnit gridUnit, float deltaTime)
@@ -51,7 +56,7 @@ namespace HOMM_BM
                     dialogPrompt = heroController.ReallyEnterTheBattlePrompt;
 
                     dialogPrompt.Show();
-                    dialogPrompt.OnYesEvent += () => EnterTheBattle(targetScene);
+                    dialogPrompt.OnYesEvent += () => EnterTheBattle(heroController, targetScene);
                     dialogPrompt.OnNoEvent += () => OnEnd(heroController);
 
                     dialogInitialized = true;

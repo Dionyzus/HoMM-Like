@@ -68,7 +68,7 @@ namespace HOMM_BM
                 if (modifier.Value > 0)
                     sb.Append("+");
 
-                if (modifier.Type == StatModType.Flat)
+                if (modifier.Type == StatModType.FLAT)
                 {
                     sb.Append(modifier.Value);
                 }

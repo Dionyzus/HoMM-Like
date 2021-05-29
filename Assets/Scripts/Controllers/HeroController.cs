@@ -1,7 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Security.Cryptography;
+using System;
 
 namespace HOMM_BM
 {
@@ -43,6 +46,7 @@ namespace HOMM_BM
         private ItemContainer openItemContainer;
 
         DialogPrompt reallyEnterTheBattlePrompt;
+        SplitArmyPrompt splitArmyPrompt;
 
         public StatPanel StatPanel { get => statPanel; set => statPanel = value; }
         public ItemTooltip ItemTooltip { get => itemTooltip; set => itemTooltip = value; }
@@ -52,6 +56,7 @@ namespace HOMM_BM
         public Inventory Inventory { get => inventory; set => inventory = value; }
         public ArtifactsPanel ArtifactsPanel { get => artifactsPanel; set => artifactsPanel = value; }
         public DialogPrompt ReallyEnterTheBattlePrompt { get => reallyEnterTheBattlePrompt; set => reallyEnterTheBattlePrompt = value; }
+        public SplitArmyPrompt SplitArmyPrompt { get => splitArmyPrompt; set => splitArmyPrompt = value; }
 
         [SerializeField]
         private InventoryReference inventoryReference;
@@ -123,6 +128,7 @@ namespace HOMM_BM
 
         private void Update()
         {
+
             float deltaTime = Time.deltaTime;
 
             //Check this out...
@@ -315,7 +321,6 @@ namespace HOMM_BM
             if (interaction.TickIsFinished(this, deltaTime))
             {
                 interaction.OnEnd(this);
-                //currentInteraction = null;
             }
         }
         public override void ActionIsDone()
@@ -331,6 +336,12 @@ namespace HOMM_BM
         {
             if (currentInteraction.GetType() != typeof(SceneTriggerInteraction))
             {
+                InteractionHook interactionHook = SceneStateHandler.instance.InteractionHooks
+                    .Find(hook => hook.GetInstanceID() == currentInteractionHook.GetInstanceID());
+
+                SceneStateHandler.instance.UpdateActiveState(interactionHook.transform.name);
+                SceneStateHandler.instance.InteractionHooks.Remove(interactionHook);
+
                 Destroy(currentInteractionHook.gameObject);
             }
 
@@ -450,7 +461,21 @@ namespace HOMM_BM
         {
             if (dragItemSlot == null) return;
 
-            if (dropItemSlot.CanAddStack(dragItemSlot.Item))
+            if (dropItemSlot.CanReceiveItem(dragItemSlot.Item) && dragItemSlot.CanReceiveItem(dropItemSlot.Item) && GameManager.instance.Keyboard.shiftKey.isPressed)
+            {
+                if (!dragItemSlot.Item.GetType().Equals(typeof(UnitItem)))
+                    return;
+                if (dragItemSlot.Amount < 2)
+                    return;
+
+                BaseItemSlot itemSlotReference = dragItemSlot;
+
+                InitializeSplitArmyWindow(itemSlotReference, splitArmyPrompt);
+
+                splitArmyPrompt.Show();
+                splitArmyPrompt.OnYesEvent += () => SplitArmy(dropItemSlot, itemSlotReference, splitArmyPrompt);
+            }
+            else if (dropItemSlot.CanAddStack(dragItemSlot.Item))
             {
                 AddStacks(dropItemSlot);
             }
@@ -459,7 +484,49 @@ namespace HOMM_BM
                 SwapItems(dropItemSlot);
             }
         }
+        public void InitializeSplitArmyWindow(BaseItemSlot itemSlot, SplitArmyPrompt dialogPrompt)
+        {
+            dialogPrompt.Slider.maxValue = itemSlot.Amount;
+            dialogPrompt.MaxValue = itemSlot.Amount;
+            dialogPrompt.Slider.minValue = 1;
 
+            int leftValue = Mathf.FloorToInt(itemSlot.Amount / 2);
+            int rightValue = itemSlot.Amount - leftValue;
+
+            dialogPrompt.Slider.value = leftValue;
+
+            dialogPrompt.FromImage.sprite = itemSlot.Item.Icon;
+            dialogPrompt.ToImage.sprite = itemSlot.Item.Icon;
+
+            dialogPrompt.FromText.text = leftValue.ToString();
+            dialogPrompt.ToText.text = rightValue.ToString();
+        }
+        public void SplitArmy(BaseItemSlot dropItemSlot, BaseItemSlot itemSlot, SplitArmyPrompt dialogPrompt)
+        {
+            itemSlot.Amount = int.Parse(dialogPrompt.FromText.text);
+
+            int newItemAmount = int.Parse(dialogPrompt.ToText.text);
+
+            UnitItem originalItemInSlot = (UnitItem)itemSlot.Item;
+            UnitItem newUnitItem = CreateCopyFromItem(originalItemInSlot);
+
+            if (newUnitItem != null)
+                inventory.AddItemsToItemSlot(dropItemSlot, newUnitItem, newItemAmount);
+        }
+        UnitItem CreateCopyFromItem(UnitItem originItem)
+        {
+            UnitItem newUnitItem = ScriptableObject.CreateInstance<UnitItem>();
+
+            newUnitItem.ID = originItem.ID;
+            newUnitItem.ItemName = originItem.ItemName;
+            newUnitItem.MaximumStacks = originItem.MaximumStacks;
+            newUnitItem.Icon = originItem.Icon;
+            newUnitItem.UnitAttackType = originItem.UnitAttackType;
+            newUnitItem.UnitType = originItem.UnitType;
+            newUnitItem.UnitStats = originItem.UnitStats;
+
+            return newUnitItem;
+        }
         private void AddStacks(BaseItemSlot dropItemSlot)
         {
             int numAddableStacks = dropItemSlot.Item.MaximumStacks - dropItemSlot.Amount;

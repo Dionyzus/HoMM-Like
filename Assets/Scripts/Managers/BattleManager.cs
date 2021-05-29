@@ -227,9 +227,7 @@ namespace HOMM_BM
             InitializeUnitLists();
             InitializeFriendlySide(xGridRange, friendlyInitialPosition);
         }
-        //We wont know number of units once battle actually starts
-        //Atm just reading existing units in the scene
-        //Add instantiating from prefab
+
         private void InitializeUnitLists()
         {
             foreach (UnitController unit in battleUnits)
@@ -378,25 +376,38 @@ namespace HOMM_BM
 
         private void InitializeEnemySide()
         {
-            //Later on add something cool with unit positions if wanted
-            //Atm just a little bit of an offset
             enemyInitialPosition = endGridPosition.transform.position;
-            //Starting from "zero" position, need to add one to z coord
-            //Positions available in row 1 and 2
             enemyInitialPosition.z -= 1;
 
-            //Atm using magic number 5 just to add a bit of spread to units
+            float middle = Mathf.Abs(endGridPosition.transform.position.x - startGridPosition.transform.position.x) / 2;
+            int stackSize = GameReferencesManager.instance.InteractionStackSize;
+            int divider;
+
+            if (stackSize >= (int)StackDescription.LARGE)
+            {
+                divider = (int)StackSplit.MAXIMAL;
+            }
+            else if (stackSize > (int)StackDescription.NORMAL && stackSize < (int)StackDescription.LARGE)
+            {
+                divider = (int)StackSplit.REGULAR;
+            }
+            else
+            {
+                divider = (int)StackSplit.MINIMAL;
+            }
+
+            int xOffset = Mathf.RoundToInt(middle / divider);
             foreach (UnitController unit in EnemyUnits)
             {
                 Vector3 offsetPosition;
 
                 if (unit.GridIndex == 1)
                 {
-                    offsetPosition = new Vector3(enemyInitialPosition.x - 5, enemyInitialPosition.y, enemyInitialPosition.z - 1);
+                    offsetPosition = new Vector3(enemyInitialPosition.x - xOffset, enemyInitialPosition.y, enemyInitialPosition.z - 1);
                 }
                 else
                 {
-                    offsetPosition = new Vector3(enemyInitialPosition.x - 5, enemyInitialPosition.y, enemyInitialPosition.z - 1);
+                    offsetPosition = new Vector3(enemyInitialPosition.x - xOffset, enemyInitialPosition.y, enemyInitialPosition.z - 1);
                 }
 
                 Node initialNode = GridManager.instance.GetNode(offsetPosition, unit.GridIndex);
@@ -405,7 +416,7 @@ namespace HOMM_BM
                     unit.transform.position = initialNode.worldPosition;
                     unit.gameObject.SetActive(true);
 
-                    enemyInitialPosition.x -= 5;
+                    enemyInitialPosition.x -= xOffset;
                 }
                 else
                 {

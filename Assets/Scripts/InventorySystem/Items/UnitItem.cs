@@ -14,6 +14,8 @@ namespace HOMM_BM
         public UnitAttackType UnitAttackType;
         public UnitType UnitType;
 
+        public UnitStats UnitStats { get => unitStats; set => unitStats = value; }
+
         public string GetUnit()
         {
             return UnitType.ToString().ToUpper();
