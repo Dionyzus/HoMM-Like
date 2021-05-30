@@ -791,6 +791,7 @@ namespace HOMM_BM
             }
 
             SimpleHero currentHero = GameReferencesManager.instance.SimpleHero;
+            List<int> slotInstances = new List<int>();
 
             foreach (UnitController unit in unitsQueue)
             {
@@ -798,10 +799,14 @@ namespace HOMM_BM
                 {
                     if (slot.Item == null)
                         continue;
+                    if (slotInstances.Contains(slot.GetInstanceID()))
+                        continue;
 
                     if (slot.Item.GetType().Equals(typeof(UnitItem)))
                     {
+                        slotInstances.Add(slot.GetInstanceID());
                         UnitItem unitItem = (UnitItem)slot.Item;
+
                         if (unit.UnitType == unitItem.UnitType)
                         {
                             slot.Amount = unit.StackSize;

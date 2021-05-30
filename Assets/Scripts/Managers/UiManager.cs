@@ -217,7 +217,7 @@ namespace HOMM_BM
             }
             else
             {
-                UpdateStackSizeUi(currentUnit);
+                UpdateStackSizeUi();
                 UpdateUnitIcons();
             }
 
@@ -226,16 +226,12 @@ namespace HOMM_BM
             BattleManager.instance.CalculatePath = true;
         }
 
-        void UpdateStackSizeUi(UnitController unitController)
+        void UpdateStackSizeUi()
         {
             foreach (GameObject unit in unitsUiQueue)
             {
                 UnitButton button = unit.GetComponentInChildren<UnitButton>();
-                if (button.UnitController == unitController)
-                {
-                    button.UpdateStackSizeText();
-                    break;
-                }
+                button.UpdateStackSizeText();
             }
         }
     }
