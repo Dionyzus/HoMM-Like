@@ -68,7 +68,8 @@ namespace HOMM_BM
     {
         MUTANT,
         NIGHTSHADE,
-        ZOMBIE
+        ZOMBIE,
+        VAMPIRE
     }
     public enum StackSplit
     {

@@ -4,21 +4,19 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
-    public class SceneTriggerInteraction : Interaction
+    public class InteractWithHeroInteraction : Interaction
     {
         DialogPrompt dialogPrompt;
         float timer;
         bool dialogInitialized;
 
         string targetScene;
-        UnitItem unitItem;
-        int stackSize;
+        HeroInteractionHook heroInteractionHook;
 
-        public SceneTriggerInteraction(string targetScene, UnitItem unitItem, int stackSize)
+        public InteractWithHeroInteraction(string targetScene, HeroInteractionHook heroInteractionHook)
         {
             this.targetScene = targetScene;
-            this.unitItem = unitItem;
-            this.stackSize = stackSize;
+            this.heroInteractionHook = heroInteractionHook;
         }
 
         public override void OnEnd(GridUnit gridUnit)
@@ -29,13 +27,9 @@ namespace HOMM_BM
 
         void EnterTheBattle(HeroController heroController, string targetScene)
         {
-            InteractionHook interactionHook = SceneStateHandler.instance.InteractionHooks
-                    .Find(hook => hook.GetInstanceID() == heroController.currentInteractionHook.GetInstanceID());
-
-            SceneStateHandler.instance.UpdateActiveState(interactionHook.transform.name);
             heroController.ClearInteractionData();
 
-            GameReferencesManager.instance.PrepareInteractionUnit(unitItem, stackSize);
+            GameReferencesManager.instance.PrepareInteractionWithHero(heroInteractionHook.Items);
             GameReferencesManager.instance.LoadTargetScene(targetScene);
         }
         public override bool TickIsFinished(GridUnit gridUnit, float deltaTime)

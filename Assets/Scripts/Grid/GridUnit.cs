@@ -159,11 +159,14 @@ namespace HOMM_BM
         {
             Debug.Log("Default interaction completed");
         }
+        public virtual void ClearInteractionData()
+        {
+            Debug.Log("Default clear interaction data");
+        }
         public GridUnit GetGridUnit()
         {
             return this;
         }
-
         public virtual void InitializeMoveToInteractionContainer(Node targetNode)
         {
             Debug.Log("Default load to interaction container");

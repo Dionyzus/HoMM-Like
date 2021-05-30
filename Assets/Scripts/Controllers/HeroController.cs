@@ -334,7 +334,7 @@ namespace HOMM_BM
         }
         public override void InteractionCompleted()
         {
-            if (currentInteraction.GetType() != typeof(SceneTriggerInteraction))
+            if (currentInteraction != null && currentInteraction.GetType() != typeof(SceneTriggerInteraction) && currentInteraction.GetType() != typeof(InteractWithHeroInteraction))
             {
                 InteractionHook interactionHook = SceneStateHandler.instance.InteractionHooks
                     .Find(hook => hook.GetInstanceID() == currentInteractionHook.GetInstanceID());
@@ -343,8 +343,14 @@ namespace HOMM_BM
                 SceneStateHandler.instance.InteractionHooks.Remove(interactionHook);
 
                 Destroy(currentInteractionHook.gameObject);
+                ClearInteractionData();
             }
 
+            WorldManager.instance.DeactivateLookAtActionCamera();
+        }
+
+        public override void ClearInteractionData()
+        {
             currentInteraction = null;
             currentInteractionHook = null;
 
@@ -356,8 +362,6 @@ namespace HOMM_BM
                     InteractionButton.instance.OnClick();
                 }
             }
-
-            WorldManager.instance.DeactivateLookAtActionCamera();
         }
 
         public override void InitializeMoveToInteractionContainer(Node targetNode)

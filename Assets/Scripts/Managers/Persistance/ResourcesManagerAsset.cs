@@ -13,6 +13,12 @@ namespace HOMM_BM
         public GameObject heroSimple;
         public Transform simpleHeroSpawnPosition;
 
+        public GameObject enemyHeroController;
+        public Transform enemyHeroSpawnPosition;
+
+        public GameObject enemyHeroSimple;
+        public Transform enemyHeroSimpleSpawnPosition;
+
         //This could be used later for bigger world, to separate big world into few smaller ones 
         //public GameObject sceneTrigger;
         //public Transform sceneTriggerSpawnPosition;

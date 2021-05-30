@@ -9,13 +9,19 @@ namespace HOMM_BM
         public GameObject hero;
         public InventoryReference inventoryReference;
 
-        public void Initialize()
+        public void InitializeFriendlyHero()
         {
             hero = Instantiate(WorldManager.instance.currentHero.heroModel);
             hero.transform.SetParent(this.transform);
             hero.transform.localScale = Vector3.one;
 
             inventoryReference = WorldManager.instance.currentHero.InventoryReference;
+        }
+        public void InitializeEnemyHero(HeroController heroController)
+        {
+            hero = Instantiate(heroController.heroModel);
+            hero.transform.SetParent(this.transform);
+            hero.transform.localScale = Vector3.one;
         }
     }
 }

@@ -18,7 +18,7 @@ namespace HOMM_BM
         }
 
         [SerializeField] Item item;
-        [SerializeField] int amount = 1;
+        [SerializeField] int amount;
         public Item Item { get => item; set => item = value; }
         public int Amount { get => amount; set => amount = value; }
 

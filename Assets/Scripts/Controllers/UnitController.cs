@@ -87,7 +87,9 @@ namespace HOMM_BM
 
             if (attackType.Equals(UnitAttackType.RANGED))
             {
-                meleeAttackDamage = damage / 3;
+                meleeAttackDamage = damage / 2;
+                if (meleeAttackDamage <= 1)
+                    meleeAttackDamage = 1;
             }
 
             unitStatsReference = new UnitStatsReference(hitPoints, damage, attack, defense, initiative, moral, luck);
@@ -323,7 +325,6 @@ namespace HOMM_BM
             if (isTargetPointBlank)
                 isTargetPointBlank = false;
 
-            //Maaybe keep interaction UI this for some cool inteeractions tracking
             if (currentInteractionInstance.uiObject != null)
             {
                 currentInteractionInstance.uiObject.SetToDestroy();

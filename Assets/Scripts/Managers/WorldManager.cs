@@ -117,7 +117,7 @@ namespace HOMM_BM
                             }
                         }
 
-                        if (currentHero.currentInteractionHook != null && hook == null)
+                        if (!currentHero.ReallyEnterTheBattlePrompt.gameObject.activeSelf && currentHero.currentInteractionHook != null && hook == null)
                         {
                             currentHero.currentInteractionHook = null;
                             currentHero.IsInteractionPointBlank = false;

@@ -31,7 +31,6 @@ namespace HOMM_BM
         public GridPosition startGridPosition;
         public GridPosition endGridPosition;
 
-        //Probably there should be some better way to get this
         [HideInInspector]
         public List<UnitController> FriendlyUnits = new List<UnitController>();
         [HideInInspector]
@@ -43,11 +42,6 @@ namespace HOMM_BM
         [HideInInspector]
         public List<Node> InvalidNodes = new List<Node>();
 
-        Vector3 enemyInitialPosition;
-
-        //I guess there could a better way to solve this, maybe 
-        //change walkability as soon as unit lands on Node, atm
-        //just dictionary of friendly unit nodes
         Dictionary<UnitController, Node> unitsNodes = new Dictionary<UnitController, Node>();
 
         [SerializeField]
@@ -103,10 +97,9 @@ namespace HOMM_BM
             Array.Sort(battleUnits,
                     delegate (UnitController unitA, UnitController unitB) { return unitB.Initiative.CompareTo(unitA.Initiative); });
 
-            //Probably swap this two once dynamic world to battle is implemented
             ActivatePreparationCamera();
             InitializePreparationPhase();
-            //Creating available tactical positions to move onto
+
             CreateTacticalNodesForSmallUnits();
             CreateTacticalNodesForBigUnits();
 
@@ -132,7 +125,6 @@ namespace HOMM_BM
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
 
-                //Clearing
                 DisableDragNDropComponent();
                 ClearInvalidNodes();
                 ClearTacticalNodes();
@@ -142,10 +134,8 @@ namespace HOMM_BM
 
             if (preparationStateFinished && !cleanUpStateFinished)
             {
-                //Initializing enemies
                 InitializeEnemySide();
 
-                //Initialize camera look up
                 DeactivatePreparationCamera();
                 ActivateBattleCamera();
 
@@ -216,7 +206,6 @@ namespace HOMM_BM
             }
         }
 
-        //Later on need to add walkable check
         void InitializePreparationPhase()
         {
             int xGridRange = Mathf.FloorToInt(Mathf.Abs(startGridPosition.transform.position.x -
@@ -250,7 +239,6 @@ namespace HOMM_BM
         int xOffsetGridIndexOne = 2;
         private void InitializeFriendlySide(int xGridRange, Vector3 friendlyInitialPosition)
         {
-            //Later on add something cool with unit positions if wanted
             foreach (UnitController unit in FriendlyUnits)
             {
                 Node initialNode = GridManager.instance.GetNode(friendlyInitialPosition, unit.GridIndex);
@@ -262,8 +250,6 @@ namespace HOMM_BM
 
                     unit.transform.position = targetPosition;
 
-                    //At some point add node render chaning depending on placed/tactical,
-                    //picked one should be standard, then previous position becomes tactical etc.
                     CreateReferenceForNode(initialNode, unit.GridIndex + 1);
                     tacticalNodes.Add(initialNode);
 
@@ -273,7 +259,6 @@ namespace HOMM_BM
 
                     unitsNodes.Add(unit, normalizedNode);
 
-                    //Adding to x side of grids as units are being placed
                     if (unit.GridIndex == 0)
                     {
                         xGridRange -= xOffsetGridIndexZero;
@@ -292,7 +277,6 @@ namespace HOMM_BM
             }
         }
 
-        //Maybe try find different way to check if position is correct
         public Node CreateNormalizedNode(Vector3 position, int gridIndex)
         {
             Vector3 normalizedPosition;
@@ -305,8 +289,6 @@ namespace HOMM_BM
             return GridManager.instance.GetNode(normalizedPosition, gridIndex);
         }
 
-        //Probably will need to have some standard grid sizes to avoid eventual problems with calculations
-        //Even tho having properly placed grid positions should ensure there are no unplanned issues
         private void CreateTacticalNodesForSmallUnits()
         {
             int xGridRange = Mathf.FloorToInt(Mathf.Abs(startGridPosition.transform.position.x -
@@ -329,8 +311,6 @@ namespace HOMM_BM
                 friendlyInitialPosition.x += xOffsetGridIndexZero;
             }
 
-            //Second row, starts from last x node -1, since we incremented x 1 additional time
-            //in first row
             friendlyInitialPosition.x -= xOffsetGridIndexZero;
             friendlyInitialPosition.z += xOffsetGridIndexZero;
 
@@ -376,9 +356,6 @@ namespace HOMM_BM
 
         private void InitializeEnemySide()
         {
-            enemyInitialPosition = endGridPosition.transform.position;
-            enemyInitialPosition.z -= 1;
-
             float middle = Mathf.Abs(endGridPosition.transform.position.x - startGridPosition.transform.position.x) / 2;
             int stackSize = GameReferencesManager.instance.InteractionStackSize;
             int divider;
@@ -397,18 +374,39 @@ namespace HOMM_BM
             }
 
             int xOffset = Mathf.RoundToInt(middle / divider);
+            int zOffset = 2;
+            int yCoord = 1;
+
+            List<Vector3> unitPositions = new List<Vector3>();
+            if (divider == (int)StackSplit.MINIMAL)
+            {
+                unitPositions.Add(new Vector3(
+                    endGridPosition.transform.position.x - middle, yCoord, endGridPosition.transform.position.z - zOffset));
+            }
+            else if (divider == (int)StackSplit.REGULAR)
+            {
+                unitPositions.Add(new Vector3(
+                    startGridPosition.transform.position.x + xOffset, yCoord, endGridPosition.transform.position.z - zOffset));
+
+                unitPositions.Add(new Vector3(
+                    endGridPosition.transform.position.x - xOffset, yCoord, endGridPosition.transform.position.z - zOffset));
+            }
+            else
+            {
+                unitPositions.Add(new Vector3(
+                    endGridPosition.transform.position.x - middle, yCoord, endGridPosition.transform.position.z - zOffset));
+
+                unitPositions.Add(new Vector3(
+                    startGridPosition.transform.position.x + xOffset, yCoord, endGridPosition.transform.position.z - zOffset));
+
+                unitPositions.Add(new Vector3(
+                    endGridPosition.transform.position.x - xOffset, yCoord, endGridPosition.transform.position.z - zOffset));
+            }
+
+            int positionIndex = 0;
             foreach (UnitController unit in EnemyUnits)
             {
-                Vector3 offsetPosition;
-
-                if (unit.GridIndex == 1)
-                {
-                    offsetPosition = new Vector3(enemyInitialPosition.x - xOffset, enemyInitialPosition.y, enemyInitialPosition.z - 1);
-                }
-                else
-                {
-                    offsetPosition = new Vector3(enemyInitialPosition.x - xOffset, enemyInitialPosition.y, enemyInitialPosition.z - 1);
-                }
+                Vector3 offsetPosition = unitPositions[positionIndex];
 
                 Node initialNode = GridManager.instance.GetNode(offsetPosition, unit.GridIndex);
                 if (initialNode != null)
@@ -416,7 +414,7 @@ namespace HOMM_BM
                     unit.transform.position = initialNode.worldPosition;
                     unit.gameObject.SetActive(true);
 
-                    enemyInitialPosition.x -= xOffset;
+                    positionIndex++;
                 }
                 else
                 {
@@ -791,31 +789,37 @@ namespace HOMM_BM
             }
 
             SimpleHero currentHero = GameReferencesManager.instance.SimpleHero;
-            List<int> slotInstances = new List<int>();
+            Dictionary<int, int> slotUnits = GameReferencesManager.instance.SlotUnits;
 
-            foreach (UnitController unit in unitsQueue)
+            bool unitItemUpdated = false;
+
+            foreach (KeyValuePair<int, int> entry in slotUnits)
             {
-                foreach (ItemSlot slot in currentHero.inventoryReference.Inventory.ItemSlots)
+                foreach (UnitController unit in unitsQueue)
                 {
-                    if (slot.Item == null)
-                        continue;
-                    if (slotInstances.Contains(slot.GetInstanceID()))
-                        continue;
-
-                    if (slot.Item.GetType().Equals(typeof(UnitItem)))
+                    if (unit.GetInstanceID() == entry.Value)
                     {
-                        slotInstances.Add(slot.GetInstanceID());
-                        UnitItem unitItem = (UnitItem)slot.Item;
-
-                        if (unit.UnitType == unitItem.UnitType)
+                        foreach (ItemSlot slot in currentHero.inventoryReference.Inventory.ItemSlots)
                         {
-                            slot.Amount = unit.StackSize;
-                            break;
+                            if (slot.GetInstanceID() == entry.Key)
+                            {
+                                slot.Amount = unit.StackSize;
+
+                                unitItemUpdated = true;
+                                break;
+                            }
                         }
+                        break;
                     }
+                }
+                if (!unitItemUpdated)
+                {
+                    ItemSlot itemSlot = currentHero.inventoryReference.Inventory.ItemSlots.Find(slot => slot.GetInstanceID() == entry.Key);
+                    itemSlot.Amount = 0;
                 }
             }
 
+            GameReferencesManager.instance.EnemyHeroDied = true;
             GameReferencesManager.instance.LoadTargetScene("WorldMap");
         }
     }
