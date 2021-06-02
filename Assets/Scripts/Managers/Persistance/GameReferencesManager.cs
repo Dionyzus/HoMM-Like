@@ -11,6 +11,7 @@ namespace HOMM_BM
         public static GameReferencesManager instance;
         private const string INTERACTIONS = "Interactions";
 
+        bool heroFight;
         bool enemyHeroDied;
 
         [SerializeField]
@@ -30,12 +31,16 @@ namespace HOMM_BM
 
         Dictionary<int, int> slotUnits = new Dictionary<int, int>();
 
+        List<HeroController> heroesQueue = new List<HeroController>();
+
         public SimpleHero SimpleHero { get => simpleHero; set => simpleHero = value; }
         public int InteractionStackSize { get => interactionStackSize; set => interactionStackSize = value; }
         public Dictionary<int, int> SlotUnits { get => slotUnits; set => slotUnits = value; }
         public SimpleHero EnemySimpleHero { get => enemySimpleHero; set => enemySimpleHero = value; }
         public HeroController EnemyHero { get => enemyHero; set => enemyHero = value; }
         public bool EnemyHeroDied { get => enemyHeroDied; set => enemyHeroDied = value; }
+        public bool HeroFight { get => heroFight; set => heroFight = value; }
+        public List<HeroController> HeroesQueue { get => heroesQueue; set => heroesQueue = value; }
 
         ItemAmountDictionary items = new ItemAmountDictionary();
 
@@ -94,8 +99,13 @@ namespace HOMM_BM
 
                 UpdateSceneStateHandler();
 
-                heroController.gameObject.SetActive(true);
+                PathfinderMaster.instance.pathLineInRange.gameObject.SetActive(true);
+                PathfinderMaster.instance.pathLineOutsideRange.gameObject.SetActive(true);
 
+                heroController.gameObject.SetActive(true);
+                WorldManager.instance.HeroesQueue = heroesQueue;
+
+                //Update heroes queue
                 if (enemyHeroDied)
                     DestroyEnemyHeroInstance();
                 else
@@ -114,6 +124,11 @@ namespace HOMM_BM
             }
             if (GameManager.instance.CurrentGameState == GameState.BATTLE)
             {
+                heroesQueue = WorldManager.instance.HeroesQueue;
+
+                PathfinderMaster.instance.pathLineInRange.gameObject.SetActive(false);
+                PathfinderMaster.instance.pathLineOutsideRange.gameObject.SetActive(false);
+
                 SceneStateHandler.instance.InteractionHooks.Clear();
 
                 GameManager.instance.WorldInitialized = true;
@@ -125,6 +140,7 @@ namespace HOMM_BM
 
                 if (items.Count != 0)
                 {
+                    heroFight = true;
                     InitializeEnemySimpleHero();
                     InitializeEnemyHeroUnits();
                 }
@@ -222,7 +238,7 @@ namespace HOMM_BM
             GameObject simpleHeroGo = Instantiate(ResourcesManager.Instance.heroSimple);
             simpleHero = simpleHeroGo.GetComponentInChildren<SimpleHero>();
 
-            simpleHero.InitializeFriendlyHero();
+            simpleHero.InitializeFriendlyHero(heroController);
 
             HideHeroData();
 
@@ -311,7 +327,7 @@ namespace HOMM_BM
             UnitController unitInstance = Instantiate(ResourcesManager.Instance.Units[interactionUnit.GetUnit()]);
             unitInstance.StackSize = stackSize;
             unitInstance.transform.localScale = Vector3.one;
-            unitInstance.transform.rotation = enemySimpleHero.transform.rotation;
+            unitInstance.transform.eulerAngles = new Vector3(0, 180, 0);
 
             unitInstance.InitializeUnitHitPoints();
             unitInstance.gameObject.SetActive(true);
@@ -331,7 +347,7 @@ namespace HOMM_BM
             slotUnits.Add(itemSlot.GetInstanceID(), unitInstance.GetInstanceID());
         }
 
-        void HideHeroData()
+        public void HideHeroData()
         {
             HeroSelectButton[] characterDisplays = FindObjectsOfType<HeroSelectButton>();
 

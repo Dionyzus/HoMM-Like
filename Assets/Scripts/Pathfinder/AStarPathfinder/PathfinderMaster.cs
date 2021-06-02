@@ -7,7 +7,8 @@ namespace HOMM_BM
     public class PathfinderMaster : MonoBehaviour
     {
         public static PathfinderMaster instance;
-        public LineRenderer pathLine;
+        public LineRenderer pathLineInRange;
+        public LineRenderer pathLineOutsideRange;
 
         public delegate void PathIsFound(List<Node> path, GridUnit.OnPathReachCallback callback);
         PathIsFound onPathIsFound;

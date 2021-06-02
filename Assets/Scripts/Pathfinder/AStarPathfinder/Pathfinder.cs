@@ -74,7 +74,8 @@ namespace HOMM_BM
                 }
             }
 
-            DrawPath(path);
+            if (unit.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                DrawPath(path);
             return path;
         }
 
@@ -159,14 +160,45 @@ namespace HOMM_BM
         }
         public void DrawPath(List<Node> path)
         {
-            PathfinderMaster.instance.pathLine.positionCount = path.Count;
+            int heroStepsCount = (int)WorldManager.instance.currentHero.InteractionSlider.value;
 
-            int reversedIndex = path.Count - 1;
-
-            for (int i = 0; i < path.Count; i++)
+            if (PathfinderMaster.instance.pathLineOutsideRange.positionCount > 0)
             {
-                PathfinderMaster.instance.pathLine.SetPosition(reversedIndex, path[i].worldPosition + Vector3.up * .3f);
-                reversedIndex--;
+                PathfinderMaster.instance.pathLineOutsideRange.positionCount = 0;
+            }
+
+            if (path.Count <= heroStepsCount)
+            {
+                PathfinderMaster.instance.pathLineInRange.positionCount = path.Count;
+                int pathIndex = path.Count - 1;
+
+                for (int i = 0; i < path.Count; i++)
+                {
+                    PathfinderMaster.instance.pathLineInRange.SetPosition(pathIndex, path[i].worldPosition + Vector3.up * .3f);
+                    pathIndex--;
+                }
+            }
+            else
+            {
+                int greenIndex = heroStepsCount - 1;
+                PathfinderMaster.instance.pathLineInRange.positionCount = heroStepsCount;
+
+                PathfinderMaster.instance.pathLineOutsideRange.positionCount = (path.Count - heroStepsCount);
+                int redIndex = (path.Count - heroStepsCount) - 1;
+
+                for (int i = 0; i < path.Count; i++)
+                {
+                    if (i < heroStepsCount)
+                    {
+                        PathfinderMaster.instance.pathLineInRange.SetPosition(greenIndex, path[i].worldPosition + Vector3.up * .3f);
+                        greenIndex--;
+                    }
+                    else
+                    {
+                        PathfinderMaster.instance.pathLineOutsideRange.SetPosition(redIndex, path[i].worldPosition + Vector3.up * .3f);
+                        redIndex--;
+                    }
+                }
             }
         }
     }

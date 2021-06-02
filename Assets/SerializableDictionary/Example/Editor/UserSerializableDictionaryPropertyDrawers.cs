@@ -8,6 +8,7 @@ using UnityEditor;
 [CustomPropertyDrawer(typeof(StringUnitControllerDictionary))]
 [CustomPropertyDrawer(typeof(InteractionHookTransformDictionary))]
 [CustomPropertyDrawer(typeof(ItemAmountDictionary))]
+[CustomPropertyDrawer(typeof(ItemSlotAmountDictionary))]
 [CustomPropertyDrawer(typeof(ObjectColorDictionary))]
 [CustomPropertyDrawer(typeof(StringColorArrayDictionary))]
 public class AnySerializableDictionaryPropertyDrawer : SerializableDictionaryPropertyDrawer {}

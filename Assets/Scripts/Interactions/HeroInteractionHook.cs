@@ -9,5 +9,9 @@ namespace HOMM_BM
         [SerializeField]
         ItemAmountDictionary items = new ItemAmountDictionary();
         public ItemAmountDictionary Items { get => items; set => items = value; }
+
+        [SerializeField]
+        ItemSlotAmountDictionary itemSlots = new ItemSlotAmountDictionary();
+        public ItemSlotAmountDictionary ItemSlots { get => itemSlots; set => itemSlots = value; }
     }
 }

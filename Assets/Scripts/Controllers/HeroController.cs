@@ -12,6 +12,8 @@ namespace HOMM_BM
     {
         bool failedToLoadPath = false;
 
+        int actionPoints;
+
         public RenderTexture renderTexture;
         public Image heroImage;
         public string heroName = "";
@@ -57,6 +59,7 @@ namespace HOMM_BM
         public ArtifactsPanel ArtifactsPanel { get => artifactsPanel; set => artifactsPanel = value; }
         public DialogPrompt ReallyEnterTheBattlePrompt { get => reallyEnterTheBattlePrompt; set => reallyEnterTheBattlePrompt = value; }
         public SplitArmyPrompt SplitArmyPrompt { get => splitArmyPrompt; set => splitArmyPrompt = value; }
+        public int ActionPoints { get => actionPoints; set => actionPoints = value; }
 
         [SerializeField]
         private InventoryReference inventoryReference;
@@ -164,10 +167,10 @@ namespace HOMM_BM
         public void SetInteractionSliderStatus()
         {
             InteractionSlider.value -= 1;
-            if (InteractionSlider.value == 0)
-            {
-                UiManager.instance.ResetInteractionSlider(this);
-            }
+            //if (InteractionSlider.value == 0)
+            //{
+            //    UiManager.instance.ResetInteractionSlider(this);
+            //}
         }
 
         void HandleMovement(float deltaTime)
@@ -211,11 +214,16 @@ namespace HOMM_BM
                 isPathInitialized = false;
                 index++;
 
-                if (PathfinderMaster.instance.pathLine.positionCount > 0)
-                    PathfinderMaster.instance.pathLine.positionCount -= 1;
+                if (PathfinderMaster.instance.pathLineInRange.positionCount > 0)
+                    PathfinderMaster.instance.pathLineInRange.positionCount -= 1;
                 SetInteractionSliderStatus();
 
-                if (index > currentPath.Count - 1)
+                if (index > actionPoints - 1)
+                {
+                    actionPoints -= index;
+                    pathIsFinished = true;
+                }
+                else if (index > currentPath.Count - 1)
                 {
                     pathIsFinished = true;
                 }
@@ -260,9 +268,9 @@ namespace HOMM_BM
             if (isInteractionPointBlank)
             {
                 LoadInteractionFromInteractionHook();
-                if (PathfinderMaster.instance.pathLine.positionCount > 0)
+                if (PathfinderMaster.instance.pathLineInRange.positionCount > 0)
                 {
-                    PathfinderMaster.instance.pathLine.positionCount = 0;
+                    PathfinderMaster.instance.pathLineInRange.positionCount = 0;
                 }
                 isInteractionPointBlank = false;
                 return;

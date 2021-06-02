@@ -89,6 +89,16 @@ namespace HOMM_BM
 
             go.SetActive(true);
         }
+        public void AddStepsSliderForAi(HeroController hero)
+        {
+            Slider stepsSlider = gameObject.AddComponent<Slider>();
+
+            stepsSlider.maxValue = hero.StepsCount;
+            stepsSlider.minValue = 0;
+            stepsSlider.value = stepsSlider.maxValue;
+
+            hero.InteractionSlider = stepsSlider;
+        }
         public void ResetInteractionSlider(HeroController hero)
         {
             hero.InteractionSlider.value = hero.InteractionSlider.maxValue;
@@ -209,6 +219,21 @@ namespace HOMM_BM
                 AddHeroInventory(targetHero);
         }
 
+        public void DeselectHero(HeroController heroController)
+        {
+            HeroSelectButton[] characterDisplays = FindObjectsOfType<HeroSelectButton>();
+
+            foreach (HeroSelectButton displays in characterDisplays)
+            {
+                Outline outline = displays.GetComponentInChildren<Outline>();
+                if (displays.heroController == heroController)
+                {
+                    outline.enabled = false;
+                    break;
+                }
+            }
+        }
+
         public void OnUnitTurn(List<UnitController> unitsQueue, UnitController currentUnit, bool isInitialize)
         {
             if (isInitialize)
@@ -233,6 +258,19 @@ namespace HOMM_BM
                 UnitButton button = unit.GetComponentInChildren<UnitButton>();
                 button.UpdateStackSizeText();
             }
+        }
+
+        public void CleanBattleUiData()
+        {
+            ClearCurrentUnitUi();
+
+            foreach (GameObject unitUi in unitsUiQueue)
+            {
+                Destroy(unitUi);
+            }
+
+            unitsUiQueue.Clear();
+            currentUnitUi = null;
         }
     }
 }

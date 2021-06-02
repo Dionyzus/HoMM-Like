@@ -94,20 +94,24 @@ namespace HOMM_BM
             UiManager.instance.DeactivateWorldUi();
 
             battleUnits = FindObjectsOfType<UnitController>();
-            Array.Sort(battleUnits,
-                    delegate (UnitController unitA, UnitController unitB) { return unitB.Initiative.CompareTo(unitA.Initiative); });
 
-            ActivatePreparationCamera();
-            InitializePreparationPhase();
+            if (battleUnits.Length != 0)
+            {
+                Array.Sort(battleUnits,
+                        delegate (UnitController unitA, UnitController unitB) { return unitB.Initiative.CompareTo(unitA.Initiative); });
 
-            CreateTacticalNodesForSmallUnits();
-            CreateTacticalNodesForBigUnits();
+                ActivatePreparationCamera();
+                InitializePreparationPhase();
 
-            unitsQueue = new List<UnitController>(battleUnits);
-            currentUnit = unitsQueue.First();
+                CreateTacticalNodesForSmallUnits();
+                CreateTacticalNodesForBigUnits();
 
-            //True as in initializing
-            OnCurrentUnitTurn(true);
+                unitsQueue = new List<UnitController>(battleUnits);
+                currentUnit = unitsQueue.First();
+
+                //True as in initializing
+                OnCurrentUnitTurn(true);
+            }
         }
 
         private void Update()
@@ -788,6 +792,8 @@ namespace HOMM_BM
                 return;
             }
 
+            UiManager.instance.CleanBattleUiData();
+
             SimpleHero currentHero = GameReferencesManager.instance.SimpleHero;
             Dictionary<int, int> slotUnits = GameReferencesManager.instance.SlotUnits;
 
@@ -795,6 +801,8 @@ namespace HOMM_BM
 
             foreach (KeyValuePair<int, int> entry in slotUnits)
             {
+                unitItemUpdated = false;
+
                 foreach (UnitController unit in unitsQueue)
                 {
                     if (unit.GetInstanceID() == entry.Value)
@@ -819,7 +827,8 @@ namespace HOMM_BM
                 }
             }
 
-            GameReferencesManager.instance.EnemyHeroDied = true;
+            if (GameReferencesManager.instance.HeroFight)
+                GameReferencesManager.instance.EnemyHeroDied = true;
             GameReferencesManager.instance.LoadTargetScene("WorldMap");
         }
     }

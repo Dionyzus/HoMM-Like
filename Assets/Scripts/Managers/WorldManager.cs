@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
 using UnityEngine.EventSystems;
+using System.Linq;
 
 namespace HOMM_BM
 {
     public class WorldManager : MonoBehaviour
     {
         public static WorldManager instance;
+
+        List<HeroController> heroesQueue = new List<HeroController>();
+        bool calculatingAiMove;
 
         public GameObject hitLookAtPrefab;
         public Camera MainCamera;
@@ -19,11 +23,15 @@ namespace HOMM_BM
         CinemachineVirtualCamera panAndZoomCamera = default;
 
         public HeroController currentHero;
+        public HeroController previousHero;
+
         [HideInInspector]
         public bool heroIsMoving;
 
         MouseLogicWorld currentMouseLogic;
         public MouseLogicWorld selectMove;
+
+        public List<HeroController> HeroesQueue { get => heroesQueue; set => heroesQueue = value; }
 
         private void Awake()
         {
@@ -46,6 +54,10 @@ namespace HOMM_BM
                     UiManager.instance.AddHeroButton(hero);
                     UiManager.instance.AddStepsSlider(hero);
                 }
+                else
+                {
+                    UiManager.instance.AddStepsSliderForAi(hero);
+                }
             }
 
             InteractionHook[] gridObjects = FindObjectsOfType<InteractionHook>();
@@ -56,6 +68,14 @@ namespace HOMM_BM
             }
 
             UiManager.instance.ActivateWorldUi();
+
+            if (heroes.Length != 0)
+            {
+                heroesQueue = new List<HeroController>(heroes);
+                currentHero = heroesQueue.First();
+
+                OnCurrentHeroTurn();
+            }
         }
 
         private void Update()
@@ -65,17 +85,40 @@ namespace HOMM_BM
 
             if (currentHero != null)
             {
+                if (currentHero.InteractionSlider != null && currentHero.InteractionSlider.value == 0)
+                {
+                    Debug.Log("Action points spent!");
+                    OnMoveFinished();
+                    return;
+                }
+
                 if (currentHero.IsInteracting || currentHero.IsInteractionInitialized)
                     return;
 
-                HandleMouseClickAction();
-
-                if (currentHero.currentInteractionHook != null && GameManager.instance.Keyboard.spaceKey.isPressed)
+                if (currentHero.gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
                 {
-                    ActivateLookAtActionCamera(currentHero.currentInteractionHook.transform);
+                    if (WorldSimulationManager.instance.AiInteracting || heroIsMoving)
+                        return;
 
-                    currentHero.IsInteractionInitialized = true;
-                    currentHero.CreateInteractionContainer(currentHero.currentInteractionHook.interactionContainer);
+                    if (!calculatingAiMove)
+                    {
+                        calculatingAiMove = true;
+                        WorldSimulationManager.instance.Initialize();
+                        return;
+                    }
+                }
+                else
+                {
+
+                    HandleMouseClickAction();
+
+                    if (currentHero.currentInteractionHook != null && GameManager.instance.Keyboard.spaceKey.isPressed)
+                    {
+                        ActivateLookAtActionCamera(currentHero.currentInteractionHook.transform);
+
+                        currentHero.IsInteractionInitialized = true;
+                        currentHero.CreateInteractionContainer(currentHero.currentInteractionHook.interactionContainer);
+                    }
                 }
             }
 
@@ -102,18 +145,21 @@ namespace HOMM_BM
 
                         if (hook != null)
                         {
-                            currentHero.currentInteractionHook = hook;
-                            Node targetNode = GridManager.instance.GetNode(hit.point, currentHero.GridIndex);
-
-                            if (targetNode != null)
+                            if (hook.GetComponentInParent<HeroController>() != currentHero)
                             {
-                                currentHero.PreviewPathToNode(targetNode, hook);
-                                PathfinderMaster.instance.CreatedNodes.Add(targetNode);
-                            }
+                                currentHero.currentInteractionHook = hook;
+                                Node targetNode = GridManager.instance.GetNode(hit.point, currentHero.GridIndex);
 
-                            if (PathfinderMaster.instance.IsTargetNodeNeighbour(currentHero.CurrentNode, targetNode))
-                            {
-                                currentHero.IsInteractionPointBlank = true;
+                                if (targetNode != null)
+                                {
+                                    currentHero.PreviewPathToNode(targetNode, hook);
+                                    PathfinderMaster.instance.CreatedNodes.Add(targetNode);
+                                }
+
+                                if (PathfinderMaster.instance.IsTargetNodeNeighbour(currentHero.CurrentNode, targetNode))
+                                {
+                                    currentHero.IsInteractionPointBlank = true;
+                                }
                             }
                         }
 
@@ -182,6 +228,8 @@ namespace HOMM_BM
         }
         public void OnSelectCurrentHero(HeroController hero)
         {
+            ActivatePanAndZoomCamera();
+
             if (heroIsMoving)
                 return;
 
@@ -193,10 +241,68 @@ namespace HOMM_BM
                 currentHero = hero;
                 UiManager.instance.OnHeroSelected(currentHero);
 
-                ActivatePanAndZoomCamera();
-
                 if (currentMouseLogic != null)
                     currentMouseLogic.InteractTick(this, currentHero);
+            }
+        }
+
+        public void OnMoveFinished()
+        {
+            if (currentHero.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                UiManager.instance.DeselectHero(currentHero);
+
+            heroesQueue.RemoveAt(0);
+            heroesQueue.Add(currentHero);
+
+            previousHero = currentHero;
+
+            if (heroesQueue.First().gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
+                currentHero = heroesQueue.First();
+            else
+            {
+                HeroController hero = heroesQueue.First();
+                UiManager.instance.ResetInteractionSlider(hero);
+                hero.ActionPoints = hero.StepsCount;
+
+                currentHero = null;
+            }
+
+            OnCurrentHeroTurn();
+        }
+        public void OnCurrentHeroTurn()
+        {
+            if (WorldSimulationManager.instance.AiInteracting)
+                WorldSimulationManager.instance.AiInteracting = false;
+
+            if (calculatingAiMove)
+                calculatingAiMove = false;
+
+            if (currentHero != null)
+            {
+                UiManager.instance.ResetInteractionSlider(currentHero);
+                currentHero.ActionPoints = currentHero.StepsCount;
+
+                if (previousHero != null && previousHero.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                    InitializeHeroInteractionHook(previousHero);
+            }
+        }
+
+        void InitializeHeroInteractionHook(HeroController hero)
+        {
+            HeroInteractionHook hook = hero.GetComponentInChildren<HeroInteractionHook>();
+            if (hook == null)
+                Debug.Log("Hook is null!");
+
+            hook.ItemSlots.Clear();
+            foreach (ItemSlot slot in hero.InventoryReference.Inventory.ItemSlots)
+            {
+                if (slot.Item == null)
+                    continue;
+
+                if (slot.Item.GetType() == typeof(UnitItem))
+                {
+                    hook.ItemSlots.Add(slot, slot.Amount);
+                }
             }
         }
     }

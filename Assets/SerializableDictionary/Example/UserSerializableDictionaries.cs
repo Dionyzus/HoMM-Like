@@ -11,6 +11,10 @@ public class StringBoolDictionary : SerializableDictionary<string, bool> {}
 public class StringUnitControllerDictionary : SerializableDictionary<string, HOMM_BM.UnitController> { }
 [Serializable]
 public class InteractionHookTransformDictionary : SerializableDictionary<HOMM_BM.InteractionHook, Transform> { }
+[Serializable]
+public class ItemAmountDictionary : SerializableDictionary<HOMM_BM.Item, int> { }
+[Serializable]
+public class ItemSlotAmountDictionary : SerializableDictionary<HOMM_BM.ItemSlot, int> { }
 
 [Serializable]
 public class ObjectColorDictionary : SerializableDictionary<UnityEngine.Object, Color> {}

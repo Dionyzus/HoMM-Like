@@ -11,8 +11,21 @@ namespace HOMM_BM
         public override void InteractTick(WorldManager worldManager, RaycastHit hit)
         {
             InteractionHook ih = hit.transform.GetComponentInParent<InteractionHook>();
-            if (ih)
-                return;
+
+            if (ih != null)
+            {
+                HeroController hero = ih.GetComponentInParent<HeroController>();
+
+                if (hero != null)
+                {
+                    if (hero.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                    {
+                        if (ih.GetType() != typeof(HeroInteractionHook))
+                            return;
+                    }
+                }
+
+            }
 
             ISelectable selectable = hit.transform.GetComponentInParent<ISelectable>();
             if (selectable != null && selectable.GetGridUnit().gameObject.layer != GridManager.ENEMY_UNITS_LAYER)

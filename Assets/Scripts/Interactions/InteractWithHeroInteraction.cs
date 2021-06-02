@@ -21,8 +21,26 @@ namespace HOMM_BM
 
         public override void OnEnd(GridUnit gridUnit)
         {
-            gridUnit.ClearInteractionData();
-            gridUnit.ActionIsDone();
+            if (gridUnit.gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
+            {
+                AiInitiatedBattle(gridUnit);
+            }
+            else
+            {
+                gridUnit.ClearInteractionData();
+                gridUnit.ActionIsDone();
+            }
+        }
+
+        void AiInitiatedBattle(GridUnit gridUnit)
+        {
+            HeroController heroController = (HeroController)gridUnit;
+            heroController.ClearInteractionData();
+
+            HeroInteractionHook hook = heroController.GetComponentInChildren<HeroInteractionHook>();
+
+            GameReferencesManager.instance.PrepareInteractionWithHero(hook.Items);
+            GameReferencesManager.instance.LoadTargetScene(targetScene);
         }
 
         void EnterTheBattle(HeroController heroController, string targetScene)
@@ -46,19 +64,26 @@ namespace HOMM_BM
 
             if (timer <= 0)
             {
-                if (!dialogInitialized)
+                if (gridUnit.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
                 {
-                    HeroController heroController = (HeroController)gridUnit;
-                    dialogPrompt = heroController.ReallyEnterTheBattlePrompt;
+                    if (!dialogInitialized)
+                    {
+                        HeroController heroController = (HeroController)gridUnit;
+                        dialogPrompt = heroController.ReallyEnterTheBattlePrompt;
 
-                    dialogPrompt.Show();
-                    dialogPrompt.OnYesEvent += () => EnterTheBattle(heroController, targetScene);
-                    dialogPrompt.OnNoEvent += () => OnEnd(heroController);
+                        dialogPrompt.Show();
+                        dialogPrompt.OnYesEvent += () => EnterTheBattle(heroController, targetScene);
+                        dialogPrompt.OnNoEvent += () => OnEnd(heroController);
 
-                    dialogInitialized = true;
+                        dialogInitialized = true;
+                    }
+                    if (!dialogPrompt.gameObject.activeSelf)
+                        return true;
                 }
-                if (!dialogPrompt.gameObject.activeSelf)
+                else
+                {
                     return true;
+                }
             }
             return false;
         }
