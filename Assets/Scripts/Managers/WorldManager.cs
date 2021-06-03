@@ -85,6 +85,7 @@ namespace HOMM_BM
 
             if (currentHero != null)
             {
+                //Temporary, making sure friendly hero move ends (atm as soon as action points are spent)
                 if (currentHero.InteractionSlider != null && currentHero.InteractionSlider.value == 0)
                 {
                     Debug.Log("Action points spent!");
@@ -117,7 +118,15 @@ namespace HOMM_BM
                         ActivateLookAtActionCamera(currentHero.currentInteractionHook.transform);
 
                         currentHero.IsInteractionInitialized = true;
-                        currentHero.CreateInteractionContainer(currentHero.currentInteractionHook.interactionContainer);
+
+                        if (currentHero.ActionPoints < PathfinderMaster.instance.StoredPath.Count)
+                        {
+                            currentHero.InitializeMoveToInteractionContainer(PathfinderMaster.instance.NodeAtMaxRange);
+                        }
+                        else
+                        {
+                            currentHero.CreateInteractionContainer(currentHero.currentInteractionHook.interactionContainer);
+                        }
                     }
                 }
             }

@@ -48,6 +48,7 @@ namespace HOMM_BM
                 if (currentHero.CurrentNode == heroMove)
                 {
                     Debug.Log("Finish move, not moving!");
+                    WorldManager.instance.OnMoveFinished();
                 }
                 else
                 {

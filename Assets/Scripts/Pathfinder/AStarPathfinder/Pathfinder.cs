@@ -191,6 +191,10 @@ namespace HOMM_BM
                     if (i < heroStepsCount)
                     {
                         PathfinderMaster.instance.pathLineInRange.SetPosition(greenIndex, path[i].worldPosition + Vector3.up * .3f);
+
+                        Node node = GridManager.instance.GetNode(path[i].worldPosition, unit.GridIndex);
+                        PathfinderMaster.instance.NodeAtMaxRange = node;
+                        PathfinderMaster.instance.CreatedNodes.Add(node);
                         greenIndex--;
                     }
                     else

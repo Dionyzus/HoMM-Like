@@ -10,6 +10,8 @@ namespace HOMM_BM
         public LineRenderer pathLineInRange;
         public LineRenderer pathLineOutsideRange;
 
+        private Node nodeAtMaxRange;
+
         public delegate void PathIsFound(List<Node> path, GridUnit.OnPathReachCallback callback);
         PathIsFound onPathIsFound;
         GridUnit.OnPathReachCallback onPathReach;
@@ -19,6 +21,7 @@ namespace HOMM_BM
 
         List<Node> storedPath = new List<Node>();
         public List<Node> StoredPath { get => storedPath; set => storedPath = value; }
+        public Node NodeAtMaxRange { get => nodeAtMaxRange; set => nodeAtMaxRange = value; }
 
         private void Awake()
         {

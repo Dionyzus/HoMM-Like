@@ -220,11 +220,11 @@ namespace HOMM_BM
 
                 if (index > actionPoints - 1)
                 {
-                    actionPoints -= index;
                     pathIsFinished = true;
                 }
                 else if (index > currentPath.Count - 1)
                 {
+                    actionPoints -= currentPath.Count;
                     pathIsFinished = true;
                 }
             }
@@ -412,6 +412,9 @@ namespace HOMM_BM
             PathfinderMaster.instance.ClearCreatedNodes();
 
             WorldManager.instance.DeactivateLookAtActionCamera();
+            //Temporary, since AI hero is only able to move
+            if (this.gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
+                WorldManager.instance.OnMoveFinished();
         }
 
         //Inventory

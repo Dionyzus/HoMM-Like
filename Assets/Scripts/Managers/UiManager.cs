@@ -91,7 +91,13 @@ namespace HOMM_BM
         }
         public void AddStepsSliderForAi(HeroController hero)
         {
-            Slider stepsSlider = gameObject.AddComponent<Slider>();
+            GameObject go = Instantiate(SliderPrefab);
+
+            go.transform.SetParent(hero.transform);
+            go.transform.localScale = Vector3.one;
+            go.transform.localPosition = Vector3.zero;
+
+            Slider stepsSlider = go.GetComponentInChildren<Slider>();
 
             stepsSlider.maxValue = hero.StepsCount;
             stepsSlider.minValue = 0;
