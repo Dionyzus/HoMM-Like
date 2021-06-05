@@ -8,6 +8,7 @@ namespace HOMM_BM
     {
         public GameObject hero;
         public InventoryReference inventoryReference;
+        public AudioListener audioListener;
 
         public void InitializeFriendlyHero(HeroController heroController)
         {
@@ -15,6 +16,8 @@ namespace HOMM_BM
             hero.transform.SetParent(this.transform);
             hero.transform.localScale = Vector3.one;
 
+            audioListener = gameObject.AddComponent<AudioListener>();
+            audioListener.enabled = true;
             inventoryReference = heroController.InventoryReference;
         }
         public void InitializeEnemyHero(HeroController heroController)

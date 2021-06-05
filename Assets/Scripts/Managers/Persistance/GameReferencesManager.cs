@@ -100,6 +100,7 @@ namespace HOMM_BM
             if (GameManager.instance.CurrentGameState == GameState.WORLD && heroController != null)
             {
                 battleAudio.Stop();
+                worldAudio.Play();
 
                 if (simpleHero != null)
                 {
@@ -118,6 +119,7 @@ namespace HOMM_BM
                 PathfinderMaster.instance.pathLineOutsideRange.gameObject.SetActive(true);
 
                 heroController.gameObject.SetActive(true);
+                heroController.AudioListener.enabled = true;
 
                 if (enemyHeroDied)
                     DestroyEnemyHeroInstance();
@@ -133,6 +135,7 @@ namespace HOMM_BM
             if (GameManager.instance.CurrentGameState == GameState.WORLD && heroController == null)
             {
                 battleAudio.Stop();
+                worldAudio.Play();
 
                 InitializeHeroController();
                 InitializeEnemyHeroController();
@@ -245,6 +248,12 @@ namespace HOMM_BM
 
             heroController.transform.SetParent(this.transform);
             heroController.gameObject.SetActive(true);
+
+            if (heroController.AudioListener == null)
+            {
+                heroController.AudioListener = heroController.gameObject.AddComponent<AudioListener>();
+                heroController.AudioListener.enabled = true;
+            }
         }
         void InitializeEnemyHeroController()
         {
@@ -385,6 +394,7 @@ namespace HOMM_BM
                 }
             }
 
+            heroController.AudioListener.enabled = true;
             heroController.gameObject.SetActive(false);
         }
     }

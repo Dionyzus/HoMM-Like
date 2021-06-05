@@ -60,12 +60,15 @@ namespace HOMM_BM
         public DialogPrompt ReallyEnterTheBattlePrompt { get => reallyEnterTheBattlePrompt; set => reallyEnterTheBattlePrompt = value; }
         public SplitArmyPrompt SplitArmyPrompt { get => splitArmyPrompt; set => splitArmyPrompt = value; }
         public int ActionPoints { get => actionPoints; set => actionPoints = value; }
+        public AudioListener AudioListener { get => audioListener; set => audioListener = value; }
 
         [SerializeField]
         private InventoryReference inventoryReference;
 
         [SerializeField]
         AudioManager stepSound = default;
+
+        AudioListener audioListener;
         public void InitializeInventory(InventoryReference reference)
         {
             inventoryReference = reference;
