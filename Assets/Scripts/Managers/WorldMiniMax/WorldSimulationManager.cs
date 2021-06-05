@@ -47,7 +47,6 @@ namespace HOMM_BM
                 aiInteracting = true;
                 if (currentHero.CurrentNode == heroMove)
                 {
-                    Debug.Log("Finish move, not moving!");
                     WorldManager.instance.OnMoveFinished();
                 }
                 else
@@ -56,8 +55,6 @@ namespace HOMM_BM
                     {
                         if (hero.CurrentNode == heroMove)
                         {
-                            Debug.Log("Target node is occupied!");
-
                             isInteractionInitialized = true;
                             targetHero = hero;
                             break;
@@ -65,8 +62,6 @@ namespace HOMM_BM
                     }
                     if (!isInteractionInitialized)
                     {
-                        Debug.Log("Need pathfind to node!");
-
                         PathfinderMaster.instance.RequestPathAndPreview(currentHero.CurrentNode,
                             heroMove, currentHero);
 

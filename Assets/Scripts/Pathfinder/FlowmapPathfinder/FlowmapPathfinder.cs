@@ -69,7 +69,6 @@ namespace HOMM_BM
                     if (x == 0 && z == 0)
                         continue;
 
-                    //Restrict main diagonal to -1 of maximum unit steps
                     if (x == z && steps == unitController.StepsCount - 1)
                     {
                         continue;

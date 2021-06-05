@@ -66,8 +66,19 @@ namespace HOMM_BM
         int stackSize;
         public int StackSize { get => stackSize; set => stackSize = value; }
         public UnitType UnitType { get => unitType; set => unitType = value; }
+        public AudioManager GettingHitSound { get => gettingHitSound; set => gettingHitSound = value; }
+        public AudioManager HitSound { get => hitSound; set => hitSound = value; }
 
         int initialTotalHitPoints;
+
+        [SerializeField]
+        AudioManager gettingHitSound;
+        [SerializeField]
+        AudioManager spellSound = default;
+        [SerializeField]
+        AudioManager hitSound;
+        [SerializeField]
+        AudioManager stepSound = default;
 
         private void Awake()
         {
@@ -209,6 +220,10 @@ namespace HOMM_BM
 
             return isFinished;
         }
+        public void PlayFootstep()
+        {
+            stepSound.Play();
+        }
         public void UpdateStackSize()
         {
             if (hitPoints != initialTotalHitPoints)
@@ -228,6 +243,8 @@ namespace HOMM_BM
             GameObject projectileInstance = Instantiate(projectilePrefab, projectileSpawnPoint.transform.position, Quaternion.identity);
 
             RangedProjectile rangedProjectile = projectileInstance.GetComponent<RangedProjectile>();
+
+            spellSound.Play();
 
             if (rangedProjectile != null)
             {
@@ -267,7 +284,7 @@ namespace HOMM_BM
             };
             interactionInstance = ii;
 
-            UiManager.instance.CreateUiObjectForInteraction(ii);
+            UiManager.instance.CreateUiObjectForInteraction(ii, container.moveDisplay);
         }
         public override void StoreInteractionHook(InteractionHook interactionHook)
         {

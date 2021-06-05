@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 namespace HOMM_BM
 {
@@ -7,6 +8,10 @@ namespace HOMM_BM
         public InteractionContainer interactionContainer;
         public Interaction interaction;
         public Transform interactionPoint;
+
+        public string interactionAnimation;
+        public GameObject particles;
+        public Animator animator;
 
         public int gridIndex = 0;
         public Node CurrentNode
@@ -26,6 +31,15 @@ namespace HOMM_BM
         {
             if (interaction != null)
                 gridUnit.LoadInteraction(interaction);
+        }
+
+        public void PlayAnimation()
+        {
+            animator.Play(interactionAnimation);
+        }
+        public void DestroyParticles()
+        {
+            Destroy(particles.gameObject);
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Diagnostics;
 
 namespace HOMM_BM
 {
@@ -26,27 +27,14 @@ namespace HOMM_BM
         {
             path.Clear();
 
-            List<Node> openSet = new List<Node>();
+            Heap<Node> openSet = new Heap<Node>(GridManager.instance.MaxSize);
             HashSet<Node> closedSet = new HashSet<Node>();
 
             openSet.Add(startNode);
 
             while (openSet.Count > 0)
             {
-                Node currentNode = openSet[0];
-
-                for (int i = 0; i < openSet.Count; i++)
-                {
-                    if (openSet[i].FCost < currentNode.FCost ||
-                       (openSet[i].FCost == currentNode.FCost && openSet[i].hCost < currentNode.hCost))
-                    {
-                        if (!currentNode.Equals(openSet[i]))
-                        {
-                            currentNode = openSet[i];
-                        }
-                    }
-                }
-                openSet.Remove(currentNode);
+                Node currentNode = openSet.RemoveFirst();
                 closedSet.Add(currentNode);
 
                 if (currentNode.Equals(endNode))

@@ -78,10 +78,21 @@ namespace HOMM_BM
             }
         }
 
+        float timer;
+        bool waitForNextTurn;
         private void Update()
         {
             if (!GameManager.instance.CurrentGameState.Equals(GameState.WORLD))
                 return;
+
+            if (waitForNextTurn)
+            {
+                timer += Time.deltaTime;
+
+                OnMoveFinished();
+
+                return;
+            }
 
             if (currentHero != null)
             {
@@ -110,7 +121,6 @@ namespace HOMM_BM
                 }
                 else
                 {
-
                     HandleMouseClickAction();
 
                     if (currentHero.currentInteractionHook != null && GameManager.instance.Keyboard.spaceKey.isPressed)
@@ -186,10 +196,10 @@ namespace HOMM_BM
         {
             panAndZoomCamera.Priority = 50;
 
-            if (currentHero != null)
-            {
-                panAndZoomCamera.transform.position = actionCamera.transform.position;
-            }
+            //if (currentHero != null)
+            //{
+            //    panAndZoomCamera.transform.position = actionCamera.transform.position;
+            //}
             //Should add castle position as default, atm fixed scene position
             panAndZoomCamera.transform.position = panAndZoomCamera.transform.position;
         }
@@ -257,6 +267,16 @@ namespace HOMM_BM
 
         public void OnMoveFinished()
         {
+            if (timer <= 1)
+            {
+                if(!waitForNextTurn)
+                    waitForNextTurn = true;
+                return;
+            }
+
+            waitForNextTurn = false;
+            timer = 0;
+
             if (currentHero.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
                 UiManager.instance.DeselectHero(currentHero);
 
@@ -288,11 +308,26 @@ namespace HOMM_BM
 
             if (currentHero != null)
             {
+                if (currentHero.gameObject.layer == GridManager.ENEMY_UNITS_LAYER)
+                {
+                    GameReferencesManager.instance.WorldAudio.Stop();
+
+                    UiManager.instance.ShowEnemyTurnDisplay(currentHero);
+                    GameReferencesManager.instance.EnemyTurnAudio.Play();
+                }
+
                 UiManager.instance.ResetInteractionSlider(currentHero);
                 currentHero.ActionPoints = currentHero.StepsCount;
 
                 if (previousHero != null && previousHero.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
                     InitializeHeroInteractionHook(previousHero);
+            }
+            else
+            {
+                UiManager.instance.HideEnemyTurnDisplay();
+                GameReferencesManager.instance.EnemyTurnAudio.Stop();
+
+                GameReferencesManager.instance.WorldAudio.Play();
             }
         }
 

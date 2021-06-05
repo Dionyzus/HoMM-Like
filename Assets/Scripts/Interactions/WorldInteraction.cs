@@ -30,8 +30,14 @@ namespace HOMM_BM
             Quaternion rotation = Quaternion.LookRotation(direction);
             gridUnit.transform.rotation = Quaternion.Slerp(gridUnit.transform.rotation, rotation, deltaTime / .3f);
 
+            if (gridUnit.currentInteractionHook.interactionAnimation.Length != 0)
+                gridUnit.currentInteractionHook.PlayAnimation();
+
             if (timer <= 0)
             {
+                if (gridUnit.currentInteractionHook.particles != null)
+                    gridUnit.currentInteractionHook.DestroyParticles();
+
                 return true;
             }
             return false;

@@ -10,6 +10,7 @@ namespace HOMM_BM
         public UnityEvent onFinish;
         public UnityEvent onAnimationHit;
         public UnityEvent onProjectileFired;
+        public UnityEvent onStep;
 
         public void OnFinish()
         {
@@ -19,6 +20,11 @@ namespace HOMM_BM
         public void OnProjectileFired()
         {
             onProjectileFired.Invoke();
+        }
+
+        public void OnStep()
+        {
+            onStep.Invoke();
         }
 
         public void OnAnimationHit()

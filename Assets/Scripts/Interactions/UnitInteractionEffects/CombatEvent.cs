@@ -18,6 +18,11 @@ namespace HOMM_BM
         public void OnDamageReceived()
         {
             receiver.HitPoints -= initiator.Damage;
+
+            if (initiator.AttackType.Equals(UnitAttackType.MELEE))
+                initiator.HitSound.Play();
+
+            receiver.GettingHitSound.Play();
             receiver.UpdateStackSize();
 
             if (receiver.HitPoints <= 0)

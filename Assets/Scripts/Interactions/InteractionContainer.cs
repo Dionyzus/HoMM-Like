@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HOMM_BM
 {
@@ -8,6 +9,8 @@ namespace HOMM_BM
     public class InteractionContainer : ScriptableObject
     {
         public ActionLogic action;
+        public Sprite moveDisplay;
+        public Sprite interactDisplay;
 
         public void LoadAction(GridUnit gridUnit)
         {

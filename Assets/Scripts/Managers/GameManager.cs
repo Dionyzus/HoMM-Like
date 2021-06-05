@@ -16,6 +16,8 @@ namespace HOMM_BM
         [HideInInspector]
         public Mouse Mouse;
 
+        [SerializeField]
+        private TimeManager timeManager;
         public bool IsMouseOverGameWindow
         {
             get
@@ -33,13 +35,13 @@ namespace HOMM_BM
         public GameState CurrentGameState { get => currentGameState; set => currentGameState = value; }
         public bool StateInitialized { get => stateInitialized; set => stateInitialized = value; }
         public bool WorldInitialized { get => worldInitialized; set => worldInitialized = value; }
+        public TimeManager TimeManager { get => timeManager; set => timeManager = value; }
 
         private void Awake()
         {
             instance = this;
         }
 
-        //Maybe this will need to be an update method
         private void Start()
         {
             Keyboard = InputSystem.GetDevice<Keyboard>();

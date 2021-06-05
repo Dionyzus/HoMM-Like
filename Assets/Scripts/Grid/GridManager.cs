@@ -32,6 +32,15 @@ namespace HOMM_BM
         public GameObject[] GridParents { get => gridParents; set => gridParents = value; }
         public GridPosition[] GridPositions { get => gridPositions; set => gridPositions = value; }
 
+        private int maxSize;
+        public int MaxSize
+        {
+            get
+            {
+                return gridSizes[0].x * gridSizes[0].z;
+            }
+        }
+
         private void Awake()
         {
             instance = this;
@@ -166,6 +175,7 @@ namespace HOMM_BM
                 go.transform.localScale = nodeScale;
 
                 node.renderer = go.GetComponentInChildren<Renderer>();
+                node.renderer.material = FlowmapPathfinderMaster.instance.standardMaterial;
             }
         }
 

@@ -15,6 +15,15 @@ namespace HOMM_BM
         bool enemyHeroDied;
 
         [SerializeField]
+        AudioManager worldAudio = default;
+        [SerializeField]
+        AudioManager enemyTurnAudio = default;
+        [SerializeField]
+        AudioManager battleAudio = default;
+
+        [SerializeField]
+        GameObject loadingScreen = default;
+        [SerializeField]
         DialogPrompt dialogPrompt = default;
         [SerializeField]
         SplitArmyPrompt splitArmyPrompt = default;
@@ -41,6 +50,8 @@ namespace HOMM_BM
         public bool EnemyHeroDied { get => enemyHeroDied; set => enemyHeroDied = value; }
         public bool HeroFight { get => heroFight; set => heroFight = value; }
         public List<HeroController> HeroesQueue { get => heroesQueue; set => heroesQueue = value; }
+        public AudioManager EnemyTurnAudio { get => enemyTurnAudio; set => enemyTurnAudio = value; }
+        public AudioManager WorldAudio { get => worldAudio; set => worldAudio = value; }
 
         ItemAmountDictionary items = new ItemAmountDictionary();
 
@@ -75,6 +86,8 @@ namespace HOMM_BM
 
         IEnumerator LoadScene(string sceneName)
         {
+            loadingScreen.SetActive(true);
+
             AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
 
             while (!operation.isDone)
@@ -86,6 +99,8 @@ namespace HOMM_BM
 
             if (GameManager.instance.CurrentGameState == GameState.WORLD && heroController != null)
             {
+                battleAudio.Stop();
+
                 if (simpleHero != null)
                 {
                     Destroy(simpleHero.gameObject);
@@ -103,13 +118,13 @@ namespace HOMM_BM
                 PathfinderMaster.instance.pathLineOutsideRange.gameObject.SetActive(true);
 
                 heroController.gameObject.SetActive(true);
-                WorldManager.instance.HeroesQueue = heroesQueue;
 
-                //Update heroes queue
                 if (enemyHeroDied)
                     DestroyEnemyHeroInstance();
                 else
                     enemyHero.gameObject.SetActive(true);
+
+                WorldManager.instance.HeroesQueue = heroesQueue;
 
                 UiManager.instance.DeactivateBattleUi();
                 UiManager.instance.ActivateWorldUi();
@@ -117,6 +132,8 @@ namespace HOMM_BM
 
             if (GameManager.instance.CurrentGameState == GameState.WORLD && heroController == null)
             {
+                battleAudio.Stop();
+
                 InitializeHeroController();
                 InitializeEnemyHeroController();
 
@@ -124,6 +141,9 @@ namespace HOMM_BM
             }
             if (GameManager.instance.CurrentGameState == GameState.BATTLE)
             {
+                worldAudio.Stop();
+                battleAudio.Play();
+
                 heroesQueue = WorldManager.instance.HeroesQueue;
 
                 PathfinderMaster.instance.pathLineInRange.gameObject.SetActive(false);
@@ -160,10 +180,14 @@ namespace HOMM_BM
                     }
                 }
             }
+
+            loadingScreen.SetActive(false);
         }
 
         void DestroyEnemyHeroInstance()
         {
+            heroesQueue.Remove(enemyHero);
+
             Destroy(enemyHero.gameObject);
             enemyHero = null;
         }

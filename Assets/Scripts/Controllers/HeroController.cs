@@ -63,6 +63,9 @@ namespace HOMM_BM
 
         [SerializeField]
         private InventoryReference inventoryReference;
+
+        [SerializeField]
+        AudioManager stepSound = default;
         public void InitializeInventory(InventoryReference reference)
         {
             inventoryReference = reference;
@@ -167,10 +170,10 @@ namespace HOMM_BM
         public void SetInteractionSliderStatus()
         {
             InteractionSlider.value -= 1;
-            //if (InteractionSlider.value == 0)
-            //{
-            //    UiManager.instance.ResetInteractionSlider(this);
-            //}
+        }
+        public void SetEnemyTurnSliderStatus()
+        {
+            UiManager.instance.currentEnemyTurnSlider.value += 1;
         }
 
         void HandleMovement(float deltaTime)
@@ -216,7 +219,11 @@ namespace HOMM_BM
 
                 if (PathfinderMaster.instance.pathLineInRange.positionCount > 0)
                     PathfinderMaster.instance.pathLineInRange.positionCount -= 1;
-                SetInteractionSliderStatus();
+
+                if (this.gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                    SetInteractionSliderStatus();
+                else
+                    SetEnemyTurnSliderStatus();
 
                 if (index > actionPoints - 1)
                 {
@@ -243,6 +250,10 @@ namespace HOMM_BM
                 onPathReachCallback?.Invoke();
             }
         }
+        public void PlayFootstep()
+        {
+            stepSound.Play();
+        }
         public override void CreateInteractionContainer(InteractionContainer container)
         {
             InteractionInstance ii = new InteractionInstance
@@ -252,7 +263,7 @@ namespace HOMM_BM
             };
             interactionInstance = ii;
 
-            UiManager.instance.CreateUiObjectForInteraction(ii);
+            UiManager.instance.CreateUiObjectForInteraction(ii, container.moveDisplay);
         }
         public override void StoreInteractionHook(InteractionHook interactionHook)
         {
@@ -326,6 +337,10 @@ namespace HOMM_BM
         protected override void HandleInteraction(Interaction interaction, float deltaTime)
         {
             interaction.StartMethod(this);
+
+            Image image = currentInteractionInstance.uiObject.GetComponentInChildren<Image>();
+            image.sprite = currentInteractionInstance.interactionContainer.interactDisplay;
+
             if (interaction.TickIsFinished(this, deltaTime))
             {
                 interaction.OnEnd(this);
@@ -350,7 +365,8 @@ namespace HOMM_BM
                 SceneStateHandler.instance.UpdateActiveState(interactionHook.transform.name);
                 SceneStateHandler.instance.InteractionHooks.Remove(interactionHook);
 
-                Destroy(currentInteractionHook.gameObject);
+                if (currentInteractionHook.interactionAnimation.Length == 0)
+                    Destroy(currentInteractionHook.gameObject);
                 ClearInteractionData();
             }
 
@@ -382,7 +398,7 @@ namespace HOMM_BM
 
             interactionInstance = ii;
 
-            UiManager.instance.CreateUiObjectForInteraction(ii);
+            UiManager.instance.CreateUiObjectForInteraction(ii, moveToLocationContainer.moveDisplay);
         }
         public override void MoveToLocation()
         {

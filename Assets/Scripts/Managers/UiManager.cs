@@ -40,6 +40,9 @@ namespace HOMM_BM
 
         public GameObject InventoryPrefab;
 
+        public GameObject enemyTurn;
+        public Slider currentEnemyTurnSlider;
+
         private void Awake()
         {
             instance = this;
@@ -48,7 +51,8 @@ namespace HOMM_BM
         public void AddHeroInventory(HeroController hero)
         {
             GameObject go = Instantiate(InventoryPrefab);
-            go.transform.SetParent(worldUi.transform);
+            go.transform.SetParent(this.transform);
+            go.transform.SetAsFirstSibling();
             go.transform.localScale = Vector3.one;
             RectTransform transform = go.transform.GetComponentInChildren<RectTransform>();
             transform.localPosition = Vector3.zero;
@@ -110,7 +114,7 @@ namespace HOMM_BM
             hero.InteractionSlider.value = hero.InteractionSlider.maxValue;
         }
 
-        public void CreateUiObjectForInteraction(InteractionInstance instance)
+        public void CreateUiObjectForInteraction(InteractionInstance instance, Sprite sprite)
         {
             GameObject go = Instantiate(InteractionPrefab);
             go.transform.SetParent(InteractionsParent);
@@ -119,6 +123,10 @@ namespace HOMM_BM
 
             InteractionButton interactionButton = go.GetComponentInChildren<InteractionButton>();
             interactionButton.interactionInstance = instance;
+
+            Image image = interactionButton.GetComponentInChildren<Image>();
+            image.sprite = sprite;
+
             instance.uiObject = interactionButton;
         }
         public void AddHeroButton(HeroController heroController)
@@ -255,6 +263,19 @@ namespace HOMM_BM
             AddCurrentUnitIcon(currentUnit);
 
             BattleManager.instance.CalculatePath = true;
+        }
+
+        public void ShowEnemyTurnDisplay(HeroController heroController)
+        {
+            enemyTurn.SetActive(true);
+            currentEnemyTurnSlider.maxValue = heroController.StepsCount;
+            currentEnemyTurnSlider.minValue = 0;
+            currentEnemyTurnSlider.value = 0;
+        }
+
+        public void HideEnemyTurnDisplay()
+        {
+            enemyTurn.SetActive(false);
         }
 
         void UpdateStackSizeUi()

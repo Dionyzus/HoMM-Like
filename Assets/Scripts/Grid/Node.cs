@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace HOMM_BM
 {
-    public class Node
+    public class Node : IHeapItem<Node>
     {
         public Vector3Int position;
         public int gridIndex;
@@ -82,12 +82,35 @@ namespace HOMM_BM
         public Node parentNode;
         public float hCost;
         public float gCost;
+        int heapIndex;
         public float FCost
         {
             get
             {
                 return gCost + hCost;
             }
+        }
+
+        public int HeapIndex
+        {
+            get
+            {
+                return heapIndex;
+            }
+            set
+            {
+                heapIndex = value;
+            }
+        }
+
+        public int CompareTo(Node nodeToCompare)
+        {
+            int compare = FCost.CompareTo(nodeToCompare.FCost);
+            if (compare == 0)
+            {
+                compare = hCost.CompareTo(nodeToCompare.hCost);
+            }
+            return -compare;
         }
     }
 }
