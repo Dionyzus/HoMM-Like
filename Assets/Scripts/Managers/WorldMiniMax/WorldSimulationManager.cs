@@ -32,7 +32,7 @@ namespace HOMM_BM
             heroesQueue = new List<HeroController>(WorldManager.instance.HeroesQueue);
             currentHero = heroesQueue.First();
 
-            WorldMiniMax minimax = new WorldMiniMax(heroesQueue, 3);
+            WorldMiniMax minimax = new WorldMiniMax(heroesQueue, 1);
             HeroMove heroMove = minimax.StartMiniMax();
 
             MoveCount++;

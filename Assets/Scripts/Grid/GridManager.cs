@@ -14,9 +14,8 @@ namespace HOMM_BM
         public int[] scales = { 1, 2 };
         Vector3Int[] gridSizes;
         List<Node[,,]> grids = new List<Node[,,]>();
+
         GameObject[] gridParents;
-        //First position is bottom left !y=0!, second position is upper right !y=1! -> Battle
-        //First position is bottom left !y=0!, second position is upper right !y>=2! -> World
         GridPosition[] gridPositions;
 
         Vector3 minPosition;

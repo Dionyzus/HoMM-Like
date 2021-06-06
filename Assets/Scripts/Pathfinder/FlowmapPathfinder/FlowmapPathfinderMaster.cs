@@ -159,6 +159,8 @@ namespace HOMM_BM
                             {
                                 openSet.Add(neighbour);
                             }
+                            else
+                                openSet.UpdateItem(neighbour);
                         }
                     }
                 }

@@ -75,7 +75,7 @@ namespace HOMM_BM
 
             for (int i = 0; i < colliders.Length; i++)
             {
-                isWalkable = false;
+                    isWalkable = false;
             }
         }
 

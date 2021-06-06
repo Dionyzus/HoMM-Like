@@ -42,7 +42,7 @@ namespace HOMM_BM
                 {
                     reverseAnimation = false;
                 }
-                clickAnywhereButton.transform.localScale -= new Vector3(0.0001f, 0.0001f, 0.0001f);
+                clickAnywhereButton.transform.localScale -= new Vector3(0.0005f, 0.0005f, 0.0005f);
             }
             else if (clickAnywhereButton && reverseAnimation == false)
             {
@@ -50,7 +50,7 @@ namespace HOMM_BM
                 {
                     reverseAnimation = true;
                 }
-                clickAnywhereButton.transform.localScale += new Vector3(0.0001f, 0.0001f, 0.0001f);
+                clickAnywhereButton.transform.localScale += new Vector3(0.0005f, 0.0005f, 0.0005f);
             }
         }
         public void SlideMenu()
