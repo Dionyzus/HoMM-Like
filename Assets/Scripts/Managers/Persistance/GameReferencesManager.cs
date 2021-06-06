@@ -144,6 +144,9 @@ namespace HOMM_BM
             }
             if (GameManager.instance.CurrentGameState == GameState.BATTLE)
             {
+                if (UiManager.instance.enemyTurn.gameObject.activeSelf)
+                    UiManager.instance.HideEnemyTurnDisplay();
+
                 worldAudio.Stop();
                 battleAudio.Play();
 

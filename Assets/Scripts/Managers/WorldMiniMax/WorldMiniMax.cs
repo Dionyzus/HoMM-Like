@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 namespace HOMM_BM
 {
@@ -8,7 +9,7 @@ namespace HOMM_BM
     {
         List<HeroController> heroesQueue = new List<HeroController>();
         int depthSearch;
-        Node bestHeroMove;
+        HeroMove bestHeroMove;
 
         public WorldMiniMax(List<HeroController> heroesQueue, int depth)
         {
@@ -16,7 +17,7 @@ namespace HOMM_BM
             depthSearch = depth;
         }
 
-        public Node StartMiniMax()
+        public HeroMove StartMiniMax()
         {
             List<SimulationHero> simulationHeroesQueue = new List<SimulationHero>();
 
@@ -44,7 +45,10 @@ namespace HOMM_BM
 
             if (gridState.CurrentHero.HeroSide == UnitSide.MAX_UNIT)
             {
-                List<Node> legalMoves = gridState.GetLegalMoves();
+                List<HeroMove> legalMoves = gridState.GetLegalMoves();
+                gridState.EvaluateMoves(legalMoves);
+
+                legalMoves = legalMoves.OrderByDescending(move => move.MoveEvaluation).ToList();
 
                 for (int i = 0, len = legalMoves.Count; i < len; ++i)
                 {
@@ -66,7 +70,10 @@ namespace HOMM_BM
             }
             else
             {
-                List<Node> legalMoves = gridState.GetLegalMoves();
+                List<HeroMove> legalMoves = gridState.GetLegalMoves();
+                gridState.EvaluateMoves(legalMoves);
+
+                legalMoves = legalMoves.OrderByDescending(move => move.MoveEvaluation).ToList();
 
                 for (int i = 0, len = legalMoves.Count; i < len; ++i)
                 {

@@ -32,8 +32,8 @@ namespace HOMM_BM
             heroesQueue = new List<HeroController>(WorldManager.instance.HeroesQueue);
             currentHero = heroesQueue.First();
 
-            WorldMiniMax minimax = new WorldMiniMax(heroesQueue, 1);
-            Node heroMove = minimax.StartMiniMax();
+            WorldMiniMax minimax = new WorldMiniMax(heroesQueue, 3);
+            HeroMove heroMove = minimax.StartMiniMax();
 
             MoveCount++;
 
@@ -45,29 +45,30 @@ namespace HOMM_BM
             else
             {
                 aiInteracting = true;
-                if (currentHero.CurrentNode == heroMove)
-                {
-                    WorldManager.instance.OnMoveFinished();
-                }
-                else
+                if (heroMove.HeroAvailableFromNode != null)
                 {
                     foreach (HeroController hero in heroesQueue)
                     {
-                        if (hero.CurrentNode == heroMove)
+                        if (heroMove.HeroAvailableFromNode.HeroId.Equals(hero.GetInstanceID()))
                         {
                             isInteractionInitialized = true;
                             targetHero = hero;
-                            break;
                         }
                     }
-                    if (!isInteractionInitialized)
-                    {
-                        PathfinderMaster.instance.RequestPathAndPreview(currentHero.CurrentNode,
-                            heroMove, currentHero);
+                }
 
-                        currentHero.IsInteractionInitialized = true;
-                        currentHero.InitializeMoveToInteractionContainer(heroMove);
-                    }
+                else if (currentHero.CurrentNode == heroMove.TargetNode)
+                {
+                    WorldManager.instance.OnMoveFinished();
+                }
+
+                else if (!isInteractionInitialized)
+                {
+                    PathfinderMaster.instance.RequestPathAndPreview(currentHero.CurrentNode,
+                        heroMove.TargetNode, currentHero);
+
+                    currentHero.IsInteractionInitialized = true;
+                    currentHero.InitializeMoveToInteractionContainer(heroMove.TargetNode);
                 }
 
                 if (isInteractionInitialized)

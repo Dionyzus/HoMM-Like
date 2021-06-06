@@ -41,10 +41,114 @@ namespace HOMM_BM
 
             currentHero = heroesQueue.First();
         }
-        public List<Node> GetLegalMoves()
+        public List<HeroMove> GetLegalMoves()
         {
-            return CalculateWalkablePositions();
+            return ConvertNodesToHeroMoves(CalculateWalkablePositions());
         }
+        List<HeroMove> ConvertNodesToHeroMoves(List<Node> reachableNodes)
+        {
+            List<SimulationHero> availableTargets = FindAvailableTargets();
+            List<HeroMove> legalMoves = new List<HeroMove>();
+
+            for (int i = 0, len = reachableNodes.Count; i < len; ++i)
+            {
+                foreach (SimulationHero target in availableTargets)
+                {
+                    if (IsTargetNodeNeighbour(target.CurrentNode, reachableNodes[i]))
+                    {
+                        HeroMove newAttackMove = new HeroMove();
+
+                        newAttackMove.IsAttackMove = true;
+                        newAttackMove.TargetNode = reachableNodes[i];
+
+                        newAttackMove.HeroAvailableFromNode = new SimulationHero(target.CurrentNode, target.HeroSide, target.HeroId, target.StepsCount);
+
+                        legalMoves.Add(newAttackMove);
+                    }
+                }
+
+                HeroMove newLegalMove = new HeroMove();
+                newLegalMove.TargetNode = reachableNodes[i];
+
+                legalMoves.Add(newLegalMove);
+            }
+
+            return legalMoves;
+        }
+        bool IsTargetNodeNeighbour(Node currentNode, Node targetNode)
+        {
+            float xDistance = Mathf.Abs(currentNode.worldPosition.x - targetNode.worldPosition.x);
+            float zDistance = Mathf.Abs(currentNode.worldPosition.z - targetNode.worldPosition.z);
+
+            if (xDistance <= 1 && zDistance <= 1)
+            {
+                return true;
+            }
+            return false;
+        }
+        private List<SimulationHero> FindAvailableTargets()
+        {
+            List<SimulationHero> availableTargets = new List<SimulationHero>();
+
+            foreach (SimulationHero hero in heroesQueue)
+            {
+                if (hero.HeroSide == currentHero.HeroSide)
+                    continue;
+                else
+                {
+                    availableTargets.Add(hero);
+                }
+            }
+
+            return availableTargets;
+        }
+        public void EvaluateMoves(List<HeroMove> heroMoves)
+        {
+            List<SimulationHero> availableTargets = FindAvailableTargets();
+
+            List<HeroMoveInfo> heroMovesInfo = new List<HeroMoveInfo>();
+
+            foreach (SimulationHero target in availableTargets)
+            {
+                HeroMoveInfo moveInfo = new HeroMoveInfo(target, heroMoves[0], float.MaxValue);
+                heroMovesInfo.Add(moveInfo);
+            }
+
+            for (int i = 0, len = heroMoves.Count; i < len; ++i)
+            {
+                if (heroMoves[i].IsAttackMove)
+                {
+                    heroMoves[i].MoveEvaluation += (int)EvaluationScore.ATTACK_MOVE;
+                }
+                else
+                {
+                    foreach (HeroMoveInfo heroMoveInfo in heroMovesInfo)
+                    {
+                        float newDistance = Vector3.Distance(heroMoves[i].TargetNode.worldPosition, heroMoveInfo.Hero.CurrentNode.worldPosition);
+
+                        if (newDistance < heroMoveInfo.Distance)
+                        {
+                            heroMoveInfo.Distance = newDistance;
+                            heroMoveInfo.HeroMove = heroMoves[i];
+                        }
+                    }
+                }
+            }
+
+            foreach (HeroMoveInfo heroMoveInfo in heroMovesInfo)
+            {
+                for (int i = 0, len = heroMoves.Count; i < len; ++i)
+                {
+                    if (heroMoves[i] == heroMoveInfo.HeroMove)
+                    {
+                        if (heroMoves[i].MoveEvaluation == 1)
+                            heroMoves[i].MoveEvaluation += (int)EvaluationScore.ROAMING_MOVE;
+                        break;
+                    }
+                }
+            }
+        }
+
         List<Node> CalculateWalkablePositions()
         {
             if (currentHero == null)
@@ -142,9 +246,19 @@ namespace HOMM_BM
             }
             return retVal;
         }
-        public void MoveHero(Node move)
+        public void MoveHero(HeroMove heroMove)
         {
-            currentHero.CurrentNode = move;
+            if (heroMove.TargetNode.IsWalkable())
+            {
+                if (heroMove.IsAttackMove)
+                {
+                    currentHero.CurrentNode = heroMove.TargetNode;
+                }
+                else
+                {
+                    currentHero.CurrentNode = heroMove.TargetNode;
+                }
+            }
 
             heroesQueue.Remove(CurrentHero);
             heroesQueue.Add(CurrentHero);
@@ -156,11 +270,6 @@ namespace HOMM_BM
         public int Evaluate()
         {
             int distance = Mathf.Abs(Mathf.RoundToInt(Vector3.Distance(heroesQueue[0].CurrentNode.worldPosition, heroesQueue[1].CurrentNode.worldPosition)));
-
-            if (distance == 1)
-            {
-                return -10000 + (moveCount - initialMoveCount);
-            }
 
             return -distance;
         }
