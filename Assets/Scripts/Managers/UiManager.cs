@@ -43,6 +43,9 @@ namespace HOMM_BM
         public GameObject enemyTurn;
         public Slider currentEnemyTurnSlider;
 
+        public GameObject ObtainedItemPrefab;
+        public Transform ObtainedItemParent;
+
         private void Awake()
         {
             instance = this;
@@ -129,6 +132,26 @@ namespace HOMM_BM
 
             instance.uiObject = interactionButton;
         }
+
+        public void DisplayObtainedItem(InteractionHook hook)
+        {
+            GameObject go = Instantiate(ObtainedItemPrefab);
+            go.transform.SetParent(ObtainedItemParent);
+            go.transform.localScale = Vector3.one;
+            RectTransform transform = go.transform.GetComponentInChildren<RectTransform>();
+            transform.localPosition = Vector3.zero;
+
+            ObtainedItemDisplay obtainedItemDisplay = go.GetComponentInChildren<ObtainedItemDisplay>();
+            obtainedItemDisplay.ItemIcon.sprite = hook.Item.Icon;
+
+            if (hook.Amount > 1)
+                obtainedItemDisplay.AmountText.text = hook.Amount.ToString();
+            else
+                obtainedItemDisplay.AmountText.text = "";
+
+            go.SetActive(true);
+        }
+
         public void AddHeroButton(HeroController heroController)
         {
             GameObject go = Instantiate(HeroSelectPrefab);

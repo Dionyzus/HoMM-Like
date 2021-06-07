@@ -33,6 +33,22 @@ public class @MouseControls : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Axis"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Click"",
+                    ""type"": ""Button"",
+                    ""id"": ""b3a9acf9-b798-4edb-b016-608e355994c9"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""Position"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""c9d1fe1e-caf8-42c6-bf05-d0bcced19894"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -55,6 +71,28 @@ public class @MouseControls : IInputActionCollection, IDisposable
                     ""processors"": ""Normalize(min=-1,max=1),Invert"",
                     ""groups"": """",
                     ""action"": ""Zoom"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f860dae7-d8dd-4327-87c1-43176a41cc77"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": ""Press(behavior=1)"",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Click"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ae8a9ba9-9933-433c-9310-6df9507a4653"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Position"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -138,6 +176,8 @@ public class @MouseControls : IInputActionCollection, IDisposable
         m_Mouse = asset.FindActionMap("Mouse", throwIfNotFound: true);
         m_Mouse_Pan = m_Mouse.FindAction("Pan", throwIfNotFound: true);
         m_Mouse_Zoom = m_Mouse.FindAction("Zoom", throwIfNotFound: true);
+        m_Mouse_Click = m_Mouse.FindAction("Click", throwIfNotFound: true);
+        m_Mouse_Position = m_Mouse.FindAction("Position", throwIfNotFound: true);
         // Keyboard
         m_Keyboard = asset.FindActionMap("Keyboard", throwIfNotFound: true);
         m_Keyboard_Move = m_Keyboard.FindAction("Move", throwIfNotFound: true);
@@ -192,12 +232,16 @@ public class @MouseControls : IInputActionCollection, IDisposable
     private IMouseActions m_MouseActionsCallbackInterface;
     private readonly InputAction m_Mouse_Pan;
     private readonly InputAction m_Mouse_Zoom;
+    private readonly InputAction m_Mouse_Click;
+    private readonly InputAction m_Mouse_Position;
     public struct MouseActions
     {
         private @MouseControls m_Wrapper;
         public MouseActions(@MouseControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @Pan => m_Wrapper.m_Mouse_Pan;
         public InputAction @Zoom => m_Wrapper.m_Mouse_Zoom;
+        public InputAction @Click => m_Wrapper.m_Mouse_Click;
+        public InputAction @Position => m_Wrapper.m_Mouse_Position;
         public InputActionMap Get() { return m_Wrapper.m_Mouse; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -213,6 +257,12 @@ public class @MouseControls : IInputActionCollection, IDisposable
                 @Zoom.started -= m_Wrapper.m_MouseActionsCallbackInterface.OnZoom;
                 @Zoom.performed -= m_Wrapper.m_MouseActionsCallbackInterface.OnZoom;
                 @Zoom.canceled -= m_Wrapper.m_MouseActionsCallbackInterface.OnZoom;
+                @Click.started -= m_Wrapper.m_MouseActionsCallbackInterface.OnClick;
+                @Click.performed -= m_Wrapper.m_MouseActionsCallbackInterface.OnClick;
+                @Click.canceled -= m_Wrapper.m_MouseActionsCallbackInterface.OnClick;
+                @Position.started -= m_Wrapper.m_MouseActionsCallbackInterface.OnPosition;
+                @Position.performed -= m_Wrapper.m_MouseActionsCallbackInterface.OnPosition;
+                @Position.canceled -= m_Wrapper.m_MouseActionsCallbackInterface.OnPosition;
             }
             m_Wrapper.m_MouseActionsCallbackInterface = instance;
             if (instance != null)
@@ -223,6 +273,12 @@ public class @MouseControls : IInputActionCollection, IDisposable
                 @Zoom.started += instance.OnZoom;
                 @Zoom.performed += instance.OnZoom;
                 @Zoom.canceled += instance.OnZoom;
+                @Click.started += instance.OnClick;
+                @Click.performed += instance.OnClick;
+                @Click.canceled += instance.OnClick;
+                @Position.started += instance.OnPosition;
+                @Position.performed += instance.OnPosition;
+                @Position.canceled += instance.OnPosition;
             }
         }
     }
@@ -264,6 +320,8 @@ public class @MouseControls : IInputActionCollection, IDisposable
     {
         void OnPan(InputAction.CallbackContext context);
         void OnZoom(InputAction.CallbackContext context);
+        void OnClick(InputAction.CallbackContext context);
+        void OnPosition(InputAction.CallbackContext context);
     }
     public interface IKeyboardActions
     {

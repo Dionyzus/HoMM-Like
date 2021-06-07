@@ -200,6 +200,9 @@ namespace HOMM_BM
                 moveTime = 0;
 
                 isPathInitialized = true;
+
+                if (gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                    CursorManager.instance.SetToInteractionInitialized();
             }
 
             bool pathIsFinished = false;
@@ -231,11 +234,15 @@ namespace HOMM_BM
                 if (index > actionPoints - 1)
                 {
                     pathIsFinished = true;
+                    if (gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                        CursorManager.instance.SetToDefault();
                 }
                 else if (index > currentPath.Count - 1)
                 {
                     actionPoints -= currentPath.Count;
                     pathIsFinished = true;
+                    if (gameObject.layer == GridManager.FRIENDLY_UNITS_LAYER)
+                        CursorManager.instance.SetToDefault();
                 }
             }
 

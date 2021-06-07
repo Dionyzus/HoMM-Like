@@ -11,6 +11,8 @@ namespace HOMM_BM
         public static GameReferencesManager instance;
         private const string INTERACTIONS = "Interactions";
 
+        Camera mainCamera;
+
         bool heroFight;
         bool enemyHeroDied;
 
@@ -52,6 +54,7 @@ namespace HOMM_BM
         public List<HeroController> HeroesQueue { get => heroesQueue; set => heroesQueue = value; }
         public AudioManager EnemyTurnAudio { get => enemyTurnAudio; set => enemyTurnAudio = value; }
         public AudioManager WorldAudio { get => worldAudio; set => worldAudio = value; }
+        public Camera MainCamera { get => mainCamera; set => mainCamera = value; }
 
         ItemAmountDictionary items = new ItemAmountDictionary();
 
@@ -60,6 +63,7 @@ namespace HOMM_BM
             if (instance == null)
             {
                 instance = this;
+                mainCamera = Camera.main;
                 DontDestroyOnLoad(this.gameObject);
             }
             else
@@ -130,6 +134,8 @@ namespace HOMM_BM
 
                 UiManager.instance.DeactivateBattleUi();
                 UiManager.instance.ActivateWorldUi();
+
+                mainCamera = WorldManager.instance.MainCamera;
             }
 
             if (GameManager.instance.CurrentGameState == GameState.WORLD && heroController == null)
@@ -141,12 +147,17 @@ namespace HOMM_BM
                 InitializeEnemyHeroController();
 
                 InitializeSceneStateHandler();
+
+                mainCamera = WorldManager.instance.MainCamera;
             }
             if (GameManager.instance.CurrentGameState == GameState.BATTLE)
             {
+                CursorManager.instance.SetToDefault();
+
                 if (UiManager.instance.enemyTurn.gameObject.activeSelf)
                     UiManager.instance.HideEnemyTurnDisplay();
 
+                enemyTurnAudio.Stop();
                 worldAudio.Stop();
                 battleAudio.Play();
 
@@ -185,6 +196,8 @@ namespace HOMM_BM
                         InitializeInteractionUnits((int)StackSplit.MINIMAL);
                     }
                 }
+
+                mainCamera = BattleManager.instance.MainCamera;
             }
 
             loadingScreen.SetActive(false);

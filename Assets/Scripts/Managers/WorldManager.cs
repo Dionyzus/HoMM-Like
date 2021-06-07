@@ -15,7 +15,9 @@ namespace HOMM_BM
         bool calculatingAiMove;
 
         public GameObject hitLookAtPrefab;
-        public Camera MainCamera;
+
+        [SerializeField]
+        private Camera mainCamera = default;
 
         [SerializeField]
         CinemachineVirtualCamera actionCamera = default;
@@ -32,6 +34,7 @@ namespace HOMM_BM
         public MouseLogicWorld selectMove;
 
         public List<HeroController> HeroesQueue { get => heroesQueue; set => heroesQueue = value; }
+        public Camera MainCamera { get => mainCamera; set => mainCamera = value; }
 
         private void Awake()
         {
@@ -154,11 +157,11 @@ namespace HOMM_BM
         {
             if (GameManager.instance.Mouse.leftButton.isPressed)
             {
-                Ray ray = Camera.main.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
+                Ray ray = mainCamera.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
 
                 if (Physics.Raycast(ray, out RaycastHit hit, 100))
                 {
-                    if (EventSystem.current.IsPointerOverGameObject())
+                    if (EventSystem.current.IsPointerOverGameObject() && hit.collider.gameObject.layer != 5)
                     {
                         InteractionHook hook = hit.transform.GetComponentInParent<InteractionHook>();
 
@@ -231,15 +234,16 @@ namespace HOMM_BM
 
         void HandleMouse()
         {
-            //Need to find another way to stop user from clicking while interaction is still ongoing
-            if (currentHero != null && (currentHero.IsInteracting || currentHero.currentInteractionHook != null))
-                return;
-
-            Ray ray = Camera.main.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
+            Ray ray = mainCamera.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
             if (Physics.Raycast(ray, out RaycastHit hit, 100))
             {
-                if (EventSystem.current.IsPointerOverGameObject())
+                if (EventSystem.current.IsPointerOverGameObject() && hit.collider.gameObject.layer != 5)
                 {
+                    CursorManager.instance.DetectObject(hit.collider);
+
+                    if (currentHero != null && (currentHero.IsInteracting || currentHero.currentInteractionHook != null))
+                        return;
+
                     if (currentMouseLogic != null)
                         currentMouseLogic.InteractTick(this, hit);
                 }
@@ -293,6 +297,8 @@ namespace HOMM_BM
                 UiManager.instance.ResetInteractionSlider(hero);
                 hero.ActionPoints = hero.StepsCount;
 
+                CursorManager.instance.SetToDefault();
+
                 currentHero = null;
             }
 
@@ -313,6 +319,7 @@ namespace HOMM_BM
                     GameReferencesManager.instance.WorldAudio.Stop();
 
                     UiManager.instance.ShowEnemyTurnDisplay(currentHero);
+                    CursorManager.instance.SetToEnemyTurn();
                     GameReferencesManager.instance.EnemyTurnAudio.Play();
                 }
 
@@ -325,8 +332,8 @@ namespace HOMM_BM
             else
             {
                 UiManager.instance.HideEnemyTurnDisplay();
-                GameReferencesManager.instance.EnemyTurnAudio.Stop();
 
+                GameReferencesManager.instance.EnemyTurnAudio.Stop();
                 GameReferencesManager.instance.WorldAudio.Play();
             }
         }

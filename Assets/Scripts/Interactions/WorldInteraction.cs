@@ -20,6 +20,8 @@ namespace HOMM_BM
                 heroController.Inventory.AddItems(gridUnit.currentInteractionHook.Item, gridUnit.currentInteractionHook.Amount);
             }
 
+            UiManager.instance.DisplayObtainedItem(gridUnit.currentInteractionHook);
+
             gridUnit.ActionIsDone();
         }
         public override bool TickIsFinished(GridUnit gridUnit, float deltaTime)

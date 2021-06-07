@@ -5,6 +5,8 @@ namespace HOMM_BM
 {
     public class InteractionHook : MonoBehaviour
     {
+        public InteractionType InteractionType;
+
         public InteractionContainer interactionContainer;
         public Interaction interaction;
         public Transform interactionPoint;

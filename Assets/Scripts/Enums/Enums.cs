@@ -83,4 +83,11 @@ namespace HOMM_BM
         LARGE = 30,
         HORDE = 50
     }
+    public enum InteractionType
+    {
+        ENEMY_UNIT,
+        COLLECTABLE,
+        COMBAT,
+        FRIENDLY
+    }
 }

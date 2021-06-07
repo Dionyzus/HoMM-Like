@@ -11,7 +11,9 @@ namespace HOMM_BM
     public class BattleManager : MonoBehaviour
     {
         public static BattleManager instance;
-        public Camera MainCamera;
+
+        [SerializeField]
+        private Camera mainCamera = default;
 
         //Will be enums
         bool preparationStateFinished;
@@ -79,6 +81,7 @@ namespace HOMM_BM
         public UnitController PreviousUnit { get => previousUnit; set => previousUnit = value; }
         public bool CalculatePath { get => calculatePath; set => calculatePath = value; }
         public List<UnitController> UnitsQueue { get => unitsQueue; set => unitsQueue = value; }
+        public Camera MainCamera { get => mainCamera; set => mainCamera = value; }
 
         float waitForCleanupTime;
         float waitForNewTurn;
@@ -501,12 +504,14 @@ namespace HOMM_BM
             if (currentUnit.IsInteractionInitialized || currentUnit.IsInteracting || currentUnit.currentInteractionHook != null)
                 return;
 
-            Ray ray = Camera.main.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
+            Ray ray = mainCamera.ScreenPointToRay(GameManager.instance.Mouse.position.ReadValue());
 
             if (Physics.Raycast(ray, out RaycastHit hit, 100))
             {
                 if (EventSystem.current.IsPointerOverGameObject())
                 {
+                    CursorManager.instance.DetectObject(hit.collider);
+
                     //For easier hook detection, due to camera raycasting position
                     Vector3 offSet = new Vector3(0.3f, 0, 0.3f);
 
@@ -540,6 +545,8 @@ namespace HOMM_BM
 
                             else if (distance <= currentUnit.MaximumRange)
                             {
+                                CursorManager.instance.SetToRangedAttack();
+
                                 if (GameManager.instance.Mouse.leftButton.isPressed)
                                 {
                                     currentUnit.currentInteractionHook = interactionHook;
@@ -554,6 +561,10 @@ namespace HOMM_BM
                                     }
                                 }
                             }
+                            //else
+                            //{
+                            //    CursorManager.instance.SetToUninteractable();
+                            //}
                         }
 
                         else if ((interactionHook.interactionContainer != null && FlowmapPathfinderMaster.instance.previousPath.Count != 0) || isTargetPointBlank)
@@ -576,7 +587,7 @@ namespace HOMM_BM
                                     HandleMovingAction(currentUnit.CurrentNode.worldPosition);
                                 }
 
-                                if (isTargetPointBlank)
+                                else if (isTargetPointBlank)
                                 {
                                     currentUnit.IsTargetPointBlank = true;
                                     isTargetPointBlank = false;
@@ -658,6 +669,8 @@ namespace HOMM_BM
             {
                 UiManager.instance.OnUnitTurn(unitsQueue, currentUnit, isInitialize);
                 currentMouseLogic = selectMove;
+
+                CursorManager.instance.SetToDefault();
             }
             else
             {

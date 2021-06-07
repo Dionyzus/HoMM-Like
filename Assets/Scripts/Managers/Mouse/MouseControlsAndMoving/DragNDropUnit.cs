@@ -26,8 +26,6 @@ namespace HOMM_BM
                 transform.position).z;
 
             mOffset = transform.position - GetMouseWorldPosition();
-
-            Cursor.visible = false;
         }
         public void OnDrag(PointerEventData eventData)
         {
@@ -37,8 +35,6 @@ namespace HOMM_BM
         //Later on need to add walkable check
         public void OnEndDrag(PointerEventData eventData)
         {
-            Cursor.visible = true;
-
             List<Node> tacticalNodes = BattleManager.instance.GetNormalizedTacticalNodes();
             Dictionary<UnitController, Node> unitsNodes = BattleManager.instance.GetUnitsNodes();
 

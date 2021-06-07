@@ -43,33 +43,41 @@ namespace HOMM_BM
             {
                 if (worldManager.currentHero != null)
                 {
-                    Node targetNode = null;
+                    Node targetNode = GridManager.instance.GetNode(hit.point, worldManager.currentHero.GridIndex);
 
-                    if (GameManager.instance.Mouse.leftButton.isPressed)
+                    if (targetNode != null && targetNode.IsWalkable())
                     {
-                        targetNode = GridManager.instance.GetNode(hit.point, worldManager.currentHero.GridIndex);
-
-                        if (worldManager.currentHero.IsInteractionPointBlank)
+                        if (GameManager.instance.Mouse.leftButton.isPressed)
                         {
-                            worldManager.currentHero.IsInteractionPointBlank = false;
-                        }
-                        if (targetNode != null)
+                            targetNode = GridManager.instance.GetNode(hit.point, worldManager.currentHero.GridIndex);
+
+                            if (worldManager.currentHero.IsInteractionPointBlank)
+                            {
+                                worldManager.currentHero.IsInteractionPointBlank = false;
+                            }
+
                             worldManager.currentHero.PreviewPathToNode(targetNode);
+                        }
+
+                        if (PathfinderMaster.instance.StoredPath.Count > 0 && GameManager.instance.Keyboard.spaceKey.isPressed)
+                        {
+                            worldManager.currentHero.IsInteractionInitialized = true;
+
+                            if (hitLookAt != null)
+                                Destroy(hitLookAt);
+
+                            hitLookAt = Instantiate(worldManager.hitLookAtPrefab);
+                            hitLookAt.transform.position = hit.point;
+                            hitLookAt.SetActive(true);
+
+                            worldManager.ActivateLookAtActionCamera(hitLookAt.transform);
+                            worldManager.currentHero.InitializeMoveToInteractionContainer(targetNode);
+                        }
                     }
-
-                    if (PathfinderMaster.instance.StoredPath.Count > 0 && GameManager.instance.Keyboard.spaceKey.isPressed)
+                    else
                     {
-                        worldManager.currentHero.IsInteractionInitialized = true;
-
-                        if (hitLookAt != null)
-                            Destroy(hitLookAt);
-
-                        hitLookAt = Instantiate(worldManager.hitLookAtPrefab);
-                        hitLookAt.transform.position = hit.point;
-                        hitLookAt.SetActive(true);
-
-                        worldManager.ActivateLookAtActionCamera(hitLookAt.transform);
-                        worldManager.currentHero.InitializeMoveToInteractionContainer(targetNode);
+                        //if (ih == null)
+                        //    CursorManager.instance.SetToUninteractable();
                     }
                 }
             }

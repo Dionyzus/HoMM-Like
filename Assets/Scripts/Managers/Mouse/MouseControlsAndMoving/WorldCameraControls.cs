@@ -80,10 +80,10 @@ namespace HOMM_BM
                 {
                     ZoomScreen(yAxis);
                 }
+                HandleCameraMovement();
+                HandleCameraRotation();
+                HandleMouseDrag();
             }
-            HandleCameraMovement();
-            HandleCameraRotation();
-            HandleMouseDrag();
 
             transform.position = Vector3.Lerp(transform.position, newPosition, time * Time.deltaTime);
             transform.rotation = Quaternion.Lerp(transform.rotation, newRotation, time * Time.deltaTime);

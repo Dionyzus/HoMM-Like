@@ -177,6 +177,8 @@ namespace HOMM_BM
 
                 isPathInitialized = true;
                 isWalking = true;
+
+                CursorManager.instance.SetToInteractionInitialized();
             }
 
             if (!moveIsBasedOnAnimation)
@@ -304,6 +306,8 @@ namespace HOMM_BM
         }
         protected override void HandleInteraction(Interaction interaction, float deltaTime)
         {
+            CursorManager.instance.SetToInteractionInitialized();
+
             if (currentInteractionHook && attackType.Equals(UnitAttackType.MELEE))
                 BattleManager.instance.ActivateCombatCamera(currentInteractionHook.transform);
 
