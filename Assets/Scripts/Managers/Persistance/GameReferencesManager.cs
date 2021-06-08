@@ -136,6 +136,8 @@ namespace HOMM_BM
                 UiManager.instance.ActivateWorldUi();
 
                 mainCamera = WorldManager.instance.MainCamera;
+
+                CursorManager.instance.SetToDefault();
             }
 
             if (GameManager.instance.CurrentGameState == GameState.WORLD && heroController == null)
@@ -149,11 +151,11 @@ namespace HOMM_BM
                 InitializeSceneStateHandler();
 
                 mainCamera = WorldManager.instance.MainCamera;
+
+                CursorManager.instance.SetToDefault();
             }
             if (GameManager.instance.CurrentGameState == GameState.BATTLE)
             {
-                CursorManager.instance.SetToDefault();
-
                 if (UiManager.instance.enemyTurn.gameObject.activeSelf)
                     UiManager.instance.HideEnemyTurnDisplay();
 
@@ -198,6 +200,8 @@ namespace HOMM_BM
                 }
 
                 mainCamera = BattleManager.instance.MainCamera;
+
+                CursorManager.instance.SetToDefault();
             }
 
             loadingScreen.SetActive(false);

@@ -45,6 +45,8 @@ namespace HOMM_BM
 
         protected override void OnStart(GridUnit gridUnit)
         {
+            CursorManager.instance.SetToInteractionInitialized();
+
             timer = gridUnit.animationClip.length;
             gridUnit.PlayAnimation(gridUnit.actionAnimation);
             gridUnit.Animator.SetBool("isInteracting", true);

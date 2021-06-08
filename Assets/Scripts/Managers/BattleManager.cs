@@ -513,7 +513,7 @@ namespace HOMM_BM
                     CursorManager.instance.DetectObject(hit.collider);
 
                     //For easier hook detection, due to camera raycasting position
-                    Vector3 offSet = new Vector3(0.3f, 0, 0.3f);
+                    Vector3 offSet = new Vector3(0.4f, 0.2f, 0.4f);
 
                     interactionHook = CheckForInteractionHook(hit.point + offSet);
 
@@ -669,8 +669,6 @@ namespace HOMM_BM
             {
                 UiManager.instance.OnUnitTurn(unitsQueue, currentUnit, isInitialize);
                 currentMouseLogic = selectMove;
-
-                CursorManager.instance.SetToDefault();
             }
             else
             {
@@ -740,6 +738,7 @@ namespace HOMM_BM
             ActivateBattleCamera();
 
             unitReceivedHitDebug = false;
+            CursorManager.instance.SetToDefault();
 
             int axisCount = CheckBattleState();
 
